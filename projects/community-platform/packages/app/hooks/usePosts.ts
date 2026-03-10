@@ -1,0 +1,143 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { supabase } from '../utils/supabase'
+
+export interface Post {
+    id: string
+    content: string
+    authorId: string
+    createdAt: string
+    author?: {
+        id: string
+        username: string
+        avatarUrl: string | null
+    }
+    group?: {
+        id: string
+        name: string
+    }
+    likes: { profileId: string }[]
+}
+
+// 피드 포스트 가져오기 (전체 혹은 특정 그룹용)
+export function usePosts(groupId?: string) {
+    return useQuery({
+        queryKey: groupId ? ['posts', 'group', groupId] : ['posts', 'all'],
+        queryFn: async () => {
+            let query = supabase
+                .from('Post')
+                .select(`
+          *,
+          author:"Profile"(id, username, avatarUrl),
+          likes:"PostLike"(profileId),
+          group:"Group"(id, name)
+        `)
+                .order('createdAt', { ascending: false })
+
+            if (groupId) {
+                query = query.eq('groupId', groupId)
+            }
+
+            const { data, error } = await query
+
+            if (error) throw error
+            return data as Post[]
+        },
+    })
+}
+
+// 특정 사용자 포스트 가져오기 (프로필 화면용)
+export function useUserPosts(profileId: string) {
+    return useQuery({
+        queryKey: ['posts', profileId],
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('Post')
+                .select(`
+          *,
+          author:"Profile"(id, username, avatarUrl),
+          likes:"PostLike"(profileId)
+        `)
+                .eq('authorId', profileId)
+                .order('createdAt', { ascending: false })
+
+            if (error) throw error
+            return data as Post[]
+        },
+        enabled: !!profileId,
+    })
+}
+
+// 단일 포스트 가져오기 (게시글 상세 화면용)
+export function usePost(postId: string) {
+    return useQuery({
+        queryKey: ['post', postId],
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('Post')
+                .select(`
+          *,
+          author:"Profile"(id, username, avatarUrl),
+          likes:"PostLike"(profileId)
+        `)
+                .eq('id', postId)
+                .single()
+
+            if (error) throw error
+            return data as Post
+        },
+        enabled: !!postId,
+    })
+}
+
+
+// 포스트 생성
+export function useCreatePost() {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: async ({ content, profileId, groupId }: { content: string; profileId: string; groupId?: string }) => {
+            const { data, error } = await supabase
+                .from('Post')
+                .insert({ content, authorId: profileId, groupId: groupId || null })
+                .select()
+                .single()
+
+            if (error) throw error
+            return data
+        },
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['posts', 'all'] })
+            if (variables.groupId) {
+                queryClient.invalidateQueries({ queryKey: ['posts', 'group', variables.groupId] })
+            }
+            queryClient.invalidateQueries({ queryKey: ['posts', variables.profileId] })
+        },
+    })
+}
+
+// 포스트 좋아요 토글
+export function useToggleLike() {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: async ({ postId, hasLiked, profileId }: { postId: string; hasLiked: boolean; profileId: string }) => {
+            if (hasLiked) {
+                // 좋아요 취소
+                const { error } = await supabase
+                    .from('PostLike')
+                    .delete()
+                    .match({ postId: postId, profileId: profileId })
+                if (error) throw error
+            } else {
+                // 좋아요 추가
+                const { error } = await supabase
+                    .from('PostLike')
+                    .insert({ postId: postId, profileId: profileId })
+                if (error) throw error
+            }
+        },
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['posts'] })
+        },
+    })
+}
