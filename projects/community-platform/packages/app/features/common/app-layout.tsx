@@ -127,7 +127,7 @@ function UserDropdown({ userProfile, onLogout, router }: { userProfile: any; onL
                                 py="$2.5"
                                 cursor="pointer"
                                 hoverStyle={{ bg: '$surfaceContainerHigh' }}
-                                onPress={() => { setOpen(false); router.push('/admin/dashboard') }}
+                                onPress={() => { setOpen(false); router.push('/admin') }}
                             >
                                 <Shield size={18} color="$tertiary" />
                                 <SizableText size="$3" color="$tertiary" fontWeight="600">관리자 패널</SizableText>

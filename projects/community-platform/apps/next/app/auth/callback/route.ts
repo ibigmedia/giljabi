@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
 
       // Admin/Editor → dashboard, 일반 회원 → feed
       if (existingProfile.role === 'ADMIN' || existingProfile.role === 'EDITOR') {
-        return NextResponse.redirect(new URL('/admin/dashboard', requestUrl.origin))
+        return NextResponse.redirect(new URL('/admin', requestUrl.origin))
       }
     }
   }
