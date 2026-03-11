@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { YStack, XStack, H3, Paragraph, Avatar, Button, Separator, Input, Spinner, SizableText } from '@my/ui'
-import { MessageSquare, Trash, PenTool, Sparkles } from '@tamagui/lucide-icons'
+import { MessageSquare, Trash, PenTool, Sparkles, Eye } from '@tamagui/lucide-icons'
 import { useBlogPosts, useDeleteBlogPost, useCreateBlogPost, useGenerateAIBlog, useUpdateBlogPost } from '../../hooks/useBlogs'
 import type { BlogPost } from '../../hooks/useBlogs'
 import { useCurrentUserProfile } from '../../hooks/useProfiles'
 import { useRouter } from 'solito/navigation'
+import { RichEditor, markdownToHtml, htmlToMarkdown } from '../blog/rich-editor'
 
 export function AdminBlogsScreen() {
     const { data: posts, isLoading, error } = useBlogPosts()
@@ -13,25 +14,26 @@ export function AdminBlogsScreen() {
     const { mutate: createPost, isPending: isCreating } = useCreateBlogPost()
     const { mutate: generateAI, isPending: isGeneratingAI } = useGenerateAIBlog()
     const { data: currentUserProfile } = useCurrentUserProfile()
-    
+
     const router = useRouter()
-    
+
     const [showNewForm, setShowNewForm] = useState(false)
     const [title, setTitle] = useState('')
-    const [content, setContent] = useState('')
+    const [editorHtml, setEditorHtml] = useState('')
     const [prompt, setPrompt] = useState('')
 
     const handleCreate = () => {
         if (!title.trim() || !currentUserProfile?.id) return
-        createPost({ 
-            title, 
-            content, 
+        const content = htmlToMarkdown(editorHtml)
+        createPost({
+            title,
+            content,
             authorId: currentUserProfile.id,
-            isPublished: true 
+            isPublished: true
         }, {
             onSuccess: () => {
                 setTitle('')
-                setContent('')
+                setEditorHtml('')
                 setShowNewForm(false)
             }
         })
@@ -42,7 +44,9 @@ export function AdminBlogsScreen() {
         generateAI(prompt, {
             onSuccess: (data) => {
                 setTitle(data.title)
-                setContent(data.content)
+                // AI가 마크다운으로 반환하므로 HTML로 변환
+                const html = markdownToHtml(data.content)
+                setEditorHtml(html)
             }
         })
     }
@@ -52,9 +56,9 @@ export function AdminBlogsScreen() {
             <YStack maxWidth={1000} alignSelf="center" width="100%" px="$4" py="$8" gap="$6">
                 <XStack justifyContent="space-between" alignItems="center">
                     <H3 color="$textMain" fontWeight="bold">블로그 관리 (CMS)</H3>
-                    <Button 
-                        bg="$primary" 
-                        icon={<PenTool size={16} color="white" />} 
+                    <Button
+                        bg="$primary"
+                        icon={<PenTool size={16} color="white" />}
                         onPress={() => setShowNewForm(!showNewForm)}
                     >
                         <SizableText color="white">새 글 작성</SizableText>
@@ -64,20 +68,21 @@ export function AdminBlogsScreen() {
                 {showNewForm && (
                     <YStack bg="$surface" p="$4" borderRadius="$card" borderWidth={1} borderColor="$borderLight" gap="$4">
                         <H3 size="$5" fontWeight="bold" color="$textMain">새 블로그 포스트 작성</H3>
-                        
+
+                        {/* AI Assistant */}
                         <YStack gap="$2" bg="$backgroundBody" p="$3" borderRadius="$2">
-                            <SizableText color="$textMain" fontWeight="bold" size="$3" mb="$1">💡 AI 작성 어시스턴트</SizableText>
+                            <SizableText color="$textMain" fontWeight="bold" size="$3" mb="$1">AI 작성 어시스턴트</SizableText>
                             <XStack gap="$2" alignItems="center">
-                                <Input 
+                                <Input
                                     flex={1}
                                     placeholder="어떤 주제로 글을 작성할까요? (ex: 디지털 사역의 미래)"
                                     value={prompt}
                                     onChangeText={setPrompt}
                                     size="$3"
                                 />
-                                <Button 
-                                    bg="$color5" 
-                                    icon={isGeneratingAI ? <Spinner /> : <Sparkles size={16} color="$primary" />} 
+                                <Button
+                                    bg="$color5"
+                                    icon={isGeneratingAI ? <Spinner /> : <Sparkles size={16} color="$primary" />}
                                     onPress={handleAIGenerate}
                                     disabled={!prompt.trim() || isGeneratingAI}
                                 >
@@ -88,28 +93,27 @@ export function AdminBlogsScreen() {
 
                         <Separator borderColor="$borderLight" my="$2" />
 
-                        <Input 
-                            placeholder="글 제목" 
-                            value={title} 
-                            onChangeText={setTitle} 
+                        {/* Title */}
+                        <Input
+                            placeholder="글 제목"
+                            value={title}
+                            onChangeText={setTitle}
                             bg="$backgroundBody"
                             size="$4"
                             fontWeight="bold"
                         />
-                        <Input 
-                            placeholder="본문 내용 (인라인 에디터에서 추후 수정 가능)" 
-                            value={content} 
-                            onChangeText={setContent} 
-                            bg="$backgroundBody"
-                            size="$4"
-                            multiline
-                            numberOfLines={6}
+
+                        {/* Rich Text Editor */}
+                        <RichEditor
+                            content={editorHtml}
+                            onChange={setEditorHtml}
+                            placeholder="본문을 작성하세요. 마크다운과 리치 텍스트 편집을 지원합니다."
                         />
-                        
+
                         <XStack justifyContent="flex-end" gap="$2">
                             <Button bg="transparent" onPress={() => setShowNewForm(false)}><SizableText color="$textMuted">취소</SizableText></Button>
-                            <Button 
-                                bg="$primary" 
+                            <Button
+                                bg="$primary"
                                 disabled={!title.trim() || isCreating || !currentUserProfile}
                                 onPress={handleCreate}
                             >
@@ -119,6 +123,7 @@ export function AdminBlogsScreen() {
                     </YStack>
                 )}
 
+                {/* Blog Posts Table */}
                 <YStack bg="$surface" borderRadius="$card" borderWidth={1} borderColor="$borderLight" overflow="hidden">
                     <XStack bg="$backgroundBody" p="$3" borderBottomWidth={1} borderColor="$borderLight">
                         <Paragraph flex={1} fontWeight="bold" color="$textMuted">제목</Paragraph>
