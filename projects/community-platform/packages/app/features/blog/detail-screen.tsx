@@ -19,7 +19,7 @@ const BLOG_READ_CSS = `
     word-break: keep-all;
 }
 .blog-content h1 {
-    font-size: 1.33em;
+    font-size: 0.95em;
     font-weight: 700;
     margin: 1.4em 0 0.6em;
     color: #1a1a2e;
@@ -28,15 +28,15 @@ const BLOG_READ_CSS = `
     padding-bottom: 0.4em;
 }
 .blog-content h2 {
-    font-size: 1.02em;
+    font-size: 1.16em;
     font-weight: 600;
     margin: 1.3em 0 0.5em;
     color: #2d2d44;
     line-height: 1.35;
 }
 .blog-content h3 {
-    font-size: 0.84em;
-    font-weight: 600;
+    font-size: 1.2em;
+    font-weight: 700;
     margin: 1.1em 0 0.4em;
     color: #3d3d5c;
 }
