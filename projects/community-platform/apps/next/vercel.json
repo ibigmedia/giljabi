@@ -1,3 +1,4 @@
 {
-  "installCommand": "corepack enable && yarn install"
+  "installCommand": "cd ../.. && corepack enable && yarn install",
+  "buildCommand": "cd ../.. && yarn build && cd apps/next && next build"
 }
