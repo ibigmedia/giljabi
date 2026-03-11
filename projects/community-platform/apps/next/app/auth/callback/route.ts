@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
 
       const { data: existingProfile } = await adminClient
         .from('Profile')
-        .select('id, isApproved')
+        .select('id, isApproved, role')
         .eq('userId', data.user.id)
         .single()
 
@@ -44,6 +44,11 @@ export async function GET(request: NextRequest) {
       if (existingProfile && !existingProfile.isApproved) {
         await supabase.auth.signOut()
         return NextResponse.redirect(new URL('/pending-approval', requestUrl.origin))
+      }
+
+      // Admin/Editor → dashboard, 일반 회원 → feed
+      if (existingProfile.role === 'ADMIN' || existingProfile.role === 'EDITOR') {
+        return NextResponse.redirect(new URL('/admin/dashboard', requestUrl.origin))
       }
     }
   }

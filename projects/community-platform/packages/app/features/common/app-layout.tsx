@@ -1,10 +1,10 @@
 'use client'
 
-import React from 'react'
-import { YStack, XStack, SizableText, Button, Avatar } from '@my/ui'
+import React, { useState, useRef, useEffect } from 'react'
+import { YStack, XStack, SizableText, Button, Avatar, Separator } from '@my/ui'
 import { usePathname, useRouter } from 'solito/navigation'
 import { useCurrentUserProfile } from '../../hooks/useProfiles'
-import { Home, Users, MessageSquare, User, Bell, Search, Edit3, LogOut, Shield } from '@tamagui/lucide-icons'
+import { Home, Users, MessageSquare, User, Bell, Search, Edit3, LogOut, Shield, ChevronDown, Settings } from '@tamagui/lucide-icons'
 import { supabase } from '../../utils/supabase'
 
 const NAV_ITEMS = [
@@ -13,6 +13,140 @@ const NAV_ITEMS = [
     { label: '그룹', path: '/groups', icon: Users },
     { label: '블로그', path: '/blog', icon: Edit3 },
 ]
+
+function UserDropdown({ userProfile, onLogout, router }: { userProfile: any; onLogout: () => void; router: any }) {
+    const [open, setOpen] = useState(false)
+    const dropdownRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+                setOpen(false)
+            }
+        }
+        if (open) {
+            document.addEventListener('mousedown', handleClickOutside)
+        }
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [open])
+
+    return (
+        <YStack position="relative" ref={dropdownRef as any}>
+            <XStack
+                alignItems="center"
+                gap="$2"
+                cursor="pointer"
+                onPress={() => setOpen(!open)}
+                bg={open ? '$surfaceContainerHigh' : '$surfaceContainerLow'}
+                hoverStyle={{ bg: '$surfaceContainerHigh' }}
+                borderRadius="$full"
+                paddingHorizontal="$3"
+                paddingVertical="$1.5"
+            >
+                <Avatar circular size="$2.5" bg="$primaryContainer">
+                    <Avatar.Image src={userProfile.avatarUrl || undefined} />
+                    <Avatar.Fallback bg="$primaryContainer">
+                        <SizableText size="$1" color="$primary" fontWeight="700">
+                            {userProfile.username?.charAt(0)?.toUpperCase() || 'U'}
+                        </SizableText>
+                    </Avatar.Fallback>
+                </Avatar>
+                <SizableText size="$3" fontWeight="600" color="$onSurface">
+                    {userProfile.username}
+                </SizableText>
+                <ChevronDown size={14} color="$onSurfaceVariant" />
+            </XStack>
+
+            {open && (
+                <YStack
+                    position="absolute"
+                    top="100%"
+                    right={0}
+                    mt="$2"
+                    bg="$surface"
+                    borderRadius="$4"
+                    elevation="$4"
+                    borderWidth={1}
+                    borderColor="$borderLight"
+                    minWidth={220}
+                    overflow="hidden"
+                    zIndex={1000}
+                >
+                    <YStack p="$3" gap="$1">
+                        <SizableText size="$4" fontWeight="700" color="$onSurface">
+                            {userProfile.username}
+                        </SizableText>
+                        <SizableText size="$2" color="$onSurfaceVariant">
+                            {userProfile.email || userProfile.role || '회원'}
+                        </SizableText>
+                    </YStack>
+
+                    <Separator borderColor="$borderLight" />
+
+                    <YStack py="$1">
+                        <XStack
+                            alignItems="center"
+                            gap="$3"
+                            px="$3"
+                            py="$2.5"
+                            cursor="pointer"
+                            hoverStyle={{ bg: '$surfaceContainerHigh' }}
+                            onPress={() => { setOpen(false); router.push('/profile') }}
+                        >
+                            <User size={18} color="$onSurfaceVariant" />
+                            <SizableText size="$3" color="$onSurface">내 프로필</SizableText>
+                        </XStack>
+
+                        <XStack
+                            alignItems="center"
+                            gap="$3"
+                            px="$3"
+                            py="$2.5"
+                            cursor="pointer"
+                            hoverStyle={{ bg: '$surfaceContainerHigh' }}
+                            onPress={() => { setOpen(false); router.push('/profile/edit') }}
+                        >
+                            <Settings size={18} color="$onSurfaceVariant" />
+                            <SizableText size="$3" color="$onSurface">프로필 설정</SizableText>
+                        </XStack>
+
+                        {(userProfile.role === 'ADMIN' || userProfile.role === 'EDITOR') && (
+                            <XStack
+                                alignItems="center"
+                                gap="$3"
+                                px="$3"
+                                py="$2.5"
+                                cursor="pointer"
+                                hoverStyle={{ bg: '$surfaceContainerHigh' }}
+                                onPress={() => { setOpen(false); router.push('/admin/dashboard') }}
+                            >
+                                <Shield size={18} color="$tertiary" />
+                                <SizableText size="$3" color="$tertiary" fontWeight="600">관리자 패널</SizableText>
+                            </XStack>
+                        )}
+                    </YStack>
+
+                    <Separator borderColor="$borderLight" />
+
+                    <YStack py="$1">
+                        <XStack
+                            alignItems="center"
+                            gap="$3"
+                            px="$3"
+                            py="$2.5"
+                            cursor="pointer"
+                            hoverStyle={{ bg: '$errorContainer' }}
+                            onPress={() => { setOpen(false); onLogout() }}
+                        >
+                            <LogOut size={18} color="$error" />
+                            <SizableText size="$3" color="$error">로그아웃</SizableText>
+                        </XStack>
+                    </YStack>
+                </YStack>
+            )}
+        </YStack>
+    )
+}
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter()
@@ -30,10 +164,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
     return (
         <YStack flex={1} bg="$backgroundBody" height="100%">
-            {/* Desktop GNB - M3 Surface with elevation */}
+            {/* ===== Desktop: Top Header GNB (sm 이상에서만 보임) ===== */}
             <XStack
-                display="flex"
-                $sm={{ display: 'none' }}
+                display="none"
+                $gtSm={{ display: 'flex' }}
                 bg="$surface"
                 paddingHorizontal="$6"
                 height={64}
@@ -49,7 +183,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                         fontWeight="800"
                         color="$primary"
                         cursor="pointer"
-                        onPress={() => router.push('/dashboard')}
+                        onPress={() => router.push('/landing')}
                         letterSpacing={-0.5}
                     >
                         Giljabi
@@ -95,23 +229,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                         bg="transparent"
                         hoverStyle={{ bg: '$surfaceContainerHigh' }}
                         icon={<Search size={20} color="$onSurfaceVariant" />}
+                        onPress={() => router.push('/search')}
                     />
 
                     {userProfile ? (
                         <>
-                            {(userProfile.role === 'ADMIN' || userProfile.role === 'EDITOR') && (
-                                <Button
-                                    size="$3"
-                                    bg="$tertiaryContainer"
-                                    borderRadius="$full"
-                                    hoverStyle={{ opacity: 0.9 }}
-                                    icon={<Shield size={16} color="$tertiary" />}
-                                    onPress={() => router.push('/admin/dashboard')}
-                                >
-                                    <SizableText size="$2" color="$tertiary" fontWeight="600">관리자</SizableText>
-                                </Button>
-                            )}
-
                             <Button
                                 size="$3"
                                 circular
@@ -130,54 +252,43 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                                 onPress={() => router.push('/notifications')}
                             />
 
-                            <XStack
-                                alignItems="center"
-                                gap="$2.5"
-                                ml="$1"
-                                cursor="pointer"
-                                onPress={() => router.push('/profile')}
-                                bg="$surfaceContainerLow"
-                                hoverStyle={{ bg: '$surfaceContainerHigh' }}
-                                borderRadius="$full"
-                                paddingHorizontal="$3"
-                                paddingVertical="$1.5"
-                            >
-                                <Avatar circular size="$2.5" bg="$primaryContainer">
-                                    <Avatar.Image src={userProfile.avatarUrl || undefined} />
-                                    <Avatar.Fallback bg="$primaryContainer" />
-                                </Avatar>
-                                <SizableText size="$3" fontWeight="600" color="$onSurface">
-                                    {userProfile.username}
-                                </SizableText>
-                            </XStack>
-
-                            <Button
-                                size="$3"
-                                circular
-                                bg="transparent"
-                                hoverStyle={{ bg: '$errorContainer' }}
-                                icon={<LogOut size={16} color="$error" />}
-                                onPress={handleLogout}
+                            <UserDropdown
+                                userProfile={userProfile}
+                                onLogout={handleLogout}
+                                router={router}
                             />
                         </>
                     ) : (
-                        <Button
-                            size="$3"
-                            bg="$primary"
-                            borderRadius="$full"
-                            hoverStyle={{ opacity: 0.9 }}
-                            onPress={() => router.push('/login')}
-                        >
-                            <SizableText color="white" fontWeight="600">로그인</SizableText>
-                        </Button>
+                        <XStack gap="$2" alignItems="center">
+                            <Button
+                                size="$3"
+                                bg="transparent"
+                                borderRadius="$full"
+                                borderWidth={1}
+                                borderColor="$primary"
+                                hoverStyle={{ bg: '$primaryContainer' }}
+                                onPress={() => router.push('/login')}
+                            >
+                                <SizableText color="$primary" fontWeight="600" size="$3">로그인</SizableText>
+                            </Button>
+                            <Button
+                                size="$3"
+                                bg="$primary"
+                                borderRadius="$full"
+                                hoverStyle={{ opacity: 0.9 }}
+                                onPress={() => router.push('/login')}
+                            >
+                                <SizableText color="white" fontWeight="600" size="$3">회원가입</SizableText>
+                            </Button>
+                        </XStack>
                     )}
                 </XStack>
             </XStack>
 
-            {/* Mobile Header - M3 Surface */}
+            {/* ===== Mobile: Top Header (sm에서만 보임 - 간단한 로고 + 아이콘) ===== */}
             <XStack
-                display="none"
-                $sm={{ display: 'flex' }}
+                display="flex"
+                $gtSm={{ display: 'none' }}
                 paddingHorizontal="$4"
                 paddingVertical="$3"
                 bg="$surface"
@@ -186,12 +297,51 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 zIndex={100}
                 elevation="$1"
             >
-                <SizableText size="$6" fontWeight="800" color="$primary" letterSpacing={-0.5}>
+                <SizableText
+                    size="$6"
+                    fontWeight="800"
+                    color="$primary"
+                    letterSpacing={-0.5}
+                    cursor="pointer"
+                    onPress={() => router.push('/landing')}
+                >
                     Giljabi
                 </SizableText>
-                <XStack gap="$1">
-                    <Button size="$3" circular bg="transparent" hoverStyle={{ bg: '$surfaceContainerHigh' }} icon={<Search size={22} color="$onSurfaceVariant" />} />
-                    <Button size="$3" circular bg="transparent" hoverStyle={{ bg: '$surfaceContainerHigh' }} icon={<Bell size={22} color="$onSurfaceVariant" />} />
+                <XStack gap="$1" alignItems="center">
+                    {userProfile ? (
+                        <>
+                            <Button size="$3" circular bg="transparent" hoverStyle={{ bg: '$surfaceContainerHigh' }} icon={<Search size={20} color="$onSurfaceVariant" />} onPress={() => router.push('/search')} />
+                            <Button size="$3" circular bg="transparent" hoverStyle={{ bg: '$surfaceContainerHigh' }} icon={<MessageSquare size={20} color="$onSurfaceVariant" />} onPress={() => router.push('/messages')} />
+                            <Button size="$3" circular bg="transparent" hoverStyle={{ bg: '$surfaceContainerHigh' }} icon={<Bell size={20} color="$onSurfaceVariant" />} onPress={() => router.push('/notifications')} />
+                            <Avatar
+                                circular
+                                size="$2.5"
+                                bg="$primaryContainer"
+                                ml="$1"
+                                onPress={() => router.push('/profile')}
+                                cursor="pointer"
+                            >
+                                <Avatar.Image src={userProfile.avatarUrl || undefined} />
+                                <Avatar.Fallback bg="$primaryContainer">
+                                    <SizableText size="$1" color="$primary" fontWeight="700">
+                                        {userProfile.username?.charAt(0)?.toUpperCase() || 'U'}
+                                    </SizableText>
+                                </Avatar.Fallback>
+                            </Avatar>
+                        </>
+                    ) : (
+                        <>
+                            <Button size="$3" circular bg="transparent" hoverStyle={{ bg: '$surfaceContainerHigh' }} icon={<Search size={22} color="$onSurfaceVariant" />} />
+                            <Button
+                                size="$2"
+                                bg="$primary"
+                                borderRadius="$full"
+                                onPress={() => router.push('/login')}
+                            >
+                                <SizableText color="white" fontWeight="600" size="$2">로그인</SizableText>
+                            </Button>
+                        </>
+                    )}
                 </XStack>
             </XStack>
 
@@ -199,10 +349,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <YStack flex={1} position="relative" height="100%">
                 {children}
 
-                {/* Mobile Bottom Navigation - M3 Navigation Bar */}
+                {/* ===== Mobile: Bottom Tab Bar (sm에서만 보임) ===== */}
                 <XStack
-                    display="none"
-                    $sm={{ display: 'flex' }}
+                    display="flex"
+                    $gtSm={{ display: 'none' }}
                     bg="$surfaceContainerLow"
                     pt="$2"
                     pb="$4"
@@ -229,7 +379,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                                 gap="$1"
                                 py="$1"
                             >
-                                {/* M3 Active Indicator Pill */}
                                 <XStack
                                     bg={isActive ? '$primaryContainer' : 'transparent'}
                                     borderRadius="$full"
