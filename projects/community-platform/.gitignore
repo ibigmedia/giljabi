@@ -49,3 +49,8 @@ thumbs.db
 
 /generated/prisma
 .env
+apps/next/.env
+
+# 테스트/디버깅 스크립트 (프로덕션 제외)
+test-*.ts
+disable-rls.ts

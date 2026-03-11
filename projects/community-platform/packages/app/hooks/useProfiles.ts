@@ -6,12 +6,19 @@ export interface Profile {
     id: string
     userId: string
     username: string
+    email: string | null
     avatarUrl: string | null
     coverUrl: string | null
     bio: string | null
+    church: string | null
+    churchRole: string | null
+    isApproved: boolean
+    role: 'MEMBER' | 'EDITOR' | 'ADMIN'
     createdAt: string
     updatedAt: string
 }
+
+export type UserRoleType = 'MEMBER' | 'EDITOR' | 'ADMIN'
 
 // 모든 프로필 가져오기 (디렉토리용)
 export function useProfiles() {
@@ -47,20 +54,22 @@ export function useProfile(profileId: string) {
     })
 }
 
-// 현재 로그인한 사용자의 프로필 가져오기
+// 현재 로그인한 사용자의 프로필 가져오기 (임시 처리)
 export function useCurrentUserProfile() {
     return useQuery({
         queryKey: ['profile', 'current'],
         queryFn: async () => {
             const { data: { user } } = await supabase.auth.getUser()
-            if (!user) throw new Error('Not authenticated')
+            
+            if (!user) {
+                return null
+            }
 
             const { data, error } = await supabase
                 .from('Profile')
                 .select('*')
                 .eq('userId', user.id)
                 .single()
-
             if (error) throw error
             return data as Profile
         },
@@ -142,6 +151,82 @@ export function useUpdateProfile() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['profile'] })
             queryClient.invalidateQueries({ queryKey: ['profiles'] })
+        },
+    })
+}
+
+// 프로필 삭제
+export function useDeleteProfile() {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: async (profileId: string) => {
+            const { error } = await supabase
+                .from('Profile')
+                .delete()
+                .eq('id', profileId)
+            if (error) throw error
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['profiles'] })
+        },
+    })
+}
+
+// User Role 권한 수정 (Admin 전용)
+export function useUpdateProfileRole() {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: async ({ profileId, role }: { profileId: string; role: UserRoleType }) => {
+            const { error } = await supabase
+                .from('Profile')
+                .update({ role })
+                .eq('id', profileId)
+
+            if (error) throw error
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['profiles'] })
+            queryClient.invalidateQueries({ queryKey: ['profile'] })
+        },
+    })
+}
+
+export interface AdminUpdateProfileData {
+    profileId: string
+    username?: string
+    bio?: string
+    church?: string
+    churchRole?: string
+    isApproved?: boolean
+}
+
+export function useAdminUpdateProfile() {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: async (data: AdminUpdateProfileData) => {
+            const updates: Partial<Profile> = {
+                ...(data.username !== undefined && { username: data.username }),
+                ...(data.bio !== undefined && { bio: data.bio }),
+                ...(data.church !== undefined && { church: data.church }),
+                ...(data.churchRole !== undefined && { churchRole: data.churchRole }),
+                ...(data.isApproved !== undefined && { isApproved: data.isApproved }),
+            }
+
+            if (Object.keys(updates).length === 0) return
+
+            const { error: updateError } = await supabase
+                .from('Profile')
+                .update(updates)
+                .eq('id', data.profileId)
+
+            if (updateError) throw updateError
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['profiles'] })
+            queryClient.invalidateQueries({ queryKey: ['profile'] })
         },
     })
 }

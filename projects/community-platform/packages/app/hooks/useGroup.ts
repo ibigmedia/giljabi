@@ -66,7 +66,7 @@ export function useMyGroups() {
         .eq('profileId', profile.id)
 
       if (error) throw error
-      return data.map((membership: any) => membership.group)
+      return data.map((membership) => (membership as unknown as { group: Group }).group)
     },
   })
 }

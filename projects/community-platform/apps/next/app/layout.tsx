@@ -1,21 +1,23 @@
 import type { Metadata } from 'next'
 import { NextTamaguiProvider } from 'app/provider/NextTamaguiProvider'
+import { AppLayout } from 'app/features/common/app-layout'
+import React from 'react'
 
 export const metadata: Metadata = {
-  title: 'Tamagui • App Router',
-  description: 'Tamagui, Solito, Expo & Next.js',
+  title: 'Giljabi Community',
+  description: 'Community platform powered by Tamagui and Next.js',
   icons: '/favicon.ico',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    // You can use `suppressHydrationWarning` to avoid the warning about mismatched content during hydration in dev mode
-    <html
-      lang="en"
-      suppressHydrationWarning
-    >
+    <html lang="en" suppressHydrationWarning>
       <body>
-        <NextTamaguiProvider>{children}</NextTamaguiProvider>
+        <NextTamaguiProvider>
+          <AppLayout>
+            {children}
+          </AppLayout>
+        </NextTamaguiProvider>
       </body>
     </html>
   )

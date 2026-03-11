@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
-import { YStack, XStack, Input, Paragraph, Avatar, ScrollView, H4, Spinner, Separator, Button, Tabs, SizableText } from '@my/ui'
-import { Search as SearchIcon, Heart, MessageCircle } from '@tamagui/lucide-icons'
+import { useState, useEffect, useRef } from 'react'
+import { YStack, XStack, Input, Paragraph, Avatar, ScrollView, Spinner, Tabs, SizableText } from '@my/ui'
+import { Search as SearchIcon, Heart } from '@tamagui/lucide-icons'
 import { useRouter } from 'solito/navigation'
 import { useSearchProfiles, useSearchPosts } from '../../hooks/useSearch'
 import { useCurrentUserProfile } from '../../hooks/useProfiles'
@@ -13,12 +13,15 @@ export function SearchScreen() {
     const [debouncedQuery, setDebouncedQuery] = useState('')
     const router = useRouter()
 
-    // 디바운스 적용 (렌더링 최적화, 실제 앱에서는 useDebounce 훅 사용 권장)
+    const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const handleSearchChange = (text: string) => {
         setSearchQuery(text)
-        // 간단한 딜레이 처리
-        setTimeout(() => setDebouncedQuery(text), 500)
+        if (timerRef.current) clearTimeout(timerRef.current)
+        timerRef.current = setTimeout(() => setDebouncedQuery(text), 400)
     }
+    useEffect(() => {
+        return () => { if (timerRef.current) clearTimeout(timerRef.current) }
+    }, [])
 
     const { data: users, isLoading: usersLoading } = useSearchProfiles(debouncedQuery)
     const { data: posts, isLoading: postsLoading } = useSearchPosts(debouncedQuery)
@@ -32,69 +35,70 @@ export function SearchScreen() {
     }
 
     return (
-        <YStack flex={1} bg="$backgroundLight">
-            <YStack padding="$4" gap="$4" maxWidth={680} alignSelf="center" width="100%" flex={1}>
+        <YStack flex={1} bg="$backgroundBody">
+            <YStack padding="$4" gap="$4" maxWidth={680} alignSelf="center" width="100%" flex={1} py="$6">
 
-                {/* 검색 입력 영역 */}
-                <XStack bg="$surfaceLight" p="$3" borderRadius="$4" elevation="$2" alignItems="center" gap="$3">
-                    <SearchIcon color="$color10" size={20} />
+                {/* Search Bar - M3 Style */}
+                <XStack bg="$surfaceContainerHigh" p="$3" borderRadius="$full" alignItems="center" gap="$3">
+                    <SearchIcon color="$onSurfaceVariant" size={20} />
                     <Input
                         flex={1}
-                        placeholder="Search users, posts, or keywords..."
+                        placeholder="사용자, 게시글 검색..."
                         value={searchQuery}
                         onChangeText={handleSearchChange}
                         bg="transparent"
                         borderWidth={0}
                         focusStyle={{ borderWidth: 0 }}
+                        color="$onSurface"
+                        placeholderTextColor="$onSurfaceVariant"
                     />
                 </XStack>
 
-                {/* 검색 결과 탭 영역 */}
+                {/* Tabs - M3 */}
                 <Tabs defaultValue="users" orientation="horizontal" flexDirection="column" flex={1}>
-                    <Tabs.List bg="$surfaceLight" borderRadius="$4" elevation="$1" mb="$4">
-                        <Tabs.Tab value="users" flex={1}>
-                            <SizableText>Users</SizableText>
+                    <Tabs.List bg="$surfaceContainerLow" borderRadius="$card" mb="$4">
+                        <Tabs.Tab value="users" flex={1} borderRadius="$card">
+                            <SizableText fontWeight="600" color="$onSurface">사용자</SizableText>
                         </Tabs.Tab>
-                        <Tabs.Tab value="posts" flex={1}>
-                            <SizableText>Posts</SizableText>
+                        <Tabs.Tab value="posts" flex={1} borderRadius="$card">
+                            <SizableText fontWeight="600" color="$onSurface">게시글</SizableText>
                         </Tabs.Tab>
                     </Tabs.List>
 
-                    {/* 유저 검색 탭 */}
                     <Tabs.Content value="users" flex={1}>
                         <ScrollView>
                             {usersLoading ? (
-                                <YStack padding="$4" alignItems="center"><Spinner size="large" /></YStack>
+                                <YStack padding="$6" alignItems="center"><Spinner size="large" color="$primary" /></YStack>
                             ) : debouncedQuery && users?.length === 0 ? (
                                 <YStack padding="$8" alignItems="center">
-                                    <Paragraph color="$color10">No users found.</Paragraph>
+                                    <SizableText color="$onSurfaceVariant">검색 결과가 없습니다.</SizableText>
                                 </YStack>
                             ) : (
-                                <YStack gap="$3">
+                                <YStack gap="$2">
                                     {users?.map(user => (
                                         <XStack
                                             key={user.id}
-                                            bg="$surfaceLight"
+                                            bg="$surface"
                                             p="$4"
-                                            borderRadius="$4"
-                                            elevation="$1"
-                                            gap="$4"
+                                            borderRadius="$card"
+                                            elevation="$0.5"
+                                            gap="$3"
                                             alignItems="center"
                                             cursor="pointer"
-                                            hoverStyle={{ bg: '$color3' }}
+                                            hoverStyle={{ bg: '$surfaceContainerLow' }}
                                             onPress={() => router.push(`/user/${user.id}`)}
                                         >
-                                            <Avatar circular size="$5">
-                                                <Avatar.Image src={user.avatarUrl || "https://i.pravatar.cc/150"} />
-                                                <Avatar.Fallback bg="$color5" />
+                                            <Avatar circular size="$5" bg="$primaryContainer">
+                                                <Avatar.Image width="100%" height="100%" src={user.avatarUrl || "https://i.pravatar.cc/150"} />
+                                                <Avatar.Fallback bg="$primaryContainer" />
                                             </Avatar>
                                             <YStack flex={1}>
-                                                <H4 fontWeight="bold" color="$color12" margin={0}>
+                                                <SizableText fontWeight="700" color="$onSurface" size="$4">
                                                     {user.username}
-                                                </H4>
-                                                <Paragraph size="$3" color="$color10" numberOfLines={1}>
-                                                    {user.bio || 'No bio available'}
-                                                </Paragraph>
+                                                </SizableText>
+                                                <SizableText size="$3" color="$onSurfaceVariant" numberOfLines={1}>
+                                                    {user.bio || '소개글이 없습니다'}
+                                                </SizableText>
                                             </YStack>
                                         </XStack>
                                     ))}
@@ -103,17 +107,16 @@ export function SearchScreen() {
                         </ScrollView>
                     </Tabs.Content>
 
-                    {/* 게시글 검색 탭 */}
                     <Tabs.Content value="posts" flex={1}>
                         <ScrollView>
                             {postsLoading ? (
-                                <YStack padding="$4" alignItems="center"><Spinner size="large" /></YStack>
+                                <YStack padding="$6" alignItems="center"><Spinner size="large" color="$primary" /></YStack>
                             ) : debouncedQuery && posts?.length === 0 ? (
                                 <YStack padding="$8" alignItems="center">
-                                    <Paragraph color="$color10">No posts found.</Paragraph>
+                                    <SizableText color="$onSurfaceVariant">검색 결과가 없습니다.</SizableText>
                                 </YStack>
                             ) : (
-                                <YStack gap="$4">
+                                <YStack gap="$3">
                                     {posts?.map(post => {
                                         const likesCount = post.likes.length
                                         const hasLiked = currentUserProfile ? post.likes.some(like => like.profileId === currentUserProfile.id) : false
@@ -121,38 +124,38 @@ export function SearchScreen() {
                                         return (
                                             <YStack
                                                 key={post.id}
-                                                bg="$surfaceLight"
+                                                bg="$surface"
                                                 p="$4"
-                                                borderRadius="$4"
-                                                elevation="$2"
+                                                borderRadius="$card"
+                                                elevation="$0.5"
                                                 gap="$3"
                                                 cursor="pointer"
-                                                hoverStyle={{ bg: '$color3' }}
+                                                hoverStyle={{ bg: '$surfaceContainerLow' }}
                                                 onPress={() => router.push(`/post/${post.id}`)}
                                             >
                                                 <XStack gap="$3" alignItems="center">
-                                                    <Avatar circular size="$3">
-                                                        <Avatar.Image src={post.author?.avatarUrl || "https://i.pravatar.cc/150"} />
-                                                        <Avatar.Fallback bg="$color5" />
+                                                    <Avatar circular size="$3" bg="$primaryContainer">
+                                                        <Avatar.Image width="100%" height="100%" src={post.author?.avatarUrl || "https://i.pravatar.cc/150"} />
+                                                        <Avatar.Fallback bg="$primaryContainer" />
                                                     </Avatar>
                                                     <YStack>
-                                                        <Paragraph fontWeight="bold" color="$color12" size="$3">
-                                                            {post.author?.username || 'Unknown User'}
-                                                        </Paragraph>
-                                                        <Paragraph size="$2" color="$color10">
-                                                            {new Date(post.createdAt).toLocaleDateString()}
-                                                        </Paragraph>
+                                                        <SizableText fontWeight="700" color="$onSurface" size="$3">
+                                                            {post.author?.username || '알 수 없는 사용자'}
+                                                        </SizableText>
+                                                        <SizableText size="$2" color="$onSurfaceVariant">
+                                                            {new Date(post.createdAt).toLocaleDateString('ko-KR')}
+                                                        </SizableText>
                                                     </YStack>
                                                 </XStack>
 
-                                                <Paragraph color="$color12" mt="$1">
+                                                <Paragraph color="$onSurface" lineHeight={22}>
                                                     {post.content}
                                                 </Paragraph>
 
-                                                <XStack gap="$4" mt="$2">
-                                                    <XStack gap="$1" alignItems="center" cursor="pointer" onPress={() => handleLike(post.id, post.likes)}>
-                                                        <Heart size={16} color={hasLiked ? "$red10" : "$color10"} fill={hasLiked ? "red" : "transparent"} />
-                                                        <Paragraph color="$color10" size="$2">{likesCount}</Paragraph>
+                                                <XStack gap="$4" mt="$1">
+                                                    <XStack gap="$1.5" alignItems="center" cursor="pointer" onPress={() => handleLike(post.id, post.likes)}>
+                                                        <Heart size={16} color={hasLiked ? "$primary" : "$onSurfaceVariant"} fill={hasLiked ? "var(--color-primary)" : "transparent"} />
+                                                        <SizableText color="$onSurfaceVariant" size="$2">{likesCount}</SizableText>
                                                     </XStack>
                                                 </XStack>
                                             </YStack>

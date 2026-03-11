@@ -3,15 +3,11 @@
 import { useState } from 'react'
 import { YStack, XStack, Avatar, Paragraph, Input, Button, Separator, ScrollView, H4, Spinner, Text } from '@my/ui'
 import { Heart, MessageCircle, MoreHorizontal, Send, Trash2 } from '@tamagui/lucide-icons'
-import { createParam } from 'solito'
 import { usePost, useToggleLike } from '../../hooks/usePosts'
 import { useComments, useCreateComment, useDeleteComment } from '../../hooks/useComments'
 import { useCurrentUserProfile } from '../../hooks/useProfiles'
 
-const { useParam } = createParam<{ id: string }>()
-
-export function PostDetailScreen() {
-    const [id] = useParam('id')
+export function PostDetailScreen({ id }: { id?: string }) {
     const [commentText, setCommentText] = useState('')
 
     const { data: currentUserProfile } = useCurrentUserProfile()
@@ -26,15 +22,15 @@ export function PostDetailScreen() {
 
     if (isPostLoading) {
         return (
-            <YStack flex={1} justifyContent="center" alignItems="center" bg="$backgroundLight">
-                <Spinner size="large" color="$primaryLight" />
+            <YStack flex={1} justifyContent="center" alignItems="center" bg="$backgroundBody">
+                <Spinner size="large" color="$primary" />
             </YStack>
         )
     }
 
     if (!post) {
         return (
-            <YStack flex={1} justifyContent="center" alignItems="center" bg="$backgroundLight">
+            <YStack flex={1} justifyContent="center" alignItems="center" bg="$backgroundBody">
                 <Paragraph>게시글을 찾을 수 없습니다.</Paragraph>
             </YStack>
         )
@@ -62,15 +58,15 @@ export function PostDetailScreen() {
     }
 
     return (
-        <YStack flex={1} bg="$backgroundLight">
+        <YStack flex={1} bg="$backgroundBody">
             <ScrollView flex={1}>
                 {/* 메인 게시글 영역 */}
                 <YStack padding="$4" gap="$4" maxWidth={680} alignSelf="center" width="100%">
-                    <YStack bg="$surfaceLight" p="$4" borderRadius="$4" elevation="$2" gap="$3">
+                    <YStack bg="$surface" p="$4" borderRadius="$4" elevation="$2" gap="$3">
                         <XStack justifyContent="space-between" alignItems="center">
                             <XStack gap="$3" alignItems="center">
                                 <Avatar circular size="$4">
-                                    <Avatar.Image src={post.author?.avatarUrl || "https://i.pravatar.cc/150"} />
+                                    <Avatar.Image width="100%" height="100%" src={post.author?.avatarUrl || "https://i.pravatar.cc/150"} />
                                     <Avatar.Fallback bg="$color5" />
                                 </Avatar>
                                 <YStack>
@@ -117,7 +113,7 @@ export function PostDetailScreen() {
                                     <XStack justifyContent="space-between" alignItems="flex-start">
                                         <XStack gap="$2" alignItems="center">
                                             <Avatar circular size="$3">
-                                                <Avatar.Image src={comment.author?.avatarUrl || "https://i.pravatar.cc/150"} />
+                                                <Avatar.Image width="100%" height="100%" src={comment.author?.avatarUrl || "https://i.pravatar.cc/150"} />
                                                 <Avatar.Fallback bg="$color5" />
                                             </Avatar>
                                             <YStack>
@@ -151,11 +147,11 @@ export function PostDetailScreen() {
             </ScrollView>
 
             {/* 댓글 입력 폼 */}
-            <YStack bg="$surfaceLight" p="$4" borderTopWidth={1} borderTopColor="$color5">
+            <YStack bg="$surface" p="$4" borderTopWidth={1} borderTopColor="$color5">
                 <YStack maxWidth={680} alignSelf="center" width="100%">
                     <XStack gap="$2" alignItems="center">
                         <Avatar circular size="$3">
-                            <Avatar.Image src={currentUserProfile?.avatarUrl || "https://i.pravatar.cc/150"} />
+                            <Avatar.Image width="100%" height="100%" src={currentUserProfile?.avatarUrl || "https://i.pravatar.cc/150"} />
                             <Avatar.Fallback bg="$color5" />
                         </Avatar>
                         <Input
@@ -168,7 +164,7 @@ export function PostDetailScreen() {
                             size="$3"
                         />
                         <Button
-                            bg="$primaryLight"
+                            bg="$primary"
                             size="$3"
                             circular
                             icon={<Send size={16} color="white" />}

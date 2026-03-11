@@ -59,7 +59,7 @@ export function HomeScreen({ onLinkPress, onLoginPress, onFeedPress, onProfilePr
         <Button onPress={onLoginPress}>
           로그인 / 회원가입
         </Button>
-        <Button onPress={onFeedPress} bg="$primaryLight">
+        <Button onPress={onFeedPress} bg="$primary">
           커뮤니티 피드 들어가기
         </Button>
         <Button onPress={onProfilePress} bg="$color5">

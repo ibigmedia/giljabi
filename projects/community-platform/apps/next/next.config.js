@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 module.exports = {
   typescript: {
-    ignoreBuildErrors: true,
+    // 프로덕션 빌드 시 TS 에러를 감지하기 위해 false 설정
+    ignoreBuildErrors: false,
   },
   transpilePackages: [
     'solito',

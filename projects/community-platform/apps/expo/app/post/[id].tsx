@@ -1,7 +1,8 @@
 import { PostDetailScreen } from 'app/features/post/detail-screen'
-import { Stack } from 'expo-router'
+import { Stack, useLocalSearchParams } from 'expo-router'
 
 export default function Screen() {
+    const { id } = useLocalSearchParams<{ id: string }>()
     return (
         <>
             <Stack.Screen
@@ -10,7 +11,7 @@ export default function Screen() {
                     presentation: 'card',
                 }}
             />
-            <PostDetailScreen />
+            <PostDetailScreen id={id} />
         </>
     )
 }

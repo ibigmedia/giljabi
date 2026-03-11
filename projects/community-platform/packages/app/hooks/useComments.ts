@@ -35,6 +35,15 @@ export function useComments(postId: string) {
     })
 }
 
+// 간단한 UUID 제너레이터 (RN 호환)
+const generateId = () => {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID()
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8)
+        return v.toString(16)
+    })
+}
+
 // 새로운 댓글 생성하기
 export function useCreateComment() {
     const queryClient = useQueryClient()
@@ -43,17 +52,42 @@ export function useCreateComment() {
         mutationFn: async ({ postId, content, profileId }: { postId: string; content: string; profileId: string }) => {
             const { data, error } = await supabase
                 .from('Comment')
-                .insert({ postId, content, authorId: profileId })
+                .insert({ id: generateId(), postId, content, authorId: profileId, updatedAt: new Date().toISOString() })
                 .select()
                 .single()
 
             if (error) throw error
             return data
         },
-        onSuccess: (_, variables) => {
-            // 해당 게시물의 댓글 목록 갱신 및 게시물 데이터 무효화
+        onMutate: async (newComment) => {
+            await queryClient.cancelQueries({ queryKey: ['comments', newComment.postId] })
+            const previousComments = queryClient.getQueryData(['comments', newComment.postId])
+            
+            // 낙관적 업데이트
+            queryClient.setQueryData(['comments', newComment.postId], (old: Comment[] | undefined) => {
+                const tempComment = {
+                    id: `temp-${Date.now()}`,
+                    content: newComment.content,
+                    postId: newComment.postId,
+                    authorId: newComment.profileId,
+                    createdAt: new Date().toISOString(),
+                    // 가짜 작성자 정보를 넣어 UI 깨짐 방지
+                    author: { id: newComment.profileId, username: '게스트', avatarUrl: null }
+                }
+                return [...(old || []), tempComment]
+            })
+            
+            return { previousComments }
+        },
+        onError: (err, newComment, context) => {
+            if (context?.previousComments) {
+                queryClient.setQueryData(['comments', newComment.postId], context.previousComments)
+            }
+        },
+        onSettled: (_, __, variables) => {
             queryClient.invalidateQueries({ queryKey: ['comments', variables.postId] })
             queryClient.invalidateQueries({ queryKey: ['post', variables.postId] })
+            queryClient.invalidateQueries({ queryKey: ['posts'] })
         },
     })
 }

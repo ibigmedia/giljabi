@@ -9,17 +9,29 @@ datasource db {
   provider = "postgresql"
 }
 
+enum UserRole {
+  MEMBER
+  EDITOR
+  ADMIN
+}
+
 model Profile {
-  id        String   @id @default(dbgenerated("gen_random_uuid()::text"))
-  userId    String   @unique // Supabase Auth user id 매핑
-  username  String   @unique
-  avatarUrl String?
-  coverUrl  String?
-  bio       String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(dbgenerated("gen_random_uuid()::text"))
+  userId      String   @unique // Supabase Auth user id 매핑
+  username    String   @unique
+  email       String?  @unique
+  avatarUrl   String?
+  coverUrl    String?
+  bio         String?
+  church      String?  // 출석교회 (교단포함)
+  churchRole  String?  // 직분 (목사, 전도사, 장로, 권사, 집사, 성도)
+  isApproved  Boolean  @default(false) // 관리자 승인 여부
+  role        UserRole @default(MEMBER)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   posts       Post[]
+  blogPosts   BlogPost[]
   comments    Comment[]
   likes       PostLike[]
   memberships GroupMember[]
@@ -69,6 +81,7 @@ model Comment {
   postId    String
   post      Post     @relation(fields: [postId], references: [id])
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   notifications Notification[]
 }
@@ -154,4 +167,17 @@ model ChatMessage {
 
   channel ChatChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
   sender  Profile     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+}
+
+model BlogPost {
+  id        String   @id @default(dbgenerated("gen_random_uuid()::text"))
+  title     String
+  excerpt   String?
+  content   String
+  mediaUrl  String?
+  isPublished Boolean @default(false)
+  authorId  String
+  author    Profile  @relation(fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

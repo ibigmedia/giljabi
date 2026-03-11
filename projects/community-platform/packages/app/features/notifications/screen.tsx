@@ -98,7 +98,7 @@ export function NotificationsScreen() {
                   hoverStyle={{ bg: isRead ? '$color3' : '$color6' }}
                 >
                   <Avatar circular size="$4">
-                    <Avatar.Image src={notif.actor?.avatarUrl || 'https://i.pravatar.cc/150'} />
+                    <Avatar.Image width="100%" height="100%" src={notif.actor?.avatarUrl || 'https://i.pravatar.cc/150'} />
                     <Avatar.Fallback bg="$color8" />
                   </Avatar>
                   

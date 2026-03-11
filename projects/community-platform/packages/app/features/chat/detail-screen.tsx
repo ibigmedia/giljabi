@@ -12,7 +12,7 @@ export function ChatDetailScreen({ id }: { id: string }) {
     const { data: messages, isLoading } = useChatMessages(id)
     const { mutateAsync: sendMessage, isPending: isSending } = useSendMessage()
     const [text, setText] = useState('')
-    const scrollViewRef = useRef<any>(null)
+    const scrollViewRef = useRef<ScrollView>(null)
 
     // Scroll to bottom when messages load or change
     useEffect(() => {
@@ -66,7 +66,7 @@ export function ChatDetailScreen({ id }: { id: string }) {
                             >
                                 {!isMe && (
                                     <Avatar circular size="$3" mb="$1">
-                                        <Avatar.Image src={message.sender?.avatarUrl || "https://i.pravatar.cc/150"} />
+                                        <Avatar.Image width="100%" height="100%" src={message.sender?.avatarUrl || "https://i.pravatar.cc/150"} />
                                         <Avatar.Fallback bg="$gray5" />
                                     </Avatar>
                                 )}

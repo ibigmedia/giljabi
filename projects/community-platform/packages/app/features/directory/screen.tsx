@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useState } from 'react'
-import { YStack, XStack, ScrollView, Avatar, H3, Paragraph, Button, SizableText, Input, Spinner } from '@my/ui'
-import { Search, MapPin } from '@tamagui/lucide-icons'
+import { YStack, XStack, ScrollView, Avatar, Paragraph, Button, SizableText, Input, Spinner } from '@my/ui'
+import { Search, Users } from '@tamagui/lucide-icons'
 import { useProfiles } from '../../hooks/useProfiles'
 
 export function DirectoryScreen() {
@@ -19,16 +19,18 @@ export function DirectoryScreen() {
     }) || []
 
     return (
-        <ScrollView flex={1} bg="$gray2">
-            <YStack p="$4" pb="$6">
-                <XStack mb="$4" justifyContent="space-between" alignItems="center">
-                    <H3>멤버 디렉토리</H3>
-                    <SizableText color="$color10" size="$3">총 {profiles?.length || 0}명</SizableText>
+        <ScrollView flex={1} bg="$backgroundBody">
+            <YStack p="$4" pb="$6" maxWidth={700} alignSelf="center" width="100%" py="$6" gap="$4">
+                <XStack justifyContent="space-between" alignItems="center">
+                    <YStack>
+                        <SizableText size="$8" fontWeight="800" color="$onSurface">멤버 디렉토리</SizableText>
+                        <SizableText size="$3" color="$onSurfaceVariant" mt="$1">총 {profiles?.length || 0}명</SizableText>
+                    </YStack>
                 </XStack>
 
-                {/* Search Bar */}
-                <XStack mb="$4" bg="$background" borderRadius="$4" borderWidth={1} borderColor="$borderColor" alignItems="center" px="$3">
-                    <Search color="$color10" size={20} />
+                {/* Search Bar - M3 */}
+                <XStack bg="$surfaceContainerHigh" borderRadius="$full" alignItems="center" px="$4" gap="$2">
+                    <Search color="$onSurfaceVariant" size={20} />
                     <Input
                         flex={1}
                         borderWidth={0}
@@ -36,43 +38,49 @@ export function DirectoryScreen() {
                         placeholder="이름이나 소개글로 검색..."
                         value={searchQuery}
                         onChangeText={setSearchQuery}
+                        color="$onSurface"
+                        placeholderTextColor="$onSurfaceVariant"
                     />
                 </XStack>
 
-                {/* Directory List */}
                 {isLoading ? (
-                    <YStack padding="$4" alignItems="center">
-                        <Spinner size="large" />
+                    <YStack padding="$6" alignItems="center">
+                        <Spinner size="large" color="$primary" />
+                    </YStack>
+                ) : filteredProfiles.length === 0 ? (
+                    <YStack bg="$surface" p="$8" borderRadius="$card" elevation="$0.5" alignItems="center" gap="$2">
+                        <Users size={32} color="$onSurfaceVariant" />
+                        <SizableText color="$onSurfaceVariant">검색 결과가 없습니다.</SizableText>
                     </YStack>
                 ) : (
-                    <YStack gap="$3">
+                    <YStack gap="$2">
                         {filteredProfiles.map((user) => (
-                            <YStack key={user.id} bg="$background" p="$4" borderRadius="$4" borderWidth={1} borderColor="$borderColor">
-                                <XStack gap="$3" alignItems="center">
-                                    <Avatar circular size="$6">
-                                        <Avatar.Image src={user.avatarUrl || "https://i.pravatar.cc/150"} />
-                                        <Avatar.Fallback bg="$gray5" />
-                                    </Avatar>
+                            <XStack
+                                key={user.id}
+                                bg="$surface"
+                                p="$4"
+                                borderRadius="$card"
+                                elevation="$0.5"
+                                gap="$3"
+                                alignItems="center"
+                                hoverStyle={{ bg: '$surfaceContainerLow' }}
+                            >
+                                <Avatar circular size="$5" bg="$primaryContainer">
+                                    <Avatar.Image width="100%" height="100%" src={user.avatarUrl || "https://i.pravatar.cc/150"} />
+                                    <Avatar.Fallback bg="$primaryContainer" />
+                                </Avatar>
 
-                                    <YStack flex={1}>
-                                        <H3 m={0} size="$5">{user.username}</H3>
-                                        <Paragraph color="$color10" size="$3">@{user.username}</Paragraph>
-                                    </YStack>
-
-                                    <Button size="$3" variant="outlined">팔로우</Button>
-                                </XStack>
-
-                                <YStack mt="$3" gap="$2">
-                                    <Paragraph size="$3" numberOfLines={2}>
-                                        {user.bio || '소개글이 없습니다.'}
-                                    </Paragraph>
-
-                                    <XStack gap="$1.5" alignItems="center">
-                                        <MapPin size={14} color="$color10" />
-                                        <Paragraph color="$color10" size="$2">Unknown Location</Paragraph>
-                                    </XStack>
+                                <YStack flex={1}>
+                                    <SizableText fontWeight="700" size="$4" color="$onSurface">{user.username}</SizableText>
+                                    <SizableText color="$onSurfaceVariant" size="$3">{user.email || '이메일 없음'}</SizableText>
                                 </YStack>
-                            </YStack>
+
+                                <XStack bg="$secondaryContainer" px="$2.5" py="$1" borderRadius="$full">
+                                    <SizableText size="$2" color="$onSecondaryContainer" fontWeight="600">
+                                        {user.role}
+                                    </SizableText>
+                                </XStack>
+                            </XStack>
                         ))}
                     </YStack>
                 )}

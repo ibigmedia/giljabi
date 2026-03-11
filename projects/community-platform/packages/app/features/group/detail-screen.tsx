@@ -133,10 +133,10 @@ export function GroupDetailScreen({ id }: { id: string }) {
 
           <Tabs.Content value="members" pt="$4">
             <YStack gap="$3">
-              {group.members?.map((member) => (
+              {group.members?.map((member: any) => (
                 <XStack key={member.id} alignItems="center" gap="$3">
                   <Avatar circular size="$4">
-                    <Avatar.Image src={member.profile?.avatarUrl || ''} />
+                    <Avatar.Image width="100%" height="100%" src={member.profile?.avatarUrl || ''} />
                     <Avatar.Fallback backgroundColor="$color5" />
                   </Avatar>
                   <YStack>

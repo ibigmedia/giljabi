@@ -4,6 +4,7 @@ import { supabase } from '../utils/supabase'
 export interface Post {
     id: string
     content: string
+    mediaUrl: string | null
     authorId: string
     createdAt: string
     author?: {
@@ -16,6 +17,7 @@ export interface Post {
         name: string
     }
     likes: { profileId: string }[]
+    comments: { id: string }[]
 }
 
 // 피드 포스트 가져오기 (전체 혹은 특정 그룹용)
@@ -29,7 +31,8 @@ export function usePosts(groupId?: string) {
           *,
           author:"Profile"(id, username, avatarUrl),
           likes:"PostLike"(profileId),
-          group:"Group"(id, name)
+          group:"Group"(id, name),
+          comments:"Comment"(id)
         `)
                 .order('createdAt', { ascending: false })
 
@@ -55,7 +58,8 @@ export function useUserPosts(profileId: string) {
                 .select(`
           *,
           author:"Profile"(id, username, avatarUrl),
-          likes:"PostLike"(profileId)
+          likes:"PostLike"(profileId),
+          comments:"Comment"(id)
         `)
                 .eq('authorId', profileId)
                 .order('createdAt', { ascending: false })
@@ -77,7 +81,8 @@ export function usePost(postId: string) {
                 .select(`
           *,
           author:"Profile"(id, username, avatarUrl),
-          likes:"PostLike"(profileId)
+          likes:"PostLike"(profileId),
+          comments:"Comment"(id)
         `)
                 .eq('id', postId)
                 .single()
@@ -90,15 +95,31 @@ export function usePost(postId: string) {
 }
 
 
+// 간단한 UUID 제너레이터 (RN 호환)
+const generateId = () => {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID()
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8)
+        return v.toString(16)
+    })
+}
+
 // 포스트 생성
 export function useCreatePost() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: async ({ content, profileId, groupId }: { content: string; profileId: string; groupId?: string }) => {
+        mutationFn: async ({ content, profileId, groupId, mediaUrl }: { content: string; profileId: string; groupId?: string, mediaUrl?: string }) => {
             const { data, error } = await supabase
                 .from('Post')
-                .insert({ content, authorId: profileId, groupId: groupId || null })
+                .insert({ 
+                    id: generateId(), 
+                    content, 
+                    authorId: profileId, 
+                    groupId: groupId || null,
+                    mediaUrl: mediaUrl || null,
+                    updatedAt: new Date().toISOString()
+                })
                 .select()
                 .single()
 
@@ -132,11 +153,28 @@ export function useToggleLike() {
                 // 좋아요 추가
                 const { error } = await supabase
                     .from('PostLike')
-                    .insert({ postId: postId, profileId: profileId })
+                    .insert({ id: generateId(), postId: postId, profileId: profileId })
                 if (error) throw error
             }
         },
         onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['posts'] })
+        },
+    })
+}
+// 포스트 삭제
+export function useDeletePost() {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: async (postId: string) => {
+            const { error } = await supabase
+                .from('Post')
+                .delete()
+                .eq('id', postId)
+            if (error) throw error
+        },
+        onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['posts'] })
         },
     })

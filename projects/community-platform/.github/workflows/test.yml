@@ -1,4 +1,4 @@
-name: Run Tests
+name: CI
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
       - '*'
 
 jobs:
-  test:
+  check:
     runs-on: ubuntu-latest
 
     steps:
@@ -22,6 +22,9 @@ jobs:
 
       - name: Install dependencies
         run: yarn install
+
+      - name: TypeScript 타입 검사
+        run: npx tsc --noEmit --project packages/app/tsconfig.json
 
       - name: Run tests
         run: yarn test

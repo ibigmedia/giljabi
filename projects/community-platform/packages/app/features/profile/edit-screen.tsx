@@ -141,7 +141,7 @@ export function EditProfileScreen() {
                     <XStack justify="center">
                         <YStack position="relative" cursor="pointer" onPress={() => pickImage('avatar')}>
                             <Avatar circular size="$10">
-                                <Avatar.Image src={avatarImage?.uri || profile?.avatarUrl || 'https://i.pravatar.cc/150'} />
+                                <Avatar.Image width="100%" height="100%" src={avatarImage?.uri || profile?.avatarUrl || 'https://i.pravatar.cc/150'} />
                                 <Avatar.Fallback bg="$color8" />
                             </Avatar>
                             <YStack 
