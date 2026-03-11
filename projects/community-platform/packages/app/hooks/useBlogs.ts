@@ -33,8 +33,9 @@ export function useBlogPosts() {
                 .order('createdAt', { ascending: false })
 
             if (error) throw error
-            return data as BlogPost[]
-        }
+            return (data || []) as BlogPost[]
+        },
+        retry: 1,
     })
 }
 

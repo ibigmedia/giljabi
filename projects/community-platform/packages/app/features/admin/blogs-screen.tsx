@@ -7,7 +7,7 @@ import { useCurrentUserProfile } from '../../hooks/useProfiles'
 import { useRouter } from 'solito/navigation'
 
 export function AdminBlogsScreen() {
-    const { data: posts, isLoading } = useBlogPosts()
+    const { data: posts, isLoading, error } = useBlogPosts()
     const { mutate: deletePost } = useDeleteBlogPost()
     const { mutate: updatePost } = useUpdateBlogPost()
     const { mutate: createPost, isPending: isCreating } = useCreateBlogPost()
@@ -130,6 +130,11 @@ export function AdminBlogsScreen() {
                     {isLoading ? (
                         <YStack p="$6" alignItems="center">
                             <Spinner color="$primary" />
+                        </YStack>
+                    ) : error ? (
+                        <YStack p="$6" alignItems="center" gap="$2">
+                            <Paragraph color="$red10" fontWeight="bold">데이터 로드 오류</Paragraph>
+                            <Paragraph color="$textMuted" size="$2">{(error as Error).message}</Paragraph>
                         </YStack>
                     ) : posts?.length === 0 ? (
                         <YStack p="$6" alignItems="center">
