@@ -46,7 +46,7 @@ export function PostDetailScreen({ id }: { id?: string }) {
 
     const handleCreateComment = () => {
         if (!commentText.trim() || !currentUserProfile?.id) return
-        createComment({ postId: post.id, content: commentText, profileId: currentUserProfile.id }, {
+        createComment({ postId: post.id, content: commentText, profileId: currentUserProfile.id, authorName: currentUserProfile.username }, {
             onSuccess: () => setCommentText('')
         })
     }

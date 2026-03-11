@@ -49,7 +49,7 @@ export function useCreateComment() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: async ({ postId, content, profileId }: { postId: string; content: string; profileId: string }) => {
+        mutationFn: async ({ postId, content, profileId, authorName }: { postId: string; content: string; profileId: string; authorName?: string }) => {
             const { data, error } = await supabase
                 .from('Comment')
                 .insert({ id: generateId(), postId, content, authorId: profileId, updatedAt: new Date().toISOString() })
@@ -71,8 +71,7 @@ export function useCreateComment() {
                     postId: newComment.postId,
                     authorId: newComment.profileId,
                     createdAt: new Date().toISOString(),
-                    // 가짜 작성자 정보를 넣어 UI 깨짐 방지
-                    author: { id: newComment.profileId, username: '게스트', avatarUrl: null }
+                    author: { id: newComment.profileId, username: newComment.authorName || '나', avatarUrl: null }
                 }
                 return [...(old || []), tempComment]
             })

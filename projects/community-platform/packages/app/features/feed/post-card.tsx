@@ -44,7 +44,7 @@ export function PostCard({ post, currentUserProfile }: { post: Post; currentUser
 
     const handleCreateComment = () => {
         if (!commentText.trim() || !currentUserProfile?.id) return
-        createComment({ postId: post.id, content: commentText, profileId: currentUserProfile.id }, {
+        createComment({ postId: post.id, content: commentText, profileId: currentUserProfile.id, authorName: currentUserProfile.username }, {
             onSuccess: () => setCommentText('')
         })
     }

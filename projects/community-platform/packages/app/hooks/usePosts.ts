@@ -143,22 +143,35 @@ export function useToggleLike() {
     return useMutation({
         mutationFn: async ({ postId, hasLiked, profileId }: { postId: string; hasLiked: boolean; profileId: string }) => {
             if (hasLiked) {
-                // 좋아요 취소
                 const { error } = await supabase
                     .from('PostLike')
                     .delete()
                     .match({ postId: postId, profileId: profileId })
                 if (error) throw error
             } else {
-                // 좋아요 추가
                 const { error } = await supabase
                     .from('PostLike')
                     .insert({ id: generateId(), postId: postId, profileId: profileId })
                 if (error) throw error
             }
         },
-        onSuccess: (_, variables) => {
-            queryClient.invalidateQueries({ queryKey: ['posts'] })
+        onMutate: async (variables) => {
+            await queryClient.cancelQueries({ queryKey: ['posts'] })
+            const updatePosts = (old: Post[] | undefined) => {
+                if (!old) return old
+                return old.map(post => {
+                    if (post.id !== variables.postId) return post
+                    const newLikes = variables.hasLiked
+                        ? post.likes.filter(l => l.profileId !== variables.profileId)
+                        : [...post.likes, { profileId: variables.profileId }]
+                    return { ...post, likes: newLikes }
+                })
+            }
+            queryClient.setQueriesData({ queryKey: ['posts'] }, updatePosts)
+        },
+        onSettled: (_, __, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['posts', 'all'] })
+            queryClient.invalidateQueries({ queryKey: ['post', variables.postId] })
         },
     })
 }

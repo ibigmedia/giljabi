@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { YStack, XStack, ScrollView, H3, Paragraph, Avatar, Button, Separator, Input, Spinner, SizableText } from '@my/ui'
 import { MessageSquare, Trash, PenTool, Sparkles } from '@tamagui/lucide-icons'
-import { useBlogPosts, useDeleteBlogPost, useCreateBlogPost, useGenerateAIBlog } from '../../hooks/useBlogs'
+import { useBlogPosts, useDeleteBlogPost, useCreateBlogPost, useGenerateAIBlog, useUpdateBlogPost } from '../../hooks/useBlogs'
 import type { BlogPost } from '../../hooks/useBlogs'
 import { useCurrentUserProfile } from '../../hooks/useProfiles'
 import { useRouter } from 'solito/navigation'
@@ -9,6 +9,7 @@ import { useRouter } from 'solito/navigation'
 export function AdminBlogsScreen() {
     const { data: posts, isLoading } = useBlogPosts()
     const { mutate: deletePost } = useDeleteBlogPost()
+    const { mutate: updatePost } = useUpdateBlogPost()
     const { mutate: createPost, isPending: isCreating } = useCreateBlogPost()
     const { mutate: generateAI, isPending: isGeneratingAI } = useGenerateAIBlog()
     const { data: currentUserProfile } = useCurrentUserProfile()
@@ -123,7 +124,7 @@ export function AdminBlogsScreen() {
                         <Paragraph flex={1} fontWeight="bold" color="$textMuted">제목</Paragraph>
                         <Paragraph width={120} fontWeight="bold" color="$textMuted">작성자</Paragraph>
                         <Paragraph width={100} fontWeight="bold" color="$textMuted">상태</Paragraph>
-                        <Paragraph width={80} textAlign="center" fontWeight="bold" color="$textMuted">관리</Paragraph>
+                        <Paragraph width={120} textAlign="center" fontWeight="bold" color="$textMuted">관리</Paragraph>
                     </XStack>
 
                     {isLoading ? (
@@ -154,12 +155,23 @@ export function AdminBlogsScreen() {
                                 <Paragraph width={100} size="$2" color={post.isPublished ? "$primary" : "$textMuted"}>
                                     {post.isPublished ? '발행됨' : '임시저장'}
                                 </Paragraph>
-                                <XStack width={80} justifyContent="center">
-                                    <Button 
-                                        icon={<Trash size={16} color="$red10" />} 
-                                        size="$2" 
-                                        circular 
-                                        bg="transparent" 
+                                <XStack width={120} justifyContent="center" gap="$1">
+                                    <Button
+                                        size="$2"
+                                        bg={post.isPublished ? '$primaryContainer' : '$surfaceContainerLow'}
+                                        borderRadius="$full"
+                                        hoverStyle={{ opacity: 0.8 }}
+                                        onPress={() => updatePost({ id: post.id, isPublished: !post.isPublished })}
+                                    >
+                                        <SizableText size="$1" color={post.isPublished ? '$primary' : '$onSurfaceVariant'}>
+                                            {post.isPublished ? '비공개' : '발행'}
+                                        </SizableText>
+                                    </Button>
+                                    <Button
+                                        icon={<Trash size={16} color="$red10" />}
+                                        size="$2"
+                                        circular
+                                        bg="transparent"
                                         hoverStyle={{ bg: '$red2' }}
                                         onPress={() => deletePost(post.id)}
                                     />
