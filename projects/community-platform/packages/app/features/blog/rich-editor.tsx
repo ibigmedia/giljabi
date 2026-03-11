@@ -82,14 +82,14 @@ const EDITOR_CSS = `
   margin-top: 0;
 }
 .tiptap-editor h1 {
-  font-size: 0.9em;
-  font-weight: 700;
+  font-size: 0.72em;
+  font-weight: 800;
   margin: 1.2em 0 0.5em;
   line-height: 1.3;
 }
 .tiptap-editor h2 {
-  font-size: 1.12em;
-  font-weight: 600;
+  font-size: 1.4em;
+  font-weight: 700;
   margin: 1em 0 0.4em;
   line-height: 1.35;
 }
