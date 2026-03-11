@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 2000,
+        max_tokens: 4000,
         messages: [
           {
             role: 'user',
@@ -30,12 +30,9 @@ export async function POST(request: NextRequest) {
 
 주제: ${prompt}
 
-다음 JSON 형식으로만 응답해주세요 (다른 텍스트 없이):
-{
-  "title": "블로그 제목",
-  "excerpt": "2-3문장의 요약",
-  "content": "본문 내용 (마크다운 형식, 최소 500자)"
-}`
+반드시 순수 JSON만 출력하세요. 코드블록(\`\`\`json)으로 감싸지 마세요. 다른 텍스트도 넣지 마세요.
+JSON 형식:
+{"title": "블로그 제목", "excerpt": "2-3문장의 요약", "content": "본문 내용 (마크다운 형식, 최소 500자, JSON 문자열로 이스케이프)"}`
           }
         ]
       })
@@ -50,9 +47,13 @@ export async function POST(request: NextRequest) {
     const data = await response.json()
     const text = data.content?.[0]?.text || ''
 
-    // JSON 파싱 시도
+    // ```json ... ``` 코드블록 제거 후 JSON 파싱
+    let cleanText = text
+    // Remove ```json or ``` wrappers
+    cleanText = cleanText.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim()
+
     try {
-      const jsonMatch = text.match(/\{[\s\S]*\}/)
+      const jsonMatch = cleanText.match(/\{[\s\S]*\}/)
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0])
         return NextResponse.json({
