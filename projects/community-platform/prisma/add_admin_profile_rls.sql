@@ -1,7 +1,13 @@
 -- ===================================================
--- Admin can update any profile (for approval/role management)
+-- Admin RLS Policies (DROP + CREATE)
 -- Run this in Supabase SQL Editor
 -- ===================================================
+
+-- 기존 정책 삭제
+DROP POLICY IF EXISTS "Admins can update any profile" ON public."Profile";
+DROP POLICY IF EXISTS "Admins can delete any post" ON public."Post";
+DROP POLICY IF EXISTS "Admins can delete any comment" ON public."Comment";
+DROP POLICY IF EXISTS "Admins and editors can manage all blog posts" ON public."BlogPost";
 
 -- Allow ADMIN role users to update any profile
 CREATE POLICY "Admins can update any profile"

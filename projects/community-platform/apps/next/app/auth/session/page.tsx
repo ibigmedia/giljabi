@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from 'app/utils/supabase'
 import { YStack, SizableText, Spinner } from '@my/ui'
 
-export default function AuthSessionPage() {
+function AuthSessionContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const [status, setStatus] = useState('로그인 처리 중...')
@@ -21,7 +21,6 @@ export default function AuthSessionPage() {
             }
 
             try {
-                // 브라우저에서 직접 세션 교환 → localStorage에 자동 저장
                 const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
                 if (error) {
@@ -34,7 +33,6 @@ export default function AuthSessionPage() {
                 if (data.user) {
                     setStatus('프로필 확인 중...')
 
-                    // Profile 조회
                     const { data: profile, error: profileError } = await supabase
                         .from('Profile')
                         .select('id, isApproved, role')
@@ -42,7 +40,6 @@ export default function AuthSessionPage() {
                         .single()
 
                     if (profileError || !profile) {
-                        // 프로필이 없으면 생성
                         const meta = data.user.user_metadata
                         await supabase.from('Profile').insert({
                             userId: data.user.id,
@@ -67,7 +64,6 @@ export default function AuthSessionPage() {
                         return
                     }
 
-                    // Admin/Editor → admin, 일반 회원 → feed
                     setStatus('로그인 성공!')
                     if (profile.role === 'ADMIN' || profile.role === 'EDITOR') {
                         router.replace('/admin')
@@ -90,5 +86,18 @@ export default function AuthSessionPage() {
             <Spinner size="large" color="$primary" />
             <SizableText size="$5" color="$textMain" fontWeight="600">{status}</SizableText>
         </YStack>
+    )
+}
+
+export default function AuthSessionPage() {
+    return (
+        <Suspense fallback={
+            <YStack flex={1} alignItems="center" justifyContent="center" bg="$backgroundBody" height="100vh" gap="$4">
+                <Spinner size="large" color="$primary" />
+                <SizableText size="$5" color="$textMain" fontWeight="600">로그인 처리 중...</SizableText>
+            </YStack>
+        }>
+            <AuthSessionContent />
+        </Suspense>
     )
 }
