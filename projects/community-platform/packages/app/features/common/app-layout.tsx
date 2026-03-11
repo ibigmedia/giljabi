@@ -2,7 +2,6 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { YStack, XStack, SizableText, Button, Avatar, Separator } from '@my/ui'
-import { useMedia } from 'tamagui'
 import { usePathname, useRouter } from 'solito/navigation'
 import { useCurrentUserProfile } from '../../hooks/useProfiles'
 import { Home, Users, MessageSquare, User, Bell, Search, Edit3, LogOut, Shield, ChevronDown, Settings } from '@tamagui/lucide-icons'
@@ -14,6 +13,15 @@ const NAV_ITEMS = [
     { label: '그룹', path: '/groups', icon: Users },
     { label: '블로그', path: '/blog', icon: Edit3 },
 ]
+
+const RESPONSIVE_CSS = `
+  .desktop-only { display: flex !important; }
+  .mobile-only { display: none !important; }
+  @media (max-width: 860px) {
+    .desktop-only { display: none !important; }
+    .mobile-only { display: flex !important; }
+  }
+`
 
 function UserDropdown({ userProfile, onLogout, router }: { userProfile: any; onLogout: () => void; router: any }) {
     const [open, setOpen] = useState(false)
@@ -153,8 +161,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter()
     const pathname = usePathname()
     const { data: userProfile } = useCurrentUserProfile()
-    const media = useMedia()
-    const isMobile = media.sm // true when screen width <= 860px
 
     const handleLogout = async () => {
         await supabase.auth.signOut()
@@ -167,8 +173,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
     return (
         <YStack flex={1} bg="$backgroundBody" height="100%">
+            <style dangerouslySetInnerHTML={{ __html: RESPONSIVE_CSS }} />
+
             {/* ===== Desktop: Top Header GNB ===== */}
-            {!isMobile && (
+            <div className="desktop-only" style={{ flexDirection: 'row' }}>
                 <XStack
                     bg="$surface"
                     paddingHorizontal="$6"
@@ -177,6 +185,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     justifyContent="space-between"
                     zIndex={100}
                     elevation="$1"
+                    width="100%"
                 >
                     {/* Left: Logo & Nav */}
                     <XStack alignItems="center" gap="$5" height="100%">
@@ -286,10 +295,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                         )}
                     </XStack>
                 </XStack>
-            )}
+            </div>
 
-            {/* ===== Mobile: Top Header (간단한 로고 + 아이콘) ===== */}
-            {isMobile && (
+            {/* ===== Mobile: Top Header ===== */}
+            <div className="mobile-only" style={{ flexDirection: 'row' }}>
                 <XStack
                     paddingHorizontal="$4"
                     paddingVertical="$3"
@@ -298,6 +307,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     justifyContent="space-between"
                     zIndex={100}
                     elevation="$1"
+                    width="100%"
                 >
                     <SizableText
                         size="$6"
@@ -346,25 +356,20 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                         )}
                     </XStack>
                 </XStack>
-            )}
+            </div>
 
             {/* Main Content Area */}
             <YStack flex={1} position="relative" height="100%">
                 {children}
 
                 {/* ===== Mobile: Bottom Tab Bar ===== */}
-                {isMobile && (
+                <div className="mobile-only" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 100 }}>
                     <XStack
                         bg="$surfaceContainerLow"
                         pt="$2"
                         pb="$4"
                         justifyContent="space-around"
                         alignItems="center"
-                        position="absolute"
-                        bottom={0}
-                        left={0}
-                        right={0}
-                        zIndex={100}
                         elevation="$2"
                     >
                         {NAV_ITEMS.map((item) => {
@@ -402,7 +407,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                             )
                         })}
                     </XStack>
-                )}
+                </div>
             </YStack>
         </YStack>
     )
