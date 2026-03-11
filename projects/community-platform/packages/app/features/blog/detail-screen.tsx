@@ -19,7 +19,7 @@ const BLOG_READ_CSS = `
     word-break: keep-all;
 }
 .blog-content h1 {
-    font-size: 0.76em;
+    font-size: 1.9em;
     font-weight: 800;
     margin: 1.4em 0 0.6em;
     color: #1a1a2e;
@@ -215,8 +215,8 @@ export function BlogDetailScreen({ id }: { id: string }) {
                         <YStack gap="$4">
                             <SizableText
                                 color="$onSurface"
-                                size="$10"
-                                fontWeight="800"
+                                size="$7"
+                                fontWeight="700"
                                 lineHeight={48}
                             >
                                 {post.title}

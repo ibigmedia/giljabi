@@ -82,7 +82,7 @@ const EDITOR_CSS = `
   margin-top: 0;
 }
 .tiptap-editor h1 {
-  font-size: 0.72em;
+  font-size: 1.8em;
   font-weight: 800;
   margin: 1.2em 0 0.5em;
   line-height: 1.3;
