@@ -25,8 +25,8 @@ function AuthSessionContent() {
 
                 if (error) {
                     console.error('Session exchange error:', error)
-                    setStatus('로그인 처리 중 오류가 발생했습니다.')
-                    setTimeout(() => router.replace('/login'), 2000)
+                    setStatus(`오류: ${error.message}`)
+                    setTimeout(() => router.replace('/login'), 3000)
                     return
                 }
 
@@ -71,10 +71,10 @@ function AuthSessionContent() {
                         router.replace('/feed')
                     }
                 }
-            } catch (err) {
+            } catch (err: any) {
                 console.error('Auth error:', err)
-                setStatus('오류가 발생했습니다.')
-                setTimeout(() => router.replace('/login'), 2000)
+                setStatus(`오류: ${err?.message || '알 수 없는 오류'}`)
+                setTimeout(() => router.replace('/login'), 3000)
             }
         }
 

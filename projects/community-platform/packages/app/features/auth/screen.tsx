@@ -93,7 +93,7 @@ export function AuthScreen() {
         setErrorMsg('')
         try {
             const redirectUrl = Platform.OS === 'web'
-                ? `${window.location.origin}/auth/callback`
+                ? `${window.location.origin}/auth/session`
                 : makeRedirectUri({ path: '/login' })
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider,
