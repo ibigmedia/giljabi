@@ -13,8 +13,13 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error && data.user) {
-      // OAuth 로그인 후 Profile이 없으면 자동 생성
-      const { data: existingProfile } = await supabase
+      // Service Role 클라이언트로 RLS 우회하여 Profile 조회/생성
+      const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+      const adminClient = serviceRoleKey
+        ? createClient(supabaseUrl, serviceRoleKey)
+        : supabase
+
+      const { data: existingProfile } = await adminClient
         .from('Profile')
         .select('id, isApproved')
         .eq('userId', data.user.id)
@@ -22,7 +27,7 @@ export async function GET(request: NextRequest) {
 
       if (!existingProfile) {
         const meta = data.user.user_metadata
-        await supabase.from('Profile').insert({
+        await adminClient.from('Profile').insert({
           userId: data.user.id,
           email: data.user.email,
           username: meta?.full_name || meta?.name || data.user.email?.split('@')[0] || 'user',
@@ -33,7 +38,6 @@ export async function GET(request: NextRequest) {
           role: 'MEMBER',
         })
 
-        // 새 가입자는 승인 대기 페이지로
         return NextResponse.redirect(new URL('/pending-approval', requestUrl.origin))
       }
 
