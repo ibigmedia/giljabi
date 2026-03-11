@@ -153,17 +153,26 @@ export function useDeleteBlogPost() {
     })
 }
 
-// AI 모의 생성 응답 훅 (실제 LLM 연동 전)
+// AI 블로그 자동 생성 (Claude API)
 export function useGenerateAIBlog() {
     return useMutation({
         mutationFn: async (prompt: string) => {
-            // 실제라면 fetch('/api/llm', { body: { prompt }})
-            // 여기선 1.5초 대기 후 Mock 텍스트 반환
-            await new Promise(resolve => setTimeout(resolve, 1500))
+            const response = await fetch('/api/generate-blog', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt }),
+            })
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}))
+                throw new Error(errorData.error || 'AI 생성 중 오류가 발생했습니다.')
+            }
+
+            const data = await response.json()
             return {
-                title: `AI Generated: ${prompt.slice(0, 10)}...`,
-                excerpt: `AI가 작성한 요약문입니다. 주제는 ${prompt} 에 관한 내용입니다.`,
-                content: `이 블로그 본문은 사용자의 프롬프트("${prompt}")를 분석하여 LLM이 자동 생성한 모의 텍스트입니다.\n\n디지털 사역과 현대 기술의 만남은 많은 기회를 열어줍니다. 온라인 상에서 생명력을 가진 공동체를 만들기 위해서는 진정성 있는 관계 형성과 도구의 선용이 필수적입니다...`
+                title: data.title as string,
+                excerpt: data.excerpt as string,
+                content: data.content as string,
             }
         }
     })
