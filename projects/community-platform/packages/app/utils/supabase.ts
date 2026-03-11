@@ -16,25 +16,6 @@ const isNative = Platform.OS === 'ios' || Platform.OS === 'android'
 
 const storageAdapter = isNative ? AsyncStorage : (typeof window !== 'undefined' ? window.localStorage : undefined)
 
-// OAuth 콜백에서 쿠키로 전달된 세션을 localStorage로 복원
-if (typeof window !== 'undefined' && !isNative && supabaseUrl) {
-  try {
-    const projectRef = supabaseUrl.match(/https:\/\/(.+)\.supabase/)?.[1] || ''
-    const storageKey = `sb-${projectRef}-auth-token`
-    const cookies = document.cookie.split(';').map(c => c.trim())
-    const sessionCookie = cookies.find(c => c.startsWith(`${storageKey}=`))
-
-    if (sessionCookie && !window.localStorage.getItem(storageKey)) {
-      const cookieValue = decodeURIComponent(sessionCookie.split('=').slice(1).join('='))
-      window.localStorage.setItem(storageKey, cookieValue)
-      // 쿠키 제거 (일회성)
-      document.cookie = `${storageKey}=; path=/; max-age=0`
-    }
-  } catch (e) {
-    // 무시 - 쿠키 파싱 실패시 정상 로그인 플로우로 폴백
-  }
-}
-
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     storage: storageAdapter as any,
