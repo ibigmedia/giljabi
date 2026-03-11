@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { YStack, SizableText } from '@my/ui'
+import { AdminBlogsScreen } from 'app/features/admin/blogs-screen'
 
 class ErrorBoundary extends React.Component<
     { children: React.ReactNode },
@@ -27,21 +28,11 @@ class ErrorBoundary extends React.Component<
     }
 }
 
-// Lazy import to catch module-level errors
-const AdminBlogsScreen = React.lazy(() =>
-    import('app/features/admin/blogs-screen').then(mod => ({ default: mod.AdminBlogsScreen }))
-)
-
 export default function AdminBlogsPage() {
     return (
         <ErrorBoundary>
-            <React.Suspense fallback={
-                <YStack p="$6">
-                    <SizableText color="$textMuted">블로그 관리 로딩 중...</SizableText>
-                </YStack>
-            }>
-                <AdminBlogsScreen />
-            </React.Suspense>
+            <SizableText color="$textMuted" p="$2">Debug: AdminBlogsPage rendered</SizableText>
+            <AdminBlogsScreen />
         </ErrorBoundary>
     )
 }
