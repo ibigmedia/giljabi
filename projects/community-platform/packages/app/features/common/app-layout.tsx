@@ -166,8 +166,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <YStack flex={1} bg="$backgroundBody" height="100%">
             {/* ===== Desktop: Top Header GNB (sm 이상에서만 보임) ===== */}
             <XStack
-                display="none"
-                $gtSm={{ display: 'flex' }}
+                display="flex"
+                $sm={{ display: 'none' }}
                 bg="$surface"
                 paddingHorizontal="$6"
                 height={64}
@@ -287,8 +287,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
             {/* ===== Mobile: Top Header (sm에서만 보임 - 간단한 로고 + 아이콘) ===== */}
             <XStack
-                display="flex"
-                $gtSm={{ display: 'none' }}
+                display="none"
+                $sm={{ display: 'flex' }}
                 paddingHorizontal="$4"
                 paddingVertical="$3"
                 bg="$surface"
@@ -351,8 +351,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
                 {/* ===== Mobile: Bottom Tab Bar (sm에서만 보임) ===== */}
                 <XStack
-                    display="flex"
-                    $gtSm={{ display: 'none' }}
+                    display="none"
+                    $sm={{ display: 'flex' }}
                     bg="$surfaceContainerLow"
                     pt="$2"
                     pb="$4"
