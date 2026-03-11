@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { YStack, XStack, ScrollView, H3, Paragraph, Avatar, Button, Separator, Input, Spinner, SizableText } from '@my/ui'
+import { YStack, XStack, H3, Paragraph, Avatar, Button, Separator, Input, Spinner, SizableText } from '@my/ui'
 import { MessageSquare, Trash, PenTool, Sparkles } from '@tamagui/lucide-icons'
 import { useBlogPosts, useDeleteBlogPost, useCreateBlogPost, useGenerateAIBlog, useUpdateBlogPost } from '../../hooks/useBlogs'
 import type { BlogPost } from '../../hooks/useBlogs'
@@ -48,7 +48,7 @@ export function AdminBlogsScreen() {
     }
 
     return (
-        <ScrollView flex={1} bg="$backgroundBody">
+        <YStack flex={1} bg="$backgroundBody">
             <YStack maxWidth={1000} alignSelf="center" width="100%" px="$4" py="$8" gap="$6">
                 <XStack justifyContent="space-between" alignItems="center">
                     <H3 color="$textMain" fontWeight="bold">블로그 관리 (CMS)</H3>
@@ -186,6 +186,6 @@ export function AdminBlogsScreen() {
                     )}
                 </YStack>
             </YStack>
-        </ScrollView>
+        </YStack>
     )
 }

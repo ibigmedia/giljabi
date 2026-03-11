@@ -31,7 +31,6 @@ class ErrorBoundary extends React.Component<
 export default function AdminBlogsPage() {
     return (
         <ErrorBoundary>
-            <SizableText color="$textMuted" p="$2">Debug: AdminBlogsPage rendered</SizableText>
             <AdminBlogsScreen />
         </ErrorBoundary>
     )
