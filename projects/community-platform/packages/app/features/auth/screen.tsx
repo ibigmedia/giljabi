@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Button, Paragraph, XStack, YStack, Input, Spinner, Separator, SizableText } from '@my/ui'
+import { Button, XStack, YStack, Input, Spinner, Separator, SizableText } from '@my/ui'
 import { Platform } from 'react-native'
 import * as WebBrowser from 'expo-web-browser'
 import { makeRedirectUri } from 'expo-auth-session'
@@ -69,6 +69,11 @@ export function AuthScreen() {
                 if (error) throw error
 
                 if (data.user) {
+                    if (!data.user.email_confirmed_at) {
+                        await supabase.auth.signOut()
+                        throw new Error('이메일 인증이 필요합니다. 가입 시 입력한 이메일의 인증 링크를 확인해 주세요.')
+                    }
+
                     const { data: profile } = await supabase.from('Profile').select('isApproved').eq('userId', data.user.id).single()
                     if (profile && !profile.isApproved) {
                         await supabase.auth.signOut()
@@ -88,7 +93,7 @@ export function AuthScreen() {
         setErrorMsg('')
         try {
             const redirectUrl = Platform.OS === 'web'
-                ? `${window.location.origin}/`
+                ? `${window.location.origin}/auth/callback`
                 : makeRedirectUri({ path: '/login' })
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider,
