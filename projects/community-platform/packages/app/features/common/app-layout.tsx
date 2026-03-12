@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { YStack, XStack, SizableText, Button, Avatar, Separator } from '@my/ui'
 import { usePathname, useRouter } from 'solito/navigation'
 import { useCurrentUserProfile } from '../../hooks/useProfiles'
-import { Home, Users, MessageSquare, User, Bell, Search, Edit3, LogOut, Shield, ChevronDown, Settings, BookOpen } from '@tamagui/lucide-icons'
+import { Home, Users, MessageSquare, User, Bell, Search, Edit3, LogOut, Shield, ChevronDown, Settings, BookOpen, Menu, X } from '@tamagui/lucide-icons'
 import { supabase } from '../../utils/supabase'
 
 const NAV_ITEMS = [
@@ -21,6 +21,32 @@ const RESPONSIVE_CSS = `
   @media (max-width: 860px) {
     .desktop-only { display: none !important; }
     .mobile-only { display: flex !important; }
+  }
+  .mobile-drawer-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .mobile-drawer-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .mobile-drawer {
+    position: fixed;
+    top: 0; right: 0; bottom: 0;
+    width: 280px;
+    max-width: 80vw;
+    z-index: 1000;
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+    overflow-y: auto;
+  }
+  .mobile-drawer.open {
+    transform: translateX(0);
   }
 `
 
@@ -162,10 +188,17 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter()
     const pathname = usePathname()
     const { data: userProfile } = useCurrentUserProfile()
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
     const handleLogout = async () => {
         await supabase.auth.signOut()
+        setMobileMenuOpen(false)
         router.push('/')
+    }
+
+    const navigateMobile = (path: string) => {
+        setMobileMenuOpen(false)
+        router.push(path)
     }
 
     if (pathname?.startsWith('/admin')) {
@@ -316,99 +349,138 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                         color="$primary"
                         letterSpacing={-0.5}
                         cursor="pointer"
-                        onPress={() => router.push('/')}
+                        onPress={() => navigateMobile('/')}
                     >
                         Giljabi
                     </SizableText>
                     <XStack gap="$1" alignItems="center">
-                        {userProfile ? (
-                            <>
-                                <Button size="$3" circular bg="transparent" hoverStyle={{ bg: '$surfaceContainerHigh' }} icon={<Search size={20} color="$onSurfaceVariant" />} onPress={() => router.push('/search')} />
-                                <Button size="$3" circular bg="transparent" hoverStyle={{ bg: '$surfaceContainerHigh' }} icon={<MessageSquare size={20} color="$onSurfaceVariant" />} onPress={() => router.push('/messages')} />
-                                <Button size="$3" circular bg="transparent" hoverStyle={{ bg: '$surfaceContainerHigh' }} icon={<Bell size={20} color="$onSurfaceVariant" />} onPress={() => router.push('/notifications')} />
-                                <Avatar
-                                    circular
-                                    size="$2.5"
-                                    bg="$primaryContainer"
-                                    ml="$1"
-                                    onPress={() => router.push('/profile')}
-                                    cursor="pointer"
-                                >
-                                    <Avatar.Image src={userProfile.avatarUrl || undefined} />
-                                    <Avatar.Fallback bg="$primaryContainer">
-                                        <SizableText size="$1" color="$primary" fontWeight="700">
-                                            {userProfile.username?.charAt(0)?.toUpperCase() || 'U'}
-                                        </SizableText>
-                                    </Avatar.Fallback>
-                                </Avatar>
-                            </>
-                        ) : (
-                            <>
-                                <Button size="$3" circular bg="transparent" hoverStyle={{ bg: '$surfaceContainerHigh' }} icon={<Search size={22} color="$onSurfaceVariant" />} />
-                                <Button
-                                    size="$2"
-                                    bg="$primary"
-                                    borderRadius="$full"
-                                    onPress={() => router.push('/login')}
-                                >
-                                    <SizableText color="white" fontWeight="600" size="$2">로그인</SizableText>
-                                </Button>
-                            </>
+                        <Button size="$3" circular bg="transparent" hoverStyle={{ bg: '$surfaceContainerHigh' }} icon={<Search size={20} color="$onSurfaceVariant" />} onPress={() => navigateMobile('/search')} />
+                        {userProfile && (
+                            <Button size="$3" circular bg="transparent" hoverStyle={{ bg: '$surfaceContainerHigh' }} icon={<Bell size={20} color="$onSurfaceVariant" />} onPress={() => navigateMobile('/notifications')} />
                         )}
+                        <Button
+                            size="$3"
+                            circular
+                            bg="transparent"
+                            hoverStyle={{ bg: '$surfaceContainerHigh' }}
+                            icon={<Menu size={22} color="$onSurface" />}
+                            onPress={() => setMobileMenuOpen(true)}
+                        />
                     </XStack>
                 </XStack>
             </div>
 
-            {/* Main Content Area */}
-            <YStack flex={1} position="relative" height="100%">
-                {children}
+            {/* ===== Mobile: Drawer Menu ===== */}
+            <div className={`mobile-drawer-overlay ${mobileMenuOpen ? 'open' : ''}`} onClick={() => setMobileMenuOpen(false)} />
+            <div className={`mobile-drawer ${mobileMenuOpen ? 'open' : ''}`}>
+                <YStack bg="$surface" flex={1} height="100%">
+                    {/* Drawer Header */}
+                    <XStack px="$4" py="$3" alignItems="center" justifyContent="space-between" borderBottomWidth={1} borderColor="$outlineVariant">
+                        <SizableText size="$5" fontWeight="700" color="$primary">메뉴</SizableText>
+                        <Button
+                            size="$3"
+                            circular
+                            bg="transparent"
+                            icon={<X size={20} color="$onSurfaceVariant" />}
+                            onPress={() => setMobileMenuOpen(false)}
+                        />
+                    </XStack>
 
-                {/* ===== Mobile: Bottom Tab Bar ===== */}
-                <div className="mobile-only" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 100 }}>
-                    <XStack
-                        bg="$surfaceContainerLow"
-                        pt="$2"
-                        pb="$4"
-                        justifyContent="space-around"
-                        alignItems="center"
-                        elevation="$2"
-                    >
+                    {/* User Info */}
+                    {userProfile ? (
+                        <XStack px="$4" py="$4" gap="$3" alignItems="center" bg="$surfaceContainerLow">
+                            <Avatar circular size="$4" bg="$primaryContainer">
+                                <Avatar.Image src={userProfile.avatarUrl || undefined} />
+                                <Avatar.Fallback bg="$primaryContainer">
+                                    <SizableText size="$3" color="$primary" fontWeight="700">
+                                        {userProfile.username?.charAt(0)?.toUpperCase() || 'U'}
+                                    </SizableText>
+                                </Avatar.Fallback>
+                            </Avatar>
+                            <YStack flex={1}>
+                                <SizableText size="$4" fontWeight="700" color="$onSurface">{userProfile.username}</SizableText>
+                                <SizableText size="$2" color="$onSurfaceVariant">{userProfile.email || userProfile.role}</SizableText>
+                            </YStack>
+                        </XStack>
+                    ) : (
+                        <YStack px="$4" py="$4" gap="$2" bg="$surfaceContainerLow">
+                            <Button bg="$primary" borderRadius="$4" onPress={() => navigateMobile('/login')}>
+                                <SizableText color="white" fontWeight="600">로그인 / 회원가입</SizableText>
+                            </Button>
+                        </YStack>
+                    )}
+
+                    <Separator borderColor="$outlineVariant" />
+
+                    {/* Navigation Links */}
+                    <YStack py="$2">
                         {NAV_ITEMS.map((item) => {
                             const isActive = pathname === item.path
                             const Icon = item.icon
                             return (
-                                <YStack
+                                <XStack
                                     key={item.path}
-                                    flex={1}
                                     alignItems="center"
-                                    justifyContent="center"
+                                    gap="$3"
+                                    px="$5"
+                                    py="$3"
                                     cursor="pointer"
-                                    onPress={() => router.push(item.path)}
-                                    gap="$1"
-                                    py="$1"
+                                    bg={isActive ? '$primaryContainer' : 'transparent'}
+                                    hoverStyle={{ bg: isActive ? '$primaryContainer' : '$surfaceContainerHigh' }}
+                                    onPress={() => navigateMobile(item.path)}
                                 >
-                                    <XStack
-                                        bg={isActive ? '$primaryContainer' : 'transparent'}
-                                        borderRadius="$full"
-                                        paddingHorizontal="$5"
-                                        paddingVertical="$1"
-                                        alignItems="center"
-                                        justifyContent="center"
-                                    >
-                                        <Icon size={22} color={isActive ? '$onPrimaryContainer' : '$onSurfaceVariant'} />
-                                    </XStack>
+                                    <Icon size={20} color={isActive ? '$onPrimaryContainer' : '$onSurfaceVariant'} />
                                     <SizableText
-                                        size="$1"
-                                        color={isActive ? '$onSurface' : '$onSurfaceVariant'}
+                                        size="$4"
                                         fontWeight={isActive ? '700' : '500'}
+                                        color={isActive ? '$onPrimaryContainer' : '$onSurface'}
                                     >
                                         {item.label}
                                     </SizableText>
-                                </YStack>
+                                </XStack>
                             )
                         })}
-                    </XStack>
-                </div>
+                    </YStack>
+
+                    <Separator borderColor="$outlineVariant" />
+
+                    {/* User Actions */}
+                    {userProfile && (
+                        <YStack py="$2">
+                            <XStack alignItems="center" gap="$3" px="$5" py="$3" cursor="pointer" hoverStyle={{ bg: '$surfaceContainerHigh' }} onPress={() => navigateMobile('/messages')}>
+                                <MessageSquare size={20} color="$onSurfaceVariant" />
+                                <SizableText size="$4" color="$onSurface">메시지</SizableText>
+                            </XStack>
+                            <XStack alignItems="center" gap="$3" px="$5" py="$3" cursor="pointer" hoverStyle={{ bg: '$surfaceContainerHigh' }} onPress={() => navigateMobile('/profile')}>
+                                <User size={20} color="$onSurfaceVariant" />
+                                <SizableText size="$4" color="$onSurface">내 프로필</SizableText>
+                            </XStack>
+                            <XStack alignItems="center" gap="$3" px="$5" py="$3" cursor="pointer" hoverStyle={{ bg: '$surfaceContainerHigh' }} onPress={() => navigateMobile('/profile/edit')}>
+                                <Settings size={20} color="$onSurfaceVariant" />
+                                <SizableText size="$4" color="$onSurface">프로필 설정</SizableText>
+                            </XStack>
+
+                            {(userProfile.role === 'ADMIN' || userProfile.role === 'EDITOR') && (
+                                <XStack alignItems="center" gap="$3" px="$5" py="$3" cursor="pointer" hoverStyle={{ bg: '$surfaceContainerHigh' }} onPress={() => navigateMobile('/admin')}>
+                                    <Shield size={20} color="$tertiary" />
+                                    <SizableText size="$4" color="$tertiary" fontWeight="600">관리자 패널</SizableText>
+                                </XStack>
+                            )}
+
+                            <Separator borderColor="$outlineVariant" my="$1" />
+
+                            <XStack alignItems="center" gap="$3" px="$5" py="$3" cursor="pointer" hoverStyle={{ bg: '$errorContainer' }} onPress={handleLogout}>
+                                <LogOut size={20} color="$error" />
+                                <SizableText size="$4" color="$error">로그아웃</SizableText>
+                            </XStack>
+                        </YStack>
+                    )}
+                </YStack>
+            </div>
+
+            {/* Main Content Area */}
+            <YStack flex={1} height="100%">
+                {children}
             </YStack>
         </YStack>
     )
