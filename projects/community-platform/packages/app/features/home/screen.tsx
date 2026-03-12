@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { YStack, XStack, ScrollView, H2, H3, Paragraph, SizableText, Button, Separator } from '@my/ui'
-import { Heart, Layers, TrendingUp, Zap, BookOpen, Wifi, Users, ChevronDown, Music, Code, Globe, ArrowRight, Play } from '@tamagui/lucide-icons'
+import { Heart, Layers, TrendingUp, Zap, BookOpen, Wifi, Users, ChevronDown, Music, Code, Globe, ArrowRight, Play, Headphones, Video, Disc, ExternalLink } from '@tamagui/lucide-icons'
 import { useRouter } from 'solito/navigation'
 import { useCurrentUserProfile } from '../../hooks/useProfiles'
 
@@ -69,6 +69,79 @@ const HERO_CSS = `
     .hero-section { min-height: 380px; }
     .hero-content { padding: 60px 20px 40px; }
     .hero-crescent { width: 60px; height: 60px; top: 40px; box-shadow: 12px -4px 0 0 rgba(255,220,150,0.9); }
+  }
+
+  /* Portfolio Section */
+  .portfolio-section {
+    background: linear-gradient(180deg, #f8fafc 0%, #eef4f8 50%, #f0f7ff 100%);
+    position: relative;
+    overflow: hidden;
+  }
+  .portfolio-section::before {
+    content: '';
+    position: absolute;
+    top: -100px; right: -100px;
+    width: 400px; height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(26,107,138,0.06) 0%, transparent 70%);
+  }
+  .portfolio-section::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; left: -80px;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(93,91,125,0.05) 0%, transparent 70%);
+  }
+  .portfolio-album-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+  }
+  .portfolio-album-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+  }
+  .portfolio-video-card {
+    transition: transform 0.25s ease;
+    cursor: pointer;
+  }
+  .portfolio-video-card:hover {
+    transform: scale(1.03);
+  }
+  .portfolio-play-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.3);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+  .portfolio-album-card:hover .portfolio-play-overlay,
+  .portfolio-video-card:hover .portfolio-play-overlay {
+    opacity: 1;
+  }
+  .equalizer-bar {
+    display: inline-block;
+    width: 3px;
+    margin: 0 1px;
+    border-radius: 2px;
+    background: #1a6b8a;
+    animation: equalize 0.8s ease-in-out infinite alternate;
+  }
+  .equalizer-bar:nth-child(1) { height: 12px; animation-delay: 0s; }
+  .equalizer-bar:nth-child(2) { height: 20px; animation-delay: 0.15s; }
+  .equalizer-bar:nth-child(3) { height: 8px; animation-delay: 0.3s; }
+  .equalizer-bar:nth-child(4) { height: 16px; animation-delay: 0.45s; }
+  .equalizer-bar:nth-child(5) { height: 10px; animation-delay: 0.6s; }
+  @keyframes equalize {
+    0% { height: 4px; }
+    100% { height: 22px; }
+  }
+  @media (max-width: 860px) {
+    .portfolio-featured-grid { flex-direction: column !important; }
+    .portfolio-featured-info { min-width: auto !important; }
   }
 `
 
@@ -313,6 +386,263 @@ export function HomeScreen() {
                         })}
                     </XStack>
                 </YStack>
+
+            </YStack>
+
+            {/* ===== Portfolio / Music Showcase Section ===== */}
+            <div className="portfolio-section">
+                <YStack maxWidth={1080} alignSelf="center" width="100%" px="$4" py="$12" gap="$8" position="relative" zIndex={1}>
+
+                    {/* Section Header */}
+                    <YStack alignItems="center" gap="$3">
+                        <XStack alignItems="center" gap="$2">
+                            <div style={{ display: 'flex', alignItems: 'flex-end', height: 24 }}>
+                                <span className="equalizer-bar" />
+                                <span className="equalizer-bar" />
+                                <span className="equalizer-bar" />
+                                <span className="equalizer-bar" />
+                                <span className="equalizer-bar" />
+                            </div>
+                            <SizableText color="$primary" fontWeight="700" size="$2" letterSpacing={2}>SOUND & VISION</SizableText>
+                            <div style={{ display: 'flex', alignItems: 'flex-end', height: 24 }}>
+                                <span className="equalizer-bar" />
+                                <span className="equalizer-bar" />
+                                <span className="equalizer-bar" />
+                                <span className="equalizer-bar" />
+                                <span className="equalizer-bar" />
+                            </div>
+                        </XStack>
+                        <H3 color="$onSurface" fontWeight="800" fontSize={26} textAlign="center">
+                            음악과 영상으로 전하는 메시지
+                        </H3>
+                        <Paragraph color="$onSurfaceVariant" size="$4" textAlign="center" maxWidth={500}>
+                            사운드스케이프와 감성적 리듬으로 만들어진 창작물들.{'\n'}듣고, 보고, 함께 경험하세요.
+                        </Paragraph>
+                    </YStack>
+
+                    {/* Featured Release - Hero Card */}
+                    <div className="portfolio-album-card">
+                        <YStack bg="$surface" borderRadius="$6" elevation="$2" overflow="hidden">
+                            <XStack flexWrap="wrap" className="portfolio-featured-grid">
+                                {/* Album Art */}
+                                <YStack width={320} minWidth={280} height={320} position="relative" overflow="hidden">
+                                    {/* @ts-ignore */}
+                                    <img src="https://picsum.photos/seed/album1/640/640" alt="Run Away" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    <div className="portfolio-play-overlay">
+                                        <YStack
+                                            width={72} height={72}
+                                            borderRadius={36}
+                                            bg="white"
+                                            alignItems="center"
+                                            justifyContent="center"
+                                            elevation="$3"
+                                        >
+                                            <Play size={32} color="#1a6b8a" />
+                                        </YStack>
+                                    </div>
+                                    {/* Badge */}
+                                    <YStack position="absolute" top="$3" left="$3" bg="$primary" borderRadius="$full" px="$3" py="$1">
+                                        <SizableText color="white" size="$1" fontWeight="700" letterSpacing={1}>NEW RELEASE</SizableText>
+                                    </YStack>
+                                </YStack>
+
+                                {/* Info */}
+                                <YStack flex={1} minWidth={300} p="$6" gap="$4" justifyContent="center" className="portfolio-featured-info">
+                                    <YStack gap="$1">
+                                        <SizableText color="$onSurfaceVariant" size="$2" fontWeight="600">2024 · Single</SizableText>
+                                        <SizableText color="$onSurface" size="$9" fontWeight="900" letterSpacing={-1}>Run Away</SizableText>
+                                        <SizableText color="$primary" size="$3" fontWeight="600">iBiG band</SizableText>
+                                    </YStack>
+                                    <Paragraph color="$onSurfaceVariant" size="$3" lineHeight={22}>
+                                        디지털 시대의 새로운 찬양. 사운드스케이프와 감성적 리듬으로 만들어진 최신 싱글.
+                                        음악과 기술(Sound & Tech)이 만나 영혼의 울림을 전합니다.
+                                    </Paragraph>
+                                    <XStack gap="$3" mt="$1" flexWrap="wrap">
+                                        <XStack
+                                            alignItems="center"
+                                            gap="$2"
+                                            bg="$primaryContainer"
+                                            borderRadius="$full"
+                                            paddingHorizontal="$4"
+                                            paddingVertical="$2.5"
+                                            cursor="pointer"
+                                            hoverStyle={{ opacity: 0.9 }}
+                                            onPress={() => router.push('/portfolio')}
+                                        >
+                                            <Headphones size={16} color="$onPrimaryContainer" />
+                                            <SizableText color="$onPrimaryContainer" fontWeight="700" size="$3">지금 듣기</SizableText>
+                                        </XStack>
+                                        <XStack
+                                            alignItems="center"
+                                            gap="$2"
+                                            borderWidth={1}
+                                            borderColor="$outlineVariant"
+                                            borderRadius="$full"
+                                            paddingHorizontal="$4"
+                                            paddingVertical="$2.5"
+                                            cursor="pointer"
+                                            hoverStyle={{ bg: '$surfaceContainerLow' }}
+                                            onPress={() => router.push('/portfolio')}
+                                        >
+                                            <Disc size={16} color="$onSurfaceVariant" />
+                                            <SizableText color="$onSurface" fontWeight="600" size="$3">디스코그래피</SizableText>
+                                        </XStack>
+                                    </XStack>
+                                    {/* Mini stats */}
+                                    <XStack gap="$6" mt="$2">
+                                        <YStack>
+                                            <SizableText color="$onSurface" size="$5" fontWeight="800">5</SizableText>
+                                            <SizableText color="$onSurfaceVariant" size="$1" fontWeight="500">Releases</SizableText>
+                                        </YStack>
+                                        <YStack>
+                                            <SizableText color="$onSurface" size="$5" fontWeight="800">4</SizableText>
+                                            <SizableText color="$onSurfaceVariant" size="$1" fontWeight="500">Videos</SizableText>
+                                        </YStack>
+                                        <YStack>
+                                            <SizableText color="$onSurface" size="$5" fontWeight="800">935</SizableText>
+                                            <SizableText color="$onSurfaceVariant" size="$1" fontWeight="500">Total Views</SizableText>
+                                        </YStack>
+                                    </XStack>
+                                </YStack>
+                            </XStack>
+                        </YStack>
+                    </div>
+
+                    {/* Albums Grid */}
+                    <YStack gap="$4">
+                        <XStack justifyContent="space-between" alignItems="center">
+                            <XStack alignItems="center" gap="$2">
+                                <Disc size={18} color="$primary" />
+                                <SizableText color="$onSurface" size="$5" fontWeight="700">Discography</SizableText>
+                            </XStack>
+                            <XStack
+                                alignItems="center"
+                                gap="$1"
+                                cursor="pointer"
+                                hoverStyle={{ opacity: 0.8 }}
+                                onPress={() => router.push('/portfolio')}
+                            >
+                                <SizableText color="$primary" size="$3" fontWeight="600">전체보기</SizableText>
+                                <ArrowRight size={14} color="$primary" />
+                            </XStack>
+                        </XStack>
+
+                        <XStack gap="$4" flexWrap="wrap">
+                            {[
+                                { title: 'Run Away', year: '2024', type: 'Single', seed: 'album1' },
+                                { title: 'Jesus Story', year: '2024', type: 'Single', seed: 'album2' },
+                                { title: '성탄절 악보', year: '2023', type: 'EP', seed: 'album3' },
+                                { title: '예배 찬양 시리즈', year: '2023', type: 'Album', seed: 'album4' },
+                            ].map((album, i) => (
+                                <div key={i} className="portfolio-album-card" style={{ flex: '1 1 180px', minWidth: 160, maxWidth: 220 }}>
+                                    <YStack
+                                        bg="$surface"
+                                        borderRadius="$5"
+                                        overflow="hidden"
+                                        elevation="$1"
+                                        gap="$2"
+                                        onPress={() => router.push('/portfolio')}
+                                    >
+                                        <YStack width="100%" aspectRatio={1} position="relative" overflow="hidden">
+                                            {/* @ts-ignore */}
+                                            <img src={`https://picsum.photos/seed/${album.seed}/400/400`} alt={album.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            <div className="portfolio-play-overlay">
+                                                <YStack width={44} height={44} borderRadius={22} bg="white" alignItems="center" justifyContent="center">
+                                                    <Play size={20} color="#1a6b8a" />
+                                                </YStack>
+                                            </div>
+                                        </YStack>
+                                        <YStack px="$3" pb="$3">
+                                            <SizableText color="$onSurface" size="$3" fontWeight="700" numberOfLines={1}>{album.title}</SizableText>
+                                            <SizableText color="$onSurfaceVariant" size="$2">{album.year} · {album.type}</SizableText>
+                                        </YStack>
+                                    </YStack>
+                                </div>
+                            ))}
+                        </XStack>
+                    </YStack>
+
+                    {/* Music Videos */}
+                    <YStack gap="$4">
+                        <XStack justifyContent="space-between" alignItems="center">
+                            <XStack alignItems="center" gap="$2">
+                                <Video size={18} color="$primary" />
+                                <SizableText color="$onSurface" size="$5" fontWeight="700">Featured Videos</SizableText>
+                            </XStack>
+                            <XStack
+                                alignItems="center"
+                                gap="$1"
+                                cursor="pointer"
+                                hoverStyle={{ opacity: 0.8 }}
+                                onPress={() => router.push('/portfolio')}
+                            >
+                                <SizableText color="$primary" size="$3" fontWeight="600">더보기</SizableText>
+                                <ArrowRight size={14} color="$primary" />
+                            </XStack>
+                        </XStack>
+
+                        <XStack gap="$4" flexWrap="wrap">
+                            {[
+                                { title: 'Run Away (Official MV)', views: '86', seed: 'mv1' },
+                                { title: 'Jesus Story', views: '116', seed: 'mv2' },
+                            ].map((mv, i) => (
+                                <div key={i} className="portfolio-video-card" style={{ flex: '1 1 300px', minWidth: 280 }}>
+                                    <YStack
+                                        bg="$surface"
+                                        borderRadius="$5"
+                                        overflow="hidden"
+                                        elevation="$1"
+                                        gap="$2"
+                                        onPress={() => router.push('/portfolio')}
+                                    >
+                                        <YStack width="100%" aspectRatio={16 / 9} position="relative" overflow="hidden">
+                                            {/* @ts-ignore */}
+                                            <img src={`https://picsum.photos/seed/${mv.seed}/600/340`} alt={mv.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            <div className="portfolio-play-overlay">
+                                                <YStack width={56} height={56} borderRadius={28} bg="white" alignItems="center" justifyContent="center" elevation="$2">
+                                                    <Play size={24} color="#1a6b8a" />
+                                                </YStack>
+                                            </div>
+                                            {/* Duration badge */}
+                                            <YStack position="absolute" bottom="$2" right="$2" bg="rgba(0,0,0,0.75)" borderRadius="$2" px="$2" py="$1">
+                                                <SizableText color="white" size="$1" fontWeight="600">{3 + i}:{(10 + i * 7).toString().padStart(2, '0')}</SizableText>
+                                            </YStack>
+                                        </YStack>
+                                        <XStack px="$4" pb="$3" justifyContent="space-between" alignItems="center">
+                                            <YStack flex={1}>
+                                                <SizableText color="$onSurface" size="$4" fontWeight="700">{mv.title}</SizableText>
+                                                <SizableText color="$onSurfaceVariant" size="$2">{mv.views} views · 2024</SizableText>
+                                            </YStack>
+                                        </XStack>
+                                    </YStack>
+                                </div>
+                            ))}
+                        </XStack>
+                    </YStack>
+
+                    {/* CTA to Portfolio */}
+                    <XStack
+                        alignSelf="center"
+                        alignItems="center"
+                        gap="$2"
+                        bg="$primary"
+                        borderRadius="$full"
+                        paddingHorizontal="$6"
+                        paddingVertical="$3.5"
+                        cursor="pointer"
+                        hoverStyle={{ opacity: 0.9 }}
+                        elevation="$2"
+                        onPress={() => router.push('/portfolio')}
+                    >
+                        <Music size={18} color="white" />
+                        <SizableText color="white" fontWeight="700" size="$4">포트폴리오 전체 보기</SizableText>
+                        <ExternalLink size={16} color="rgba(255,255,255,0.7)" />
+                    </XStack>
+
+                </YStack>
+            </div>
+
+            <YStack maxWidth={1080} alignSelf="center" width="100%" px="$4" gap="$10" py="$10">
 
                 {/* ===== Mission Letter ===== */}
                 <YStack bg="$surface" borderRadius="$6" elevation="$1" overflow="hidden">
