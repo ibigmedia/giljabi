@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { YStack, XStack, SizableText, Button, ScrollView, Separator } from '@my/ui'
-import { Settings, Users, FileText, Activity, LayoutDashboard, LogOut } from '@tamagui/lucide-icons'
+import { Settings, Users, FileText, Activity, LayoutDashboard, LogOut, Music } from '@tamagui/lucide-icons'
 import { usePathname, useRouter } from 'solito/navigation'
 import { useCurrentUserProfile } from '../../hooks/useProfiles'
 import { Spinner } from 'tamagui'
@@ -13,6 +13,7 @@ const ADMIN_MENU = [
     { label: 'Groups', path: '/admin/groups', icon: Users },
     { label: 'Posts & Feed', path: '/admin/posts', icon: FileText },
     { label: 'Blogs (CMS)', path: '/admin/blogs', icon: FileText },
+    { label: 'Portfolio', path: '/admin/portfolio', icon: Music },
     { label: 'Settings', path: '/admin/settings', icon: Settings },
 ]
 

@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { YStack, XStack, SizableText, Button, Avatar, Separator } from '@my/ui'
 import { usePathname, useRouter } from 'solito/navigation'
 import { useCurrentUserProfile } from '../../hooks/useProfiles'
-import { Home, Users, MessageSquare, User, Bell, Search, Edit3, LogOut, Shield, ChevronDown, Settings, BookOpen, Menu, X } from '@tamagui/lucide-icons'
+import { Home, Users, MessageSquare, User, Bell, Search, Edit3, LogOut, Shield, ChevronDown, Settings, BookOpen, Menu, X, Music } from '@tamagui/lucide-icons'
 import { supabase } from '../../utils/supabase'
 
 const NAV_ITEMS = [
@@ -13,6 +13,7 @@ const NAV_ITEMS = [
     { label: '그룹', path: '/groups', icon: Users },
     { label: '블로그', path: '/blog', icon: Edit3 },
     { label: '멤버', path: '/directory', icon: User },
+    { label: '포트폴리오', path: '/portfolio', icon: Music },
 ]
 
 const RESPONSIVE_CSS = `
