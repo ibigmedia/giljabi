@@ -84,7 +84,17 @@ export async function GET() {
             }
         }
 
+        // Reload PostgREST schema cache so Supabase REST API can see the new tables
+        try {
+            await client.query(`NOTIFY pgrst, 'reload schema'`)
+        } catch {
+            // NOTIFY may not work through pgbouncer, that's OK
+        }
+
         await client.end()
+
+        // Small delay for schema cache to refresh
+        await new Promise(r => setTimeout(r, 2000))
 
         // Verify tables via Supabase REST API
         const sb = getSupabaseAdmin()
