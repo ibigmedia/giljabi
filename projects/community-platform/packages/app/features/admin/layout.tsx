@@ -10,6 +10,7 @@ import { Spinner } from 'tamagui'
 const ADMIN_MENU = [
     { label: 'Dashboard', path: '/admin', icon: LayoutDashboard },
     { label: 'Users', path: '/admin/users', icon: Users },
+    { label: 'Groups', path: '/admin/groups', icon: Users },
     { label: 'Posts & Feed', path: '/admin/posts', icon: FileText },
     { label: 'Blogs (CMS)', path: '/admin/blogs', icon: FileText },
     { label: 'Settings', path: '/admin/settings', icon: Settings },

@@ -2,11 +2,14 @@
 
 import { useState } from 'react'
 import { YStack, XStack, Avatar, Input, Button, Separator, ScrollView, Spinner, SizableText } from '@my/ui'
-import { Image as ImageIcon } from '@tamagui/lucide-icons'
+import { Image as ImageIcon, FileText, Users, ChevronRight } from '@tamagui/lucide-icons'
 import { usePosts, useCreatePost } from '../../hooks/usePosts'
-import { useCurrentUserProfile } from '../../hooks/useProfiles'
+import { useCurrentUserProfile, useProfiles } from '../../hooks/useProfiles'
+import { useBlogPosts } from '../../hooks/useBlogs'
+import { useGroups } from '../../hooks/useGroup'
 import { PostCard } from './post-card'
 import { ComposeLinkPreviews } from './link-preview'
+import { useRouter } from 'solito/navigation'
 
 export function FeedScreen() {
     const [postText, setPostText] = useState('')
@@ -45,9 +48,13 @@ export function FeedScreen() {
         setAttachedUrls(prev => prev.filter(u => u !== url))
     }
 
+    const router = useRouter()
     const { data: currentUserProfile } = useCurrentUserProfile()
     const { data: posts, isLoading } = usePosts()
     const { mutate: createPost, isPending: isCreating } = useCreatePost()
+    const { data: blogPosts } = useBlogPosts()
+    const { data: groups } = useGroups()
+    const { data: allProfiles } = useProfiles()
 
     const canPost = (postText.trim() || attachedUrls.length > 0) && !!currentUserProfile
 
@@ -75,7 +82,7 @@ export function FeedScreen() {
 
                 {/* Left Sidebar (Desktop Only) */}
                 <YStack display="none" $md={{ display: 'flex' }} width={280} gap="$4">
-                    {/* User Profile Card */}
+                    {/* Community Stats Card */}
                     <YStack bg="$surface" p="$5" borderRadius="$card" elevation="$0.5" gap="$4">
                         <XStack gap="$3" alignItems="center">
                             <Avatar circular size="$5" bg="$primaryContainer">
@@ -92,43 +99,89 @@ export function FeedScreen() {
                         <Separator borderColor="$outlineVariant" opacity={0.5} />
                         <XStack width="100%" justifyContent="space-around">
                             <YStack alignItems="center" gap="$1">
-                                <SizableText size="$5" fontWeight="700" color="$onSurface">12</SizableText>
+                                <SizableText size="$5" fontWeight="700" color="$onSurface">{allProfiles?.length || 0}</SizableText>
                                 <SizableText size="$1" color="$onSurfaceVariant" fontWeight="500">멤버</SizableText>
                             </YStack>
                             <YStack alignItems="center" gap="$1">
-                                <SizableText size="$5" fontWeight="700" color="$onSurface">3</SizableText>
-                                <SizableText size="$1" color="$onSurfaceVariant" fontWeight="500">활동중</SizableText>
+                                <SizableText size="$5" fontWeight="700" color="$onSurface">{posts?.length || 0}</SizableText>
+                                <SizableText size="$1" color="$onSurfaceVariant" fontWeight="500">게시글</SizableText>
                             </YStack>
                             <YStack alignItems="center" gap="$1">
-                                <SizableText size="$5" fontWeight="700" color="$onSurface">5</SizableText>
-                                <SizableText size="$1" color="$onSurfaceVariant" fontWeight="500">인기</SizableText>
+                                <SizableText size="$5" fontWeight="700" color="$onSurface">{groups?.length || 0}</SizableText>
+                                <SizableText size="$1" color="$onSurfaceVariant" fontWeight="500">그룹</SizableText>
                             </YStack>
                         </XStack>
                     </YStack>
 
-                    {/* Recent Posts Widget */}
+                    {/* Recent Blog Posts Widget */}
                     <YStack bg="$surface" p="$5" borderRadius="$card" elevation="$0.5" gap="$3">
-                        <SizableText color="$onSurface" size="$4" fontWeight="700">최근 게시글</SizableText>
+                        <XStack justifyContent="space-between" alignItems="center">
+                            <XStack gap="$2" alignItems="center">
+                                <FileText size={16} color="$onSurface" />
+                                <SizableText color="$onSurface" size="$4" fontWeight="700">최근 블로그</SizableText>
+                            </XStack>
+                            <Button size="$2" bg="transparent" onPress={() => router.push('/blog')} icon={<ChevronRight size={14} color="$primary" />}>
+                                <SizableText color="$primary" size="$2">전체</SizableText>
+                            </Button>
+                        </XStack>
                         <YStack gap="$2.5">
-                            <SizableText color="$primary" size="$3" fontWeight="500" numberOfLines={1}>함께 걷는 길잡이가 되어주세요</SizableText>
-                            <SizableText color="$primary" size="$3" fontWeight="500" numberOfLines={1}>디지털 시대, 우리는 '텐트메이커'를 꿈꿉니다</SizableText>
-                            <SizableText color="$primary" size="$3" fontWeight="500" numberOfLines={1}>책 야곱연이 음악을 만나 입체적인 예배가...</SizableText>
+                            {blogPosts?.filter(b => b.isPublished).slice(0, 5).map(blog => (
+                                <SizableText
+                                    key={blog.id}
+                                    color="$primary"
+                                    size="$3"
+                                    fontWeight="500"
+                                    numberOfLines={1}
+                                    cursor="pointer"
+                                    hoverStyle={{ textDecorationLine: 'underline' }}
+                                    onPress={() => router.push(`/blog/${blog.id}`)}
+                                >
+                                    {blog.title}
+                                </SizableText>
+                            ))}
+                            {(!blogPosts || blogPosts.filter(b => b.isPublished).length === 0) && (
+                                <SizableText color="$onSurfaceVariant" size="$2">아직 블로그 글이 없습니다</SizableText>
+                            )}
                         </YStack>
                     </YStack>
 
                     {/* Groups Widget */}
                     <YStack bg="$surface" p="$5" borderRadius="$card" elevation="$0.5" gap="$3">
-                        <SizableText color="$onSurface" size="$4" fontWeight="700">그룹</SizableText>
-                        <XStack alignItems="center" gap="$3">
-                            <Avatar circular size="$3" borderRadius={8}>
-                                <Avatar.Image width="100%" height="100%" src="https://i.pravatar.cc/150?u=g1" />
-                                <Avatar.Fallback bg="$primaryContainer" />
-                            </Avatar>
-                            <YStack flex={1}>
-                                <SizableText color="$onSurface" fontWeight="600" size="$3">북콘서트 기획팀</SizableText>
-                                <SizableText color="$onSurfaceVariant" size="$2">최근 활동 5주 전</SizableText>
-                            </YStack>
+                        <XStack justifyContent="space-between" alignItems="center">
+                            <XStack gap="$2" alignItems="center">
+                                <Users size={16} color="$onSurface" />
+                                <SizableText color="$onSurface" size="$4" fontWeight="700">그룹</SizableText>
+                            </XStack>
+                            <Button size="$2" bg="transparent" onPress={() => router.push('/groups')} icon={<ChevronRight size={14} color="$primary" />}>
+                                <SizableText color="$primary" size="$2">전체</SizableText>
+                            </Button>
                         </XStack>
+                        <YStack gap="$2.5">
+                            {groups?.slice(0, 5).map(group => (
+                                <XStack
+                                    key={group.id}
+                                    alignItems="center"
+                                    gap="$3"
+                                    cursor="pointer"
+                                    hoverStyle={{ opacity: 0.8 }}
+                                    onPress={() => router.push(`/groups/${group.id}`)}
+                                >
+                                    <Avatar circular size="$3" bg="$primaryContainer">
+                                        <Avatar.Image width="100%" height="100%" src={`https://picsum.photos/seed/${group.id}/100`} />
+                                        <Avatar.Fallback bg="$primaryContainer" />
+                                    </Avatar>
+                                    <YStack flex={1}>
+                                        <SizableText color="$onSurface" fontWeight="600" size="$3" numberOfLines={1}>{group.name}</SizableText>
+                                        <SizableText color="$onSurfaceVariant" size="$2">
+                                            {(group as any).members?.[0]?.count || 0}명
+                                        </SizableText>
+                                    </YStack>
+                                </XStack>
+                            ))}
+                            {(!groups || groups.length === 0) && (
+                                <SizableText color="$onSurfaceVariant" size="$2">아직 그룹이 없습니다</SizableText>
+                            )}
+                        </YStack>
                     </YStack>
                 </YStack>
 

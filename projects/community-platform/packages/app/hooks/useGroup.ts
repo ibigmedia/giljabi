@@ -237,6 +237,93 @@ export function useLeaveGroup() {
   })
 }
 
+// Admin: Fetch all groups with member count and details
+export function useAdminGroups() {
+  return useQuery({
+    queryKey: ['admin_groups'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('Group')
+        .select(`
+          *,
+          members:GroupMember(
+            id,
+            role,
+            profile:Profile(id, username, avatarUrl)
+          )
+        `)
+        .order('createdAt', { ascending: false })
+
+      if (error) throw error
+      return data as (Group & { members: { id: string; role: string; profile: { id: string; username: string; avatarUrl: string | null } }[] })[]
+    },
+  })
+}
+
+// Admin: Update group
+export function useUpdateGroup() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, name, description, isPrivate }: { id: string; name: string; description: string; isPrivate: boolean }) => {
+      const { error } = await supabase
+        .from('Group')
+        .update({ name, description, isPrivate, updatedAt: new Date().toISOString() })
+        .eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin_groups'] })
+      queryClient.invalidateQueries({ queryKey: ['groups'] })
+    },
+  })
+}
+
+// Admin: Delete group
+export function useDeleteGroup() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('Group').delete().eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin_groups'] })
+      queryClient.invalidateQueries({ queryKey: ['groups'] })
+      queryClient.invalidateQueries({ queryKey: ['my_groups'] })
+    },
+  })
+}
+
+// Admin: Remove member from group
+export function useRemoveGroupMember() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ memberId, groupId }: { memberId: string; groupId: string }) => {
+      const { error } = await supabase.from('GroupMember').delete().eq('id', memberId)
+      if (error) throw error
+      return groupId
+    },
+    onSuccess: (groupId) => {
+      queryClient.invalidateQueries({ queryKey: ['admin_groups'] })
+      queryClient.invalidateQueries({ queryKey: ['group', groupId] })
+    },
+  })
+}
+
+// Admin: Update member role
+export function useUpdateMemberRole() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ memberId, role }: { memberId: string; role: string }) => {
+      const { error } = await supabase.from('GroupMember').update({ role }).eq('id', memberId)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin_groups'] })
+    },
+  })
+}
+
 // Check membership status
 export function useIsGroupMember(groupId: string) {
   return useQuery({
