@@ -361,52 +361,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
             {/* Main Content Area */}
             <YStack flex={1} position="relative" height="100%">
-                <YStack flex={1}>
-                    {children}
-
-                    {/* ===== Footer ===== */}
-                    <div className="desktop-only" style={{ flexDirection: 'column' }}>
-                        <YStack bg="$surfaceContainerLow" borderTopWidth={1} borderColor="$outlineVariant">
-                            <YStack maxWidth={1080} alignSelf="center" width="100%" px="$6" py="$8">
-                                <XStack flexWrap="wrap" gap="$8" justifyContent="space-between">
-                                    {/* Brand */}
-                                    <YStack gap="$2" minWidth={200}>
-                                        <SizableText size="$6" fontWeight="800" color="$primary" letterSpacing={-0.5}>Giljabi</SizableText>
-                                        <SizableText size="$2" color="$onSurfaceVariant" lineHeight={18}>
-                                            디지털 시대에도 변치 않는{'\n'}믿음의 길을 만듭니다.
-                                        </SizableText>
-                                    </YStack>
-
-                                    {/* Links */}
-                                    <XStack gap="$8" flexWrap="wrap">
-                                        <YStack gap="$2">
-                                            <SizableText size="$2" fontWeight="700" color="$onSurface">커뮤니티</SizableText>
-                                            <SizableText size="$2" color="$onSurfaceVariant" cursor="pointer" hoverStyle={{ color: '$primary' }} onPress={() => router.push('/feed')}>공동체 나눔</SizableText>
-                                            <SizableText size="$2" color="$onSurfaceVariant" cursor="pointer" hoverStyle={{ color: '$primary' }} onPress={() => router.push('/groups')}>그룹</SizableText>
-                                            <SizableText size="$2" color="$onSurfaceVariant" cursor="pointer" hoverStyle={{ color: '$primary' }} onPress={() => router.push('/directory')}>멤버 디렉토리</SizableText>
-                                        </YStack>
-                                        <YStack gap="$2">
-                                            <SizableText size="$2" fontWeight="700" color="$onSurface">콘텐츠</SizableText>
-                                            <SizableText size="$2" color="$onSurfaceVariant" cursor="pointer" hoverStyle={{ color: '$primary' }} onPress={() => router.push('/blog')}>블로그</SizableText>
-                                            <SizableText size="$2" color="$onSurfaceVariant" cursor="pointer" hoverStyle={{ color: '$primary' }} onPress={() => router.push('/landing')}>사역 소개</SizableText>
-                                        </YStack>
-                                        <YStack gap="$2">
-                                            <SizableText size="$2" fontWeight="700" color="$onSurface">계정</SizableText>
-                                            <SizableText size="$2" color="$onSurfaceVariant" cursor="pointer" hoverStyle={{ color: '$primary' }} onPress={() => router.push('/profile')}>내 프로필</SizableText>
-                                            <SizableText size="$2" color="$onSurfaceVariant" cursor="pointer" hoverStyle={{ color: '$primary' }} onPress={() => router.push('/login')}>로그인</SizableText>
-                                        </YStack>
-                                    </XStack>
-                                </XStack>
-
-                                <Separator borderColor="$outlineVariant" my="$4" />
-
-                                <SizableText size="$1" color="$onSurfaceVariant" textAlign="center">
-                                    © 2026 Giljabi.com · Team Giljabi · I Believe in God even in the Digital Age
-                                </SizableText>
-                            </YStack>
-                        </YStack>
-                    </div>
-                </YStack>
+                {children}
 
                 {/* ===== Mobile: Bottom Tab Bar ===== */}
                 <div className="mobile-only" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 100 }}>
