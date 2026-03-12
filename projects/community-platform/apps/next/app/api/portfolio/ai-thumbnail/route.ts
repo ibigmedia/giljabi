@@ -14,15 +14,10 @@ export async function POST(req: NextRequest) {
         const encoded = encodeURIComponent(fullPrompt)
 
         // Pollinations.ai generates images from text prompts via URL
-        // Adding a seed based on prompt ensures same prompt = same image
+        // The URL itself IS the image - it generates on first request and caches
+        // No need to verify - just return the URL and let the browser load it
         const seed = hashCode(prompt)
         const imageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=512&height=512&seed=${seed}&nologo=true`
-
-        // Verify the URL is reachable
-        const check = await fetch(imageUrl, { method: 'HEAD' })
-        if (!check.ok) {
-            return NextResponse.json({ error: 'AI 이미지 생성 실패' }, { status: 502 })
-        }
 
         return NextResponse.json({ imageUrl })
     } catch (err: any) {
