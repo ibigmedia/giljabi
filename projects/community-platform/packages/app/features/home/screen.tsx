@@ -1,10 +1,37 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { YStack, XStack, ScrollView, H2, H3, Paragraph, SizableText, Button, Separator } from '@my/ui'
 import { Heart, Layers, TrendingUp, Zap, BookOpen, Wifi, Users, ChevronDown, Music, Code, Globe, ArrowRight, Play, Headphones, Video, Disc, ExternalLink } from '@tamagui/lucide-icons'
 import { useRouter } from 'solito/navigation'
 import { useCurrentUserProfile } from '../../hooks/useProfiles'
+
+type PortfolioRelease = { id: string; title: string; artist: string; year: number; type: string; coverUrl?: string; status: string; tracks?: any[] }
+type PortfolioVideo = { id: string; title: string; youtubeUrl?: string; thumbnailUrl?: string; views: number; duration: string; status: string }
+
+function extractYouTubeId(url: string): string | null {
+    const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|shorts\/))([a-zA-Z0-9_-]{11})/)
+    return m ? m[1] : null
+}
+
+function usePortfolioData() {
+    const [releases, setReleases] = useState<PortfolioRelease[]>([])
+    const [videos, setVideos] = useState<PortfolioVideo[]>([])
+    const [loaded, setLoaded] = useState(false)
+
+    useEffect(() => {
+        Promise.all([
+            fetch('/api/portfolio/releases').then(r => r.ok ? r.json() : []).catch(() => []),
+            fetch('/api/portfolio/videos').then(r => r.ok ? r.json() : []).catch(() => []),
+        ]).then(([rel, vid]) => {
+            setReleases((rel || []).filter((r: any) => r.status === 'published'))
+            setVideos((vid || []).filter((v: any) => v.status === 'published'))
+            setLoaded(true)
+        })
+    }, [])
+
+    return { releases, videos, loaded }
+}
 
 const HERO_CSS = `
   .hero-section {
@@ -150,6 +177,9 @@ const HERO_CSS = `
 export function HomeScreen() {
     const router = useRouter()
     const { data: profile } = useCurrentUserProfile()
+    const { releases, videos, loaded: portfolioLoaded } = usePortfolioData()
+    const featuredRelease = releases[0]
+    const totalTracks = releases.reduce((s, r) => s + (r.tracks?.length || 0), 0)
 
     return (
         <ScrollView flex={1} bg="$backgroundBody">
@@ -345,91 +375,68 @@ export function HomeScreen() {
                     </YStack>
 
                     {/* Featured Release - Hero Card */}
+                    {featuredRelease ? (
                     <div className="portfolio-album-card">
                         <YStack bg="rgba(255,255,255,0.06)" borderRadius="$6" overflow="hidden" borderWidth={1} borderColor="rgba(255,255,255,0.08)">
                             <XStack flexWrap="wrap" className="portfolio-featured-grid">
-                                {/* Album Art */}
                                 <YStack width={320} minWidth={280} height={320} position="relative" overflow="hidden">
                                     {/* @ts-ignore */}
-                                    <img src="https://picsum.photos/seed/album1/640/640" alt="Run Away" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    <img src={featuredRelease.coverUrl || `https://picsum.photos/seed/${featuredRelease.id}/640/640`} alt={featuredRelease.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                     <div className="portfolio-play-overlay">
-                                        <YStack
-                                            width={72} height={72}
-                                            borderRadius={36}
-                                            bg="rgba(79,124,255,0.9)"
-                                            alignItems="center"
-                                            justifyContent="center"
-                                        >
+                                        <YStack width={72} height={72} borderRadius={36} bg="rgba(79,124,255,0.9)" alignItems="center" justifyContent="center">
                                             <Play size={32} color="white" />
                                         </YStack>
                                     </div>
-                                    {/* Badge */}
                                     <YStack position="absolute" top="$3" left="$3" bg="#4F7CFF" borderRadius="$full" px="$3" py="$1">
                                         <SizableText color="white" size="$1" fontWeight="700" letterSpacing={1}>NEW RELEASE</SizableText>
                                     </YStack>
                                 </YStack>
-
-                                {/* Info */}
                                 <YStack flex={1} minWidth={300} p="$6" gap="$4" justifyContent="center" className="portfolio-featured-info">
                                     <YStack gap="$1">
-                                        <SizableText color="rgba(255,255,255,0.5)" size="$2" fontWeight="600">2024 · Single</SizableText>
-                                        <SizableText color="white" size="$9" fontWeight="900" letterSpacing={-1}>Run Away</SizableText>
-                                        <SizableText color="#4F7CFF" size="$3" fontWeight="600">iBiG band</SizableText>
+                                        <SizableText color="rgba(255,255,255,0.5)" size="$2" fontWeight="600">{featuredRelease.year} · {featuredRelease.type}</SizableText>
+                                        <SizableText color="white" size="$9" fontWeight="900" letterSpacing={-1}>{featuredRelease.title}</SizableText>
+                                        <SizableText color="#4F7CFF" size="$3" fontWeight="600">{featuredRelease.artist}</SizableText>
                                     </YStack>
                                     <Paragraph color="rgba(255,255,255,0.6)" size="$3" lineHeight={22}>
-                                        디지털 시대의 새로운 찬양. 사운드스케이프와 감성적 리듬으로 만들어진 최신 싱글.
-                                        음악과 기술(Sound & Tech)이 만나 영혼의 울림을 전합니다.
+                                        {featuredRelease.tracks?.length ? `${featuredRelease.tracks.length}곡 수록` : '최신 발매'}
                                     </Paragraph>
                                     <XStack gap="$3" mt="$1" flexWrap="wrap">
-                                        <XStack
-                                            alignItems="center"
-                                            gap="$2"
-                                            bg="#4F7CFF"
-                                            borderRadius="$full"
-                                            paddingHorizontal="$4"
-                                            paddingVertical="$2.5"
-                                            cursor="pointer"
-                                            hoverStyle={{ opacity: 0.9 }}
-                                            onPress={() => router.push('/portfolio')}
-                                        >
+                                        <XStack alignItems="center" gap="$2" bg="#4F7CFF" borderRadius="$full" paddingHorizontal="$4" paddingVertical="$2.5" cursor="pointer" hoverStyle={{ opacity: 0.9 }} onPress={() => router.push('/portfolio')}>
                                             <Headphones size={16} color="white" />
                                             <SizableText color="white" fontWeight="700" size="$3">지금 듣기</SizableText>
                                         </XStack>
-                                        <XStack
-                                            alignItems="center"
-                                            gap="$2"
-                                            borderWidth={1}
-                                            borderColor="rgba(255,255,255,0.2)"
-                                            borderRadius="$full"
-                                            paddingHorizontal="$4"
-                                            paddingVertical="$2.5"
-                                            cursor="pointer"
-                                            hoverStyle={{ bg: 'rgba(255,255,255,0.08)' }}
-                                            onPress={() => router.push('/portfolio')}
-                                        >
+                                        <XStack alignItems="center" gap="$2" borderWidth={1} borderColor="rgba(255,255,255,0.2)" borderRadius="$full" paddingHorizontal="$4" paddingVertical="$2.5" cursor="pointer" hoverStyle={{ bg: 'rgba(255,255,255,0.08)' }} onPress={() => router.push('/portfolio')}>
                                             <Disc size={16} color="rgba(255,255,255,0.6)" />
                                             <SizableText color="white" fontWeight="600" size="$3">디스코그래피</SizableText>
                                         </XStack>
                                     </XStack>
-                                    {/* Mini stats */}
                                     <XStack gap="$6" mt="$2">
                                         <YStack>
-                                            <SizableText color="white" size="$5" fontWeight="800">5</SizableText>
+                                            <SizableText color="white" size="$5" fontWeight="800">{releases.length}</SizableText>
                                             <SizableText color="rgba(255,255,255,0.5)" size="$1" fontWeight="500">Releases</SizableText>
                                         </YStack>
                                         <YStack>
-                                            <SizableText color="white" size="$5" fontWeight="800">4</SizableText>
+                                            <SizableText color="white" size="$5" fontWeight="800">{videos.length}</SizableText>
                                             <SizableText color="rgba(255,255,255,0.5)" size="$1" fontWeight="500">Videos</SizableText>
                                         </YStack>
                                         <YStack>
-                                            <SizableText color="white" size="$5" fontWeight="800">935</SizableText>
-                                            <SizableText color="rgba(255,255,255,0.5)" size="$1" fontWeight="500">Total Views</SizableText>
+                                            <SizableText color="white" size="$5" fontWeight="800">{totalTracks}</SizableText>
+                                            <SizableText color="rgba(255,255,255,0.5)" size="$1" fontWeight="500">Tracks</SizableText>
                                         </YStack>
                                     </XStack>
                                 </YStack>
                             </XStack>
                         </YStack>
                     </div>
+                    ) : !portfolioLoaded ? null : (
+                    <div className="portfolio-album-card">
+                        <YStack bg="rgba(255,255,255,0.06)" borderRadius="$6" p="$8" alignItems="center" gap="$3" borderWidth={1} borderColor="rgba(255,255,255,0.08)">
+                            <Music size={40} color="rgba(255,255,255,0.3)" />
+                            <SizableText color="rgba(255,255,255,0.5)" size="$4">발매된 음반이 없습니다</SizableText>
+                            <SizableText color="rgba(255,255,255,0.3)" size="$2">관리자 대시보드에서 음반을 추가하세요</SizableText>
+                        </YStack>
+                    </div>
+                    )}
 
                     {/* Albums Grid */}
                     <YStack gap="$4">
@@ -451,25 +458,12 @@ export function HomeScreen() {
                         </XStack>
 
                         <XStack gap="$4" flexWrap="wrap">
-                            {[
-                                { title: 'Run Away', year: '2024', type: 'Single', seed: 'album1' },
-                                { title: 'Jesus Story', year: '2024', type: 'Single', seed: 'album2' },
-                                { title: '성탄절 악보', year: '2023', type: 'EP', seed: 'album3' },
-                                { title: '예배 찬양 시리즈', year: '2023', type: 'Album', seed: 'album4' },
-                            ].map((album, i) => (
-                                <div key={i} className="portfolio-album-card" style={{ flex: '1 1 180px', minWidth: 160, maxWidth: 220 }}>
-                                    <YStack
-                                        bg="rgba(255,255,255,0.06)"
-                                        borderRadius="$5"
-                                        overflow="hidden"
-                                        borderWidth={1}
-                                        borderColor="rgba(255,255,255,0.08)"
-                                        gap="$2"
-                                        onPress={() => router.push('/portfolio')}
-                                    >
+                            {releases.slice(0, 4).map((album) => (
+                                <div key={album.id} className="portfolio-album-card" style={{ flex: '1 1 180px', minWidth: 160, maxWidth: 220 }}>
+                                    <YStack bg="rgba(255,255,255,0.06)" borderRadius="$5" overflow="hidden" borderWidth={1} borderColor="rgba(255,255,255,0.08)" gap="$2" onPress={() => router.push('/portfolio')}>
                                         <YStack width="100%" aspectRatio={1} position="relative" overflow="hidden">
                                             {/* @ts-ignore */}
-                                            <img src={`https://picsum.photos/seed/${album.seed}/400/400`} alt={album.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            <img src={album.coverUrl || `https://picsum.photos/seed/${album.id}/400/400`} alt={album.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                             <div className="portfolio-play-overlay">
                                                 <YStack width={44} height={44} borderRadius={22} bg="rgba(79,124,255,0.9)" alignItems="center" justifyContent="center">
                                                     <Play size={20} color="white" />
@@ -483,6 +477,9 @@ export function HomeScreen() {
                                     </YStack>
                                 </div>
                             ))}
+                            {releases.length === 0 && portfolioLoaded && (
+                                <SizableText color="rgba(255,255,255,0.4)" size="$3" textAlign="center" width="100%">발매된 음반이 없습니다</SizableText>
+                            )}
                         </XStack>
                     </YStack>
 
@@ -506,42 +503,37 @@ export function HomeScreen() {
                         </XStack>
 
                         <XStack gap="$4" flexWrap="wrap">
-                            {[
-                                { title: 'Run Away (Official MV)', views: '86', seed: 'mv1' },
-                                { title: 'Jesus Story', views: '116', seed: 'mv2' },
-                            ].map((mv, i) => (
-                                <div key={i} className="portfolio-video-card" style={{ flex: '1 1 300px', minWidth: 280 }}>
-                                    <YStack
-                                        bg="rgba(255,255,255,0.06)"
-                                        borderRadius="$5"
-                                        overflow="hidden"
-                                        borderWidth={1}
-                                        borderColor="rgba(255,255,255,0.08)"
-                                        gap="$2"
-                                        onPress={() => router.push('/portfolio')}
-                                    >
+                            {videos.slice(0, 4).map((mv) => {
+                                const ytId = mv.youtubeUrl ? extractYouTubeId(mv.youtubeUrl) : null
+                                const thumb = mv.thumbnailUrl || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : `https://picsum.photos/seed/${mv.id}/600/340`)
+                                return (
+                                <div key={mv.id} className="portfolio-video-card" style={{ flex: '1 1 300px', minWidth: 280 }}>
+                                    <YStack bg="rgba(255,255,255,0.06)" borderRadius="$5" overflow="hidden" borderWidth={1} borderColor="rgba(255,255,255,0.08)" gap="$2" onPress={() => router.push('/portfolio')}>
                                         <YStack width="100%" aspectRatio={16 / 9} position="relative" overflow="hidden">
                                             {/* @ts-ignore */}
-                                            <img src={`https://picsum.photos/seed/${mv.seed}/600/340`} alt={mv.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            <img src={thumb} alt={mv.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                             <div className="portfolio-play-overlay">
                                                 <YStack width={56} height={56} borderRadius={28} bg="rgba(79,124,255,0.9)" alignItems="center" justifyContent="center">
                                                     <Play size={24} color="white" />
                                                 </YStack>
                                             </div>
-                                            {/* Duration badge */}
                                             <YStack position="absolute" bottom="$2" right="$2" bg="rgba(0,0,0,0.75)" borderRadius="$2" px="$2" py="$1">
-                                                <SizableText color="white" size="$1" fontWeight="600">{3 + i}:{(10 + i * 7).toString().padStart(2, '0')}</SizableText>
+                                                <SizableText color="white" size="$1" fontWeight="600">{mv.duration}</SizableText>
                                             </YStack>
                                         </YStack>
                                         <XStack px="$4" pb="$3" justifyContent="space-between" alignItems="center">
                                             <YStack flex={1}>
                                                 <SizableText color="white" size="$4" fontWeight="700">{mv.title}</SizableText>
-                                                <SizableText color="rgba(255,255,255,0.5)" size="$2">{mv.views} views · 2024</SizableText>
+                                                <SizableText color="rgba(255,255,255,0.5)" size="$2">{mv.views} views</SizableText>
                                             </YStack>
                                         </XStack>
                                     </YStack>
                                 </div>
-                            ))}
+                                )
+                            })}
+                            {videos.length === 0 && portfolioLoaded && (
+                                <SizableText color="rgba(255,255,255,0.4)" size="$3" textAlign="center" width="100%">뮤직비디오가 없습니다</SizableText>
+                            )}
                         </XStack>
                     </YStack>
 

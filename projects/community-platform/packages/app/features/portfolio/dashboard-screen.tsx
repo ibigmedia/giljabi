@@ -128,17 +128,7 @@ function AiThumbnailGenerator({ onGenerated }: { currentUrl?: string; onGenerate
         setError(null)
         try {
             const data = await apiPost<{ imageUrl: string }>('/api/portfolio/ai-thumbnail', { prompt: prompt.trim() })
-            // Pre-load image to verify it works before showing preview
-            if (typeof document !== 'undefined') {
-                await new Promise<void>((resolve, reject) => {
-                    const img = document.createElement('img')
-                    img.onload = () => resolve()
-                    img.onerror = () => reject(new Error('Image load failed'))
-                    img.src = data.imageUrl
-                    // Allow up to 30s for AI generation (Pollinations can be slow)
-                    setTimeout(() => resolve(), 30000)
-                })
-            }
+            // Show the URL immediately — the <img> tag will handle loading
             setPreviewUrl(data.imageUrl)
         } catch (err: any) {
             setError('AI 이미지 생성 실패. 영어 프롬프트로 다시 시도해주세요. (예: "night sky with cross album cover")')
@@ -154,9 +144,15 @@ function AiThumbnailGenerator({ onGenerated }: { currentUrl?: string; onGenerate
                 <SizableText size="$2" fontWeight="700" color="$primary">AI 썸네일 생성</SizableText>
             </XStack>
             {previewUrl && (
-                <YStack width="100%" maxWidth={200} aspectRatio={1} borderRadius="$3" overflow="hidden" alignSelf="center">
+                <YStack width="100%" maxWidth={200} aspectRatio={1} borderRadius="$3" overflow="hidden" alignSelf="center" bg="$surfaceContainerHigh">
                     {/* @ts-ignore */}
-                    <img src={previewUrl} alt="AI Generated" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img
+                        src={previewUrl}
+                        alt="AI Generated"
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        onError={(e: any) => { e.target.style.display = 'none' }}
+                    />
+                    <SizableText size="$1" color="$textLight" textAlign="center" mt="$1" position="absolute" bottom={4} left={0} right={0}>AI 생성 이미지 (로딩 중일 수 있음)</SizableText>
                 </YStack>
             )}
             {error && <SizableText size="$2" color="$error">{error}</SizableText>}
