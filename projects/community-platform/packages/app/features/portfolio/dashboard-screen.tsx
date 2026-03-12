@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { YStack, XStack, SizableText, Button, Input, TextArea, Separator } from '@my/ui'
 import {
     Music, Disc, Video, BarChart3, Palette, Settings, Plus, Trash2, Edit3, Eye, Save,
-    Upload, Image, Sparkles, Play, Pause, Link2, Youtube, X, Check,
+    Upload, Image, Sparkles, Play, Youtube, X, Check,
     Clock, TrendingUp, Headphones, ExternalLink, FileAudio, Wand2,
 } from '@tamagui/lucide-icons'
 import { AudioVisualizer, THEMES } from './audio-visualizer'
@@ -116,7 +116,7 @@ function DragDropZone({ label, accept, icon: Icon, onFiles }: { label: string; a
 }
 
 // ─── AI Thumbnail Generator (shared) ─────────────────────────────────
-function AiThumbnailGenerator({ currentUrl, onGenerated }: { currentUrl?: string; onGenerated: (url: string) => void }) {
+function AiThumbnailGenerator({ onGenerated }: { currentUrl?: string; onGenerated: (url: string) => void }) {
     const [prompt, setPrompt] = useState('')
     const [generating, setGenerating] = useState(false)
     const [previewUrl, setPreviewUrl] = useState<string | null>(null)
@@ -129,14 +129,16 @@ function AiThumbnailGenerator({ currentUrl, onGenerated }: { currentUrl?: string
         try {
             const data = await apiPost<{ imageUrl: string }>('/api/portfolio/ai-thumbnail', { prompt: prompt.trim() })
             // Pre-load image to verify it works before showing preview
-            await new Promise<void>((resolve, reject) => {
-                const img = new Image()
-                img.onload = () => resolve()
-                img.onerror = () => reject(new Error('Image load failed'))
-                img.src = data.imageUrl
-                // Allow up to 30s for AI generation (Pollinations can be slow)
-                setTimeout(() => resolve(), 30000)
-            })
+            if (typeof document !== 'undefined') {
+                await new Promise<void>((resolve, reject) => {
+                    const img = document.createElement('img')
+                    img.onload = () => resolve()
+                    img.onerror = () => reject(new Error('Image load failed'))
+                    img.src = data.imageUrl
+                    // Allow up to 30s for AI generation (Pollinations can be slow)
+                    setTimeout(() => resolve(), 30000)
+                })
+            }
             setPreviewUrl(data.imageUrl)
         } catch (err: any) {
             setError('AI 이미지 생성 실패. 영어 프롬프트로 다시 시도해주세요. (예: "night sky with cross album cover")')
