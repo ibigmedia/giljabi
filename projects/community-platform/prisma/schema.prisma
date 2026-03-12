@@ -61,6 +61,7 @@ model Post {
   id        String   @id @default(dbgenerated("gen_random_uuid()::text"))
   content   String
   mediaUrl  String?
+  isPinned  Boolean  @default(false)
   authorId  String
   author    Profile  @relation(fields: [authorId], references: [id])
   groupId   String?

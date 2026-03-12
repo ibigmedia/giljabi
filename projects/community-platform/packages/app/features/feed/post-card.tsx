@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { YStack, XStack, Avatar, Paragraph, Button, Separator, Input, Spinner, Anchor, Image, SizableText } from '@my/ui'
-import { Heart, MessageCircle, MoreHorizontal, Send, Share2 } from '@tamagui/lucide-icons'
+import { Heart, MessageCircle, MoreHorizontal, Send, Share2, Pin } from '@tamagui/lucide-icons'
 import { useRouter } from 'solito/navigation'
 import { useToggleLike, Post } from '../../hooks/usePosts'
 import { useComments, useCreateComment } from '../../hooks/useComments'
@@ -67,7 +67,17 @@ export function PostCard({ post, currentUserProfile }: { post: Post; currentUser
             borderRadius="$card"
             elevation="$0.5"
             overflow="hidden"
+            borderWidth={post.isPinned ? 2 : 0}
+            borderColor={post.isPinned ? '$orange8' : undefined}
         >
+            {/* Pinned notice banner */}
+            {post.isPinned && (
+                <XStack bg="$orange3" px="$4" py="$2" gap="$2" alignItems="center">
+                    <Pin size={14} color="$orange10" />
+                    <SizableText size="$2" color="$orange10" fontWeight="700">공지글</SizableText>
+                </XStack>
+            )}
+
             {/* Header */}
             <XStack justifyContent="space-between" alignItems="center" p="$4" pb="$2">
                 <XStack gap="$3" alignItems="center" flex={1} cursor="pointer" onPress={() => router.push(`/post/${post.id}`)}>

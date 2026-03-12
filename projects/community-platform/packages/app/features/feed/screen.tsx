@@ -251,16 +251,22 @@ export function FeedScreen() {
                         </XStack>
                     </YStack>
 
-                    {/* Post Timeline */}
+                    {/* Post Timeline — pinned posts first */}
                     {isLoading ? (
                         <YStack padding="$8" alignItems="center">
                             <Spinner size="large" color="$primary" />
                         </YStack>
                     ) : (
                         <YStack gap="$3">
-                            {posts?.map(post => (
-                                <PostCard key={post.id} post={post} currentUserProfile={currentUserProfile} />
-                            ))}
+                            {[...(posts || [])]
+                                .sort((a, b) => {
+                                    if (a.isPinned && !b.isPinned) return -1
+                                    if (!a.isPinned && b.isPinned) return 1
+                                    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                                })
+                                .map(post => (
+                                    <PostCard key={post.id} post={post} currentUserProfile={currentUserProfile} />
+                                ))}
                         </YStack>
                     )}
                 </YStack>

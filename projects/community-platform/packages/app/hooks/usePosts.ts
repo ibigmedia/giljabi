@@ -5,6 +5,7 @@ export interface Post {
     id: string
     content: string
     mediaUrl: string | null
+    isPinned: boolean
     authorId: string
     createdAt: string
     author?: {
@@ -186,6 +187,52 @@ export function useDeletePost() {
                 .delete()
                 .eq('id', postId)
             if (error) throw error
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['posts'] })
+        },
+    })
+}
+
+// 포스트 고정/해제
+export function useTogglePin() {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: async ({ postId, isPinned }: { postId: string; isPinned: boolean }) => {
+            const { error } = await supabase
+                .from('Post')
+                .update({ isPinned, updatedAt: new Date().toISOString() })
+                .eq('id', postId)
+            if (error) throw error
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['posts'] })
+        },
+    })
+}
+
+// 관리자 공지글 생성
+export function useCreateNotice() {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: async ({ content, profileId, mediaUrl }: { content: string; profileId: string; mediaUrl?: string }) => {
+            const { data, error } = await supabase
+                .from('Post')
+                .insert({
+                    id: generateId(),
+                    content,
+                    authorId: profileId,
+                    isPinned: true,
+                    mediaUrl: mediaUrl || null,
+                    updatedAt: new Date().toISOString()
+                })
+                .select()
+                .single()
+
+            if (error) throw error
+            return data
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['posts'] })
