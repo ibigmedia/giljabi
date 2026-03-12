@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 // POST /api/portfolio/ai-thumbnail — generate an AI image from a text prompt
-// Uses Pollinations.ai (free, no API key needed)
 export async function POST(req: NextRequest) {
     try {
         const { prompt } = await req.json()
@@ -9,17 +8,29 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: '프롬프트를 입력해주세요.' }, { status: 400 })
         }
 
-        // Build a rich prompt for album art
-        const fullPrompt = `album cover art, music, professional, high quality, ${prompt}`
-        const encoded = encodeURIComponent(fullPrompt)
-
-        // Pollinations.ai generates images from text prompts via URL
-        // The URL itself IS the image - it generates on first request and caches
-        // No need to verify - just return the URL and let the browser load it
+        // Extract key words from prompt (keep it short for Pollinations reliability)
+        const keywords = prompt.trim().replace(/[^a-zA-Z0-9가-힣\s-]/g, '').split(/\s+/).slice(0, 6).join('-')
         const seed = hashCode(prompt)
-        const imageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=512&height=512&seed=${seed}&nologo=true`
 
-        return NextResponse.json({ imageUrl })
+        // Try Pollinations.ai first (free AI image generation)
+        const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(keywords)}?width=512&height=512&seed=${seed}`
+
+        try {
+            const res = await fetch(pollinationsUrl, {
+                method: 'GET',
+                signal: AbortSignal.timeout(15000), // 15s timeout
+            })
+            if (res.ok && res.headers.get('content-type')?.includes('image')) {
+                return NextResponse.json({ imageUrl: pollinationsUrl })
+            }
+        } catch {
+            // Pollinations failed, fall through to fallback
+        }
+
+        // Fallback: picsum.photos with deterministic seed from prompt
+        // Not AI-generated but deterministic per prompt (same prompt = same image)
+        const fallbackUrl = `https://picsum.photos/seed/${keywords}-${seed}/512/512`
+        return NextResponse.json({ imageUrl: fallbackUrl, fallback: true })
     } catch (err: any) {
         return NextResponse.json({ error: err.message || '서버 오류' }, { status: 500 })
     }
