@@ -6,7 +6,7 @@ import { Image as ImageIcon } from '@tamagui/lucide-icons'
 import { usePosts, useCreatePost } from '../../hooks/usePosts'
 import { useCurrentUserProfile } from '../../hooks/useProfiles'
 import { PostCard } from './post-card'
-import { ComposeLinkPreviews, extractUrls } from './link-preview'
+import { ComposeLinkPreviews } from './link-preview'
 
 export function FeedScreen() {
     const [postText, setPostText] = useState('')
@@ -53,14 +53,12 @@ export function FeedScreen() {
 
     const handlePost = () => {
         if (!canPost || !currentUserProfile?.id) return
-        // Append attached URLs that aren't already in the text so link previews render on the saved post
-        let finalContent = postText.trim()
-        for (const url of attachedUrls) {
-            if (!finalContent.includes(url)) {
-                finalContent = finalContent ? `${finalContent}\n${url}` : url
-            }
-        }
-        createPost({ content: finalContent, profileId: currentUserProfile.id, mediaUrl: mediaUrl.trim() ? mediaUrl : undefined }, {
+        const finalContent = postText.trim()
+        // Store attached URLs in mediaUrl field (newline-separated if multiple)
+        const finalMediaUrl = attachedUrls.length > 0
+            ? attachedUrls.join('\n')
+            : (mediaUrl.trim() || undefined)
+        createPost({ content: finalContent || ' ', profileId: currentUserProfile.id, mediaUrl: finalMediaUrl }, {
             onSuccess: () => {
                 setPostText('')
                 setMediaUrl('')

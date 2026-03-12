@@ -164,12 +164,18 @@ function SingleLinkPreview({ url }: { url: string }) {
 }
 
 // Main component: renders all link previews for a post
-export function PostLinkPreviews({ content }: { content: string }) {
-    const urls = extractUrls(content)
-    if (urls.length === 0) return null
+// Combines URLs from content text AND mediaUrl field (which stores attached previews)
+export function PostLinkPreviews({ content, mediaUrl }: { content: string; mediaUrl?: string | null }) {
+    const contentUrls = extractUrls(content)
+    // mediaUrl may contain newline-separated URLs from attached previews
+    const mediaUrls = mediaUrl
+        ? mediaUrl.split('\n').map(u => u.trim()).filter(u => u.startsWith('http') && !/\.(jpg|jpeg|png|gif|webp|svg|bmp)(\?.*)?$/i.test(u))
+        : []
+    // Combine, deduplicate
+    const allUrls = Array.from(new Set([...contentUrls, ...mediaUrls]))
+    if (allUrls.length === 0) return null
 
-    // Max 3 previews
-    const limitedUrls = urls.slice(0, 3)
+    const limitedUrls = allUrls.slice(0, 3)
 
     return (
         <YStack>

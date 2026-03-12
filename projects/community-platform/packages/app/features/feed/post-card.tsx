@@ -116,13 +116,13 @@ export function PostCard({ post, currentUserProfile }: { post: Post; currentUser
                 </Paragraph>
             </YStack>
 
-            {/* Link Previews (YouTube embeds, OG cards) */}
+            {/* Link Previews from content text + mediaUrl field */}
             <YStack px="$4" pb="$1">
-                <PostLinkPreviews content={post.content} />
+                <PostLinkPreviews content={post.content} mediaUrl={post.mediaUrl} />
             </YStack>
 
-            {/* Media */}
-            {post.mediaUrl && (
+            {/* Media (only render as image if it looks like an image URL, not a link preview) */}
+            {post.mediaUrl && /\.(jpg|jpeg|png|gif|webp|svg|bmp)(\?.*)?$/i.test(post.mediaUrl) && (
                 <YStack cursor="pointer" onPress={() => router.push(`/post/${post.id}`)}>
                     <Image source={{ uri: post.mediaUrl }} width="100%" height={320} objectFit="cover" />
                 </YStack>
