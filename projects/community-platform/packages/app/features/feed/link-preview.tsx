@@ -183,3 +183,49 @@ export function PostLinkPreviews({ content }: { content: string }) {
         </YStack>
     )
 }
+
+// Compose preview: shows removable link previews while composing a post
+export function ComposeLinkPreviews({ text, dismissedUrls, onDismiss }: {
+    text: string
+    dismissedUrls: string[]
+    onDismiss: (url: string) => void
+}) {
+    const urls = extractUrls(text).filter(u => !dismissedUrls.includes(u)).slice(0, 3)
+    if (urls.length === 0) return null
+
+    return (
+        <YStack gap="$2">
+            {urls.map((url, i) => {
+                const youtubeId = getYouTubeId(url)
+                return (
+                    <YStack key={url} position="relative">
+                        {/* Dismiss button */}
+                        <XStack
+                            position="absolute"
+                            top={8}
+                            right={8}
+                            zIndex={10}
+                            bg="rgba(0,0,0,0.6)"
+                            borderRadius="$full"
+                            width={24}
+                            height={24}
+                            alignItems="center"
+                            justifyContent="center"
+                            cursor="pointer"
+                            hoverStyle={{ bg: 'rgba(0,0,0,0.8)' }}
+                            onPress={() => onDismiss(url)}
+                        >
+                            <SizableText color="white" size="$1" fontWeight="700">✕</SizableText>
+                        </XStack>
+
+                        {youtubeId ? (
+                            <YouTubeEmbed videoId={youtubeId} />
+                        ) : (
+                            <SingleLinkPreview url={url} />
+                        )}
+                    </YStack>
+                )
+            })}
+        </YStack>
+    )
+}

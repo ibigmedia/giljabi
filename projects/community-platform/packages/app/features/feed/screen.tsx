@@ -6,11 +6,17 @@ import { Image as ImageIcon } from '@tamagui/lucide-icons'
 import { usePosts, useCreatePost, useToggleLike } from '../../hooks/usePosts'
 import { useCurrentUserProfile } from '../../hooks/useProfiles'
 import { PostCard } from './post-card'
+import { ComposeLinkPreviews } from './link-preview'
 
 export function FeedScreen() {
     const [postText, setPostText] = useState('')
     const [mediaUrl, setMediaUrl] = useState('')
     const [showMediaInput, setShowMediaInput] = useState(false)
+    const [dismissedUrls, setDismissedUrls] = useState<string[]>([])
+
+    const handleDismissUrl = (url: string) => {
+        setDismissedUrls(prev => [...prev, url])
+    }
 
     const { data: currentUserProfile } = useCurrentUserProfile()
     const { data: posts, isLoading } = usePosts()
@@ -23,6 +29,7 @@ export function FeedScreen() {
                 setPostText('')
                 setMediaUrl('')
                 setShowMediaInput(false)
+                setDismissedUrls([])
             }
         })
     }
@@ -114,6 +121,9 @@ export function FeedScreen() {
                                 fontSize={15}
                             />
                         </XStack>
+
+                        {/* Live link preview while composing */}
+                        <ComposeLinkPreviews text={postText} dismissedUrls={dismissedUrls} onDismiss={handleDismissUrl} />
 
                         {showMediaInput && (
                             <Input
