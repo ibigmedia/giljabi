@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useRef } from 'react'
-import { YStack, XStack, Avatar, Paragraph, Input, Button, Separator, ScrollView, H4, Spinner, SizableText } from '@my/ui'
+import { useState } from 'react'
+import { YStack, XStack, Avatar, Input, Button, Separator, ScrollView, Spinner, SizableText } from '@my/ui'
 import { Image as ImageIcon } from '@tamagui/lucide-icons'
-import { usePosts, useCreatePost, useToggleLike } from '../../hooks/usePosts'
+import { usePosts, useCreatePost } from '../../hooks/usePosts'
 import { useCurrentUserProfile } from '../../hooks/useProfiles'
 import { PostCard } from './post-card'
 import { ComposeLinkPreviews, extractUrls } from './link-preview'
@@ -15,14 +15,24 @@ export function FeedScreen() {
     const [attachedUrls, setAttachedUrls] = useState<string[]>([])
     const [dismissedUrls, setDismissedUrls] = useState<string[]>([])
 
-    // Detect new URLs as user types and accumulate them
+    // Only detect URLs that are "complete" (followed by a space/newline, not still being typed)
     const handleTextChange = (text: string) => {
         setPostText(text)
-        const newUrls = extractUrls(text)
+        // Match URLs followed by whitespace — meaning the user finished typing them
+        const completeUrlRegex = /(https?:\/\/[^\s]+)(?=\s)/g
+        const matches = text.match(completeUrlRegex)
+        if (!matches) return
+        const newUrls = Array.from(new Set(matches))
         setAttachedUrls(prev => {
             const combined = [...prev]
             for (const url of newUrls) {
-                if (!combined.includes(url) && !dismissedUrls.includes(url)) {
+                // Skip if dismissed or already attached
+                if (dismissedUrls.includes(url)) continue
+                // Replace any existing URL that is a prefix of this one (partial → complete)
+                const prefixIdx = combined.findIndex(u => url.startsWith(u) && u !== url)
+                if (prefixIdx !== -1) {
+                    combined[prefixIdx] = url
+                } else if (!combined.includes(url)) {
                     combined.push(url)
                 }
             }
@@ -39,9 +49,18 @@ export function FeedScreen() {
     const { data: posts, isLoading } = usePosts()
     const { mutate: createPost, isPending: isCreating } = useCreatePost()
 
+    const canPost = (postText.trim() || attachedUrls.length > 0) && !!currentUserProfile
+
     const handlePost = () => {
-        if (!postText.trim() || !currentUserProfile?.id) return
-        createPost({ content: postText, profileId: currentUserProfile.id, mediaUrl: mediaUrl.trim() ? mediaUrl : undefined }, {
+        if (!canPost || !currentUserProfile?.id) return
+        // Append attached URLs that aren't already in the text so link previews render on the saved post
+        let finalContent = postText.trim()
+        for (const url of attachedUrls) {
+            if (!finalContent.includes(url)) {
+                finalContent = finalContent ? `${finalContent}\n${url}` : url
+            }
+        }
+        createPost({ content: finalContent, profileId: currentUserProfile.id, mediaUrl: mediaUrl.trim() ? mediaUrl : undefined }, {
             onSuccess: () => {
                 setPostText('')
                 setMediaUrl('')
@@ -170,8 +189,8 @@ export function FeedScreen() {
                                 bg="$primary"
                                 size="$3"
                                 borderRadius="$button"
-                                disabled={!postText.trim() || isCreating || !currentUserProfile}
-                                opacity={(!postText.trim() || isCreating || !currentUserProfile) ? 0.5 : 1}
+                                disabled={!canPost || isCreating}
+                                opacity={(!canPost || isCreating) ? 0.5 : 1}
                                 onPress={handlePost}
                                 hoverStyle={{ opacity: 0.9 }}
                                 pressStyle={{ opacity: 0.85 }}
