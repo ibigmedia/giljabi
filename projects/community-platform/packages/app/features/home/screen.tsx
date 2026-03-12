@@ -76,6 +76,8 @@ const HERO_CSS = `
     background: linear-gradient(180deg, #f8fafc 0%, #eef4f8 50%, #f0f7ff 100%);
     position: relative;
     overflow: hidden;
+    display: flex;
+    justify-content: center;
   }
   .portfolio-section::before {
     content: '';
