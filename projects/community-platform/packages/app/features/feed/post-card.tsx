@@ -5,6 +5,7 @@ import { useRouter } from 'solito/navigation'
 import { useToggleLike, Post } from '../../hooks/usePosts'
 import { useComments, useCreateComment } from '../../hooks/useComments'
 import { Profile } from '../../hooks/useProfiles'
+import { PostLinkPreviews } from './link-preview'
 
 const renderTextWithLinks = (text: string) => {
     if (!text) return null;
@@ -113,6 +114,11 @@ export function PostCard({ post, currentUserProfile }: { post: Post; currentUser
                 <Paragraph color="$onSurface" fontSize={15} lineHeight={24}>
                     {renderTextWithLinks(post.content)}
                 </Paragraph>
+            </YStack>
+
+            {/* Link Previews (YouTube embeds, OG cards) */}
+            <YStack px="$4" pb="$1">
+                <PostLinkPreviews content={post.content} />
             </YStack>
 
             {/* Media */}
