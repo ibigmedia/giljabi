@@ -185,12 +185,12 @@ export function PostLinkPreviews({ content }: { content: string }) {
 }
 
 // Compose preview: shows removable link previews while composing a post
-export function ComposeLinkPreviews({ text, dismissedUrls, onDismiss }: {
-    text: string
-    dismissedUrls: string[]
+// urls are managed externally — once detected, they persist even if removed from text
+export function ComposeLinkPreviews({ urls: inputUrls, onDismiss }: {
+    urls: string[]
     onDismiss: (url: string) => void
 }) {
-    const urls = extractUrls(text).filter(u => !dismissedUrls.includes(u)).slice(0, 3)
+    const urls = inputUrls.slice(0, 3)
     if (urls.length === 0) return null
 
     return (

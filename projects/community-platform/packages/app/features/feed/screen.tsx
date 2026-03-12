@@ -1,21 +1,38 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { YStack, XStack, Avatar, Paragraph, Input, Button, Separator, ScrollView, H4, Spinner, SizableText } from '@my/ui'
 import { Image as ImageIcon } from '@tamagui/lucide-icons'
 import { usePosts, useCreatePost, useToggleLike } from '../../hooks/usePosts'
 import { useCurrentUserProfile } from '../../hooks/useProfiles'
 import { PostCard } from './post-card'
-import { ComposeLinkPreviews } from './link-preview'
+import { ComposeLinkPreviews, extractUrls } from './link-preview'
 
 export function FeedScreen() {
     const [postText, setPostText] = useState('')
     const [mediaUrl, setMediaUrl] = useState('')
     const [showMediaInput, setShowMediaInput] = useState(false)
+    const [attachedUrls, setAttachedUrls] = useState<string[]>([])
     const [dismissedUrls, setDismissedUrls] = useState<string[]>([])
+
+    // Detect new URLs as user types and accumulate them
+    const handleTextChange = (text: string) => {
+        setPostText(text)
+        const newUrls = extractUrls(text)
+        setAttachedUrls(prev => {
+            const combined = [...prev]
+            for (const url of newUrls) {
+                if (!combined.includes(url) && !dismissedUrls.includes(url)) {
+                    combined.push(url)
+                }
+            }
+            return combined
+        })
+    }
 
     const handleDismissUrl = (url: string) => {
         setDismissedUrls(prev => [...prev, url])
+        setAttachedUrls(prev => prev.filter(u => u !== url))
     }
 
     const { data: currentUserProfile } = useCurrentUserProfile()
@@ -29,6 +46,7 @@ export function FeedScreen() {
                 setPostText('')
                 setMediaUrl('')
                 setShowMediaInput(false)
+                setAttachedUrls([])
                 setDismissedUrls([])
             }
         })
@@ -110,7 +128,7 @@ export function FeedScreen() {
                                 flex={1}
                                 placeholder="무슨 생각을 하고 계신가요?"
                                 value={postText}
-                                onChangeText={setPostText}
+                                onChangeText={handleTextChange}
                                 bg="$surfaceContainerLow"
                                 borderWidth={0}
                                 borderRadius="$button"
@@ -122,8 +140,8 @@ export function FeedScreen() {
                             />
                         </XStack>
 
-                        {/* Live link preview while composing */}
-                        <ComposeLinkPreviews text={postText} dismissedUrls={dismissedUrls} onDismiss={handleDismissUrl} />
+                        {/* Live link preview while composing - persists after URL removed from text */}
+                        <ComposeLinkPreviews urls={attachedUrls} onDismiss={handleDismissUrl} />
 
                         {showMediaInput && (
                             <Input
