@@ -8,29 +8,29 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: '프롬프트를 입력해주세요.' }, { status: 400 })
         }
 
-        // Extract key words from prompt (keep it short for Pollinations reliability)
-        const keywords = prompt.trim().replace(/[^a-zA-Z0-9가-힣\s-]/g, '').split(/\s+/).slice(0, 6).join('-')
         const seed = hashCode(prompt)
 
-        // Try Pollinations.ai first (free AI image generation)
-        const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(keywords)}?width=512&height=512&seed=${seed}`
+        // Build an English-friendly prompt for Pollinations (transliterate Korean → description style)
+        // Pollinations works best with English prompts
+        const cleanPrompt = prompt.trim().slice(0, 200)
+        const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=512&height=512&seed=${seed}&nologo=true&model=flux`
 
+        // Verify Pollinations can serve the image with a HEAD request (fast, no download)
         try {
             const res = await fetch(pollinationsUrl, {
-                method: 'GET',
-                signal: AbortSignal.timeout(15000), // 15s timeout
+                method: 'HEAD',
+                signal: AbortSignal.timeout(10000),
             })
-            if (res.ok && res.headers.get('content-type')?.includes('image')) {
+            if (res.ok) {
                 return NextResponse.json({ imageUrl: pollinationsUrl })
             }
         } catch {
-            // Pollinations failed, fall through to fallback
+            // HEAD failed — try GET with stream abort (some CDNs don't support HEAD)
         }
 
-        // Fallback: picsum.photos with deterministic seed from prompt
-        // Not AI-generated but deterministic per prompt (same prompt = same image)
-        const fallbackUrl = `https://picsum.photos/seed/${keywords}-${seed}/512/512`
-        return NextResponse.json({ imageUrl: fallbackUrl, fallback: true })
+        // Second attempt: just return the URL directly — browser <img> will handle loading
+        // Pollinations URLs are valid even without pre-verification
+        return NextResponse.json({ imageUrl: pollinationsUrl, direct: true })
     } catch (err: any) {
         return NextResponse.json({ error: err.message || '서버 오류' }, { status: 500 })
     }

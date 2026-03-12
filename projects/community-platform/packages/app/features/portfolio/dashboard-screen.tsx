@@ -128,9 +128,18 @@ function AiThumbnailGenerator({ currentUrl, onGenerated }: { currentUrl?: string
         setError(null)
         try {
             const data = await apiPost<{ imageUrl: string }>('/api/portfolio/ai-thumbnail', { prompt: prompt.trim() })
+            // Pre-load image to verify it works before showing preview
+            await new Promise<void>((resolve, reject) => {
+                const img = new Image()
+                img.onload = () => resolve()
+                img.onerror = () => reject(new Error('Image load failed'))
+                img.src = data.imageUrl
+                // Allow up to 30s for AI generation (Pollinations can be slow)
+                setTimeout(() => resolve(), 30000)
+            })
             setPreviewUrl(data.imageUrl)
         } catch (err: any) {
-            setError('AI 이미지 생성 실패. 다시 시도해주세요.')
+            setError('AI 이미지 생성 실패. 영어 프롬프트로 다시 시도해주세요. (예: "night sky with cross album cover")')
         } finally {
             setGenerating(false)
         }
