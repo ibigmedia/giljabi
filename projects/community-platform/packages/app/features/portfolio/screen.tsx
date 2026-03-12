@@ -113,7 +113,7 @@ export function PortfolioScreen() {
                 <YStack gap="$4">
                     <XStack justifyContent="space-between" alignItems="center">
                         <SizableText size="$6" fontWeight="800" color="white">Albums & EPs</SizableText>
-                        <Button bg="transparent" icon={<ChevronRight size={16} color="#4F7CFF" />}>
+                        <Button chromeless icon={<ChevronRight size={16} color="#4F7CFF" />}>
                             <SizableText color="#4F7CFF" size="$3" fontWeight="600">View All</SizableText>
                         </Button>
                     </XStack>
@@ -175,7 +175,7 @@ export function PortfolioScreen() {
                 <YStack gap="$4">
                     <XStack justifyContent="space-between" alignItems="center">
                         <SizableText size="$6" fontWeight="800" color="white">Featured Videos</SizableText>
-                        <Button bg="transparent" icon={<ChevronRight size={16} color="#4F7CFF" />}>
+                        <Button chromeless icon={<ChevronRight size={16} color="#4F7CFF" />}>
                             <SizableText color="#4F7CFF" size="$3" fontWeight="600">Browse Gallery</SizableText>
                         </Button>
                     </XStack>

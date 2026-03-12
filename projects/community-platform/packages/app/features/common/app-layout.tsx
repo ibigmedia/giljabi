@@ -306,26 +306,33 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                             </>
                         ) : (
                             <XStack gap="$2" alignItems="center">
-                                <Button
-                                    size="$3"
-                                    bg="transparent"
+                                <XStack
+                                    alignItems="center"
+                                    justifyContent="center"
                                     borderRadius="$full"
                                     borderWidth={1}
                                     borderColor="$primary"
                                     hoverStyle={{ bg: '$primaryContainer' }}
+                                    paddingHorizontal="$4"
+                                    paddingVertical="$2"
+                                    cursor="pointer"
                                     onPress={() => router.push('/login')}
                                 >
                                     <SizableText color="$primary" fontWeight="600" size="$3">로그인</SizableText>
-                                </Button>
-                                <Button
-                                    size="$3"
+                                </XStack>
+                                <XStack
+                                    alignItems="center"
+                                    justifyContent="center"
                                     bg="$primary"
                                     borderRadius="$full"
                                     hoverStyle={{ opacity: 0.9 }}
+                                    paddingHorizontal="$4"
+                                    paddingVertical="$2"
+                                    cursor="pointer"
                                     onPress={() => router.push('/login')}
                                 >
                                     <SizableText color="white" fontWeight="600" size="$3">회원가입</SizableText>
-                                </Button>
+                                </XStack>
                             </XStack>
                         )}
                     </XStack>

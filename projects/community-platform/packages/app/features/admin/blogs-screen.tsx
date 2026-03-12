@@ -111,7 +111,7 @@ export function AdminBlogsScreen() {
                         />
 
                         <XStack justifyContent="flex-end" gap="$2">
-                            <Button bg="transparent" onPress={() => setShowNewForm(false)}><SizableText color="$textMuted">취소</SizableText></Button>
+                            <Button chromeless onPress={() => setShowNewForm(false)}><SizableText color="$textMuted">취소</SizableText></Button>
                             <Button
                                 bg="$primary"
                                 disabled={!title.trim() || isCreating || !currentUserProfile}

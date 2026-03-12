@@ -114,40 +114,52 @@ export function HomeScreen() {
                         </Paragraph>
                         <XStack gap="$3" mt="$4" flexWrap="wrap" justifyContent="center">
                             {profile ? (
-                                <Button
-                                    size="$4"
+                                <XStack
+                                    alignItems="center"
+                                    justifyContent="center"
+                                    gap="$2"
                                     bg="rgba(255,255,255,0.15)"
                                     borderWidth={1}
                                     borderColor="rgba(255,255,255,0.3)"
                                     borderRadius="$full"
                                     hoverStyle={{ bg: 'rgba(255,255,255,0.25)' }}
+                                    paddingHorizontal="$5"
+                                    paddingVertical="$3"
+                                    cursor="pointer"
                                     onPress={() => router.push('/feed')}
                                 >
                                     <SizableText color="white" fontWeight="600">커뮤니티 들어가기</SizableText>
                                     <ArrowRight size={16} color="white" />
-                                </Button>
+                                </XStack>
                             ) : (
                                 <>
-                                    <Button
-                                        size="$4"
+                                    <XStack
+                                        alignItems="center"
+                                        justifyContent="center"
                                         bg="white"
                                         borderRadius="$full"
                                         hoverStyle={{ opacity: 0.9 }}
+                                        paddingHorizontal="$5"
+                                        paddingVertical="$3"
+                                        cursor="pointer"
                                         onPress={() => router.push('/login')}
                                     >
                                         <SizableText color="#1a1a2e" fontWeight="700">시작하기</SizableText>
-                                    </Button>
-                                    <Button
-                                        size="$4"
-                                        bg="transparent"
+                                    </XStack>
+                                    <XStack
+                                        alignItems="center"
+                                        justifyContent="center"
                                         borderWidth={1}
                                         borderColor="rgba(255,255,255,0.4)"
                                         borderRadius="$full"
                                         hoverStyle={{ bg: 'rgba(255,255,255,0.1)' }}
+                                        paddingHorizontal="$5"
+                                        paddingVertical="$3"
+                                        cursor="pointer"
                                         onPress={() => router.push('/feed')}
                                     >
                                         <SizableText color="white" fontWeight="600">둘러보기</SizableText>
-                                    </Button>
+                                    </XStack>
                                 </>
                             )}
                         </XStack>
@@ -422,28 +434,35 @@ export function HomeScreen() {
                         길잡이 커뮤니티에 참여하여 디지털 시대의 믿음의 여정을 함께하세요.
                     </Paragraph>
                     <XStack gap="$3" mt="$2" flexWrap="wrap" justifyContent="center">
-                        <Button
-                            size="$4"
+                        <XStack
+                            alignItems="center"
+                            justifyContent="center"
                             bg="white"
                             borderRadius="$full"
                             hoverStyle={{ opacity: 0.9 }}
+                            paddingHorizontal="$5"
+                            paddingVertical="$3"
+                            cursor="pointer"
                             onPress={() => router.push(profile ? '/feed' : '/login')}
                         >
                             <SizableText color="$primary" fontWeight="700">
                                 {profile ? '커뮤니티 들어가기' : '회원가입'}
                             </SizableText>
-                        </Button>
-                        <Button
-                            size="$4"
-                            bg="transparent"
+                        </XStack>
+                        <XStack
+                            alignItems="center"
+                            justifyContent="center"
                             borderWidth={1}
                             borderColor="rgba(255,255,255,0.5)"
                             borderRadius="$full"
                             hoverStyle={{ bg: 'rgba(255,255,255,0.1)' }}
+                            paddingHorizontal="$5"
+                            paddingVertical="$3"
+                            cursor="pointer"
                             onPress={() => router.push('/blog')}
                         >
                             <SizableText color="white" fontWeight="600">블로그 보기</SizableText>
-                        </Button>
+                        </XStack>
                     </XStack>
                 </YStack>
 

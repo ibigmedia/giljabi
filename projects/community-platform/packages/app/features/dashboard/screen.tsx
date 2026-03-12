@@ -70,7 +70,7 @@ export function DashboardScreen() {
                     >
                         <XStack justifyContent="space-between" alignItems="center" mb="$4">
                             <SizableText size="$5" fontWeight="700" color="$onSurface">최근 활동</SizableText>
-                            <Button size="$3" bg="transparent" hoverStyle={{ bg: '$surfaceContainerHigh' }} onPress={() => router.push('/feed')}>
+                            <Button size="$3" chromeless hoverStyle={{ bg: '$surfaceContainerHigh' }} onPress={() => router.push('/feed')}>
                                 <SizableText color="$primary" fontWeight="600">전체보기</SizableText>
                             </Button>
                         </XStack>

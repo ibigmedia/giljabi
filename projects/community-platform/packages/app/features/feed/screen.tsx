@@ -120,7 +120,7 @@ export function FeedScreen() {
                                 <FileText size={16} color="$onSurface" />
                                 <SizableText color="$onSurface" size="$4" fontWeight="700">최근 블로그</SizableText>
                             </XStack>
-                            <Button size="$2" bg="transparent" onPress={() => router.push('/blog')} icon={<ChevronRight size={14} color="$primary" />}>
+                            <Button size="$2" chromeless onPress={() => router.push('/blog')} icon={<ChevronRight size={14} color="$primary" />}>
                                 <SizableText color="$primary" size="$2">전체</SizableText>
                             </Button>
                         </XStack>
@@ -152,7 +152,7 @@ export function FeedScreen() {
                                 <Users size={16} color="$onSurface" />
                                 <SizableText color="$onSurface" size="$4" fontWeight="700">그룹</SizableText>
                             </XStack>
-                            <Button size="$2" bg="transparent" onPress={() => router.push('/groups')} icon={<ChevronRight size={14} color="$primary" />}>
+                            <Button size="$2" chromeless onPress={() => router.push('/groups')} icon={<ChevronRight size={14} color="$primary" />}>
                                 <SizableText color="$primary" size="$2">전체</SizableText>
                             </Button>
                         </XStack>

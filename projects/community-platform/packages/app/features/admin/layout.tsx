@@ -70,27 +70,26 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                         const isActive = pathname === item.path
                         const Icon = item.icon
                         return (
-                            <Button
+                            <XStack
                                 key={item.path}
-                                size="$4"
-                                justifyContent="flex-start"
+                                gap="$3"
+                                alignItems="center"
                                 bg={isActive ? '$surfaceHover' : 'transparent'}
                                 borderRadius="$button"
                                 hoverStyle={{ bg: '$surfaceHover' }}
                                 p="$3"
+                                cursor="pointer"
                                 onPress={() => router.push(item.path)}
                             >
-                                <XStack gap="$3" alignItems="center">
-                                    <Icon size={20} color={isActive ? '$primary' : '$textMuted'} />
-                                    <SizableText
-                                        size="$4"
-                                        color={isActive ? '$primary' : '$textMain'}
-                                        fontWeight={isActive ? 'bold' : '500'}
-                                    >
-                                        {item.label}
-                                    </SizableText>
-                                </XStack>
-                            </Button>
+                                <Icon size={20} color={isActive ? '$primary' : '$textMuted'} />
+                                <SizableText
+                                    size="$4"
+                                    color={isActive ? '$primary' : '$textMain'}
+                                    fontWeight={isActive ? 'bold' : '500'}
+                                >
+                                    {item.label}
+                                </SizableText>
+                            </XStack>
                         )
                     })}
                 </YStack>
@@ -98,21 +97,21 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                 {/* Bottom Logout */}
                 <YStack px="$3" mt="auto">
                     <Separator borderColor="$borderLight" mb="$4" />
-                    <Button
-                        size="$4"
-                        justifyContent="flex-start"
+                    <XStack
+                        gap="$3"
+                        alignItems="center"
                         bg="transparent"
                         hoverStyle={{ bg: '$surfaceHover' }}
+                        borderRadius="$button"
                         p="$3"
+                        cursor="pointer"
                         onPress={() => router.push('/')}
                     >
-                        <XStack gap="$3" alignItems="center">
-                            <LogOut size={20} color="$textMuted" />
-                            <SizableText size="$4" color="$textMuted" fontWeight="500">
-                                Exit Admin
-                            </SizableText>
-                        </XStack>
-                    </Button>
+                        <LogOut size={20} color="$textMuted" />
+                        <SizableText size="$4" color="$textMuted" fontWeight="500">
+                            Exit Admin
+                        </SizableText>
+                    </XStack>
                 </YStack>
             </YStack>
 
