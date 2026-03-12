@@ -2,11 +2,11 @@
 
 import { useState } from 'react'
 import { YStack, XStack, SizableText, Button, Input, Separator, Spinner, Avatar, Paragraph } from '@my/ui'
-import { Pin, Trash2, Heart, MessageCircle, Eye, ExternalLink, Search, Plus, ChevronDown, ChevronUp, Link2, X } from '@tamagui/lucide-icons'
+import { Pin, Trash2, Heart, MessageCircle, Eye, Search, Plus, ChevronDown, ChevronUp, Link2, X } from '@tamagui/lucide-icons'
 import { usePosts, useDeletePost, useTogglePin, useCreateNotice } from '../../hooks/usePosts'
 import { useCurrentUserProfile } from '../../hooks/useProfiles'
 import { useRouter } from 'solito/navigation'
-import { extractUrls } from '../feed/link-preview'
+import { extractUrls, PostLinkPreviews } from '../feed/link-preview'
 
 export function AdminPostsScreen() {
     const router = useRouter()
@@ -256,39 +256,16 @@ export function AdminPostsScreen() {
                                                 {post.content}
                                             </Paragraph>
 
-                                            {/* Links in post */}
-                                            {urls.length > 0 && (
-                                                <YStack mt="$2" gap="$1">
-                                                    {urls.map((url, i) => (
-                                                        <XStack key={i} gap="$2" alignItems="center">
-                                                            <Link2 size={12} color="$primary" />
-                                                            <SizableText
-                                                                size="$2"
-                                                                color="$primary"
-                                                                numberOfLines={1}
-                                                                cursor="pointer"
-                                                                hoverStyle={{ textDecorationLine: 'underline' }}
-                                                                onPress={() => window.open(url, '_blank')}
-                                                            >
-                                                                {url}
-                                                            </SizableText>
-                                                        </XStack>
-                                                    ))}
-                                                </YStack>
-                                            )}
+                                            {/* Link previews + YouTube embeds (compact) */}
+                                            <YStack mt="$2" maxWidth={480}>
+                                                <PostLinkPreviews content={post.content} mediaUrl={post.mediaUrl} />
+                                            </YStack>
 
-                                            {/* Media URL preview */}
-                                            {post.mediaUrl && (
+                                            {/* Image media */}
+                                            {post.mediaUrl && /\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i.test(post.mediaUrl) && (
                                                 <YStack mt="$2">
-                                                    {/\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i.test(post.mediaUrl) ? (
-                                                        // @ts-ignore
-                                                        <img src={post.mediaUrl} alt="" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8, objectFit: 'cover' }} />
-                                                    ) : (
-                                                        <XStack gap="$2" alignItems="center">
-                                                            <ExternalLink size={12} color="$primary" />
-                                                            <SizableText size="$2" color="$primary" numberOfLines={1}>{post.mediaUrl}</SizableText>
-                                                        </XStack>
-                                                    )}
+                                                    {/* @ts-ignore */}
+                                                    <img src={post.mediaUrl} alt="" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8, objectFit: 'cover' }} />
                                                 </YStack>
                                             )}
                                         </YStack>
