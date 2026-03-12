@@ -182,3 +182,44 @@ model BlogPost {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// ─── Portfolio ────────────────────────────────────────────────
+
+model Release {
+  id        String   @id @default(dbgenerated("gen_random_uuid()::text"))
+  title     String
+  artist    String
+  year      Int
+  type      String   @default("Single") // Single, EP, Album
+  coverUrl  String?
+  status    String   @default("draft") // draft, published
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tracks Track[]
+}
+
+model Track {
+  id        String   @id @default(dbgenerated("gen_random_uuid()::text"))
+  title     String
+  duration  String   @default("0:00")
+  plays     Int      @default(0)
+  audioUrl  String?
+  position  Int      @default(0)
+  releaseId String
+  release   Release  @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model MusicVideo {
+  id           String   @id @default(dbgenerated("gen_random_uuid()::text"))
+  title        String
+  youtubeUrl   String?
+  thumbnailUrl String?
+  duration     String   @default("0:00")
+  views        Int      @default(0)
+  status       String   @default("draft") // draft, published
+  publishedAt  DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { YStack, XStack, SizableText, Button, Input, TextArea, Separator } from '@my/ui'
 import {
     Music, Disc, Video, BarChart3, Palette, Settings, Plus, Trash2, Edit3, Eye, Save,
@@ -38,24 +38,29 @@ function extractYouTubeId(url: string): string | null {
     return m ? m[1]! : null
 }
 
-function randomCover() {
-    return `https://picsum.photos/seed/${Math.random().toString(36).slice(2, 8)}/400/400`
+// ─── API helpers ─────────────────────────────────────────────────────
+async function apiGet<T>(path: string): Promise<T> {
+    const res = await fetch(path)
+    if (!res.ok) throw new Error(`API error: ${res.status}`)
+    return res.json()
 }
 
-// ─── Demo Data ───────────────────────────────────────────────────────
-const INITIAL_RELEASES: Release[] = [
-    { id: '1', title: 'Run Away', artist: 'iBiG band', year: 2024, type: 'Single', coverUrl: 'https://picsum.photos/seed/album1/400/400', tracks: [{ id: 't1', title: 'Run Away', duration: '3:42', plays: 86 }], status: 'published' },
-    { id: '2', title: 'Jesus Story', artist: 'iBiG band', year: 2024, type: 'Single', coverUrl: 'https://picsum.photos/seed/album2/400/400', tracks: [{ id: 't2', title: 'Jesus Story', duration: '4:17', plays: 116 }], status: 'published' },
-    { id: '3', title: '성탄절 악보 (In that day)', artist: 'iBiG media', year: 2023, type: 'EP', coverUrl: 'https://picsum.photos/seed/album3/400/400', tracks: [{ id: 't3', title: 'In that day', duration: '3:55', plays: 191 }, { id: 't4', title: 'Silent Night (Remix)', duration: '4:02', plays: 88 }], status: 'published' },
-    { id: '4', title: '예배 찬양 시리즈', artist: 'iBiG band', year: 2023, type: 'Album', coverUrl: 'https://picsum.photos/seed/album4/400/400', tracks: [{ id: 't5', title: '찬양하라 내 영혼아', duration: '5:12', plays: 245 }, { id: 't6', title: '주의 은혜', duration: '4:30', plays: 178 }, { id: 't7', title: '내 맘에 품은', duration: '3:48', plays: 119 }], status: 'published' },
-    { id: '5', title: '길잡이의 노래', artist: 'iBiG media', year: 2022, type: 'Album', coverUrl: 'https://picsum.photos/seed/album5/400/400', tracks: [{ id: 't8', title: '길을 걸으며', duration: '4:21', plays: 302 }], status: 'draft' },
-]
+async function apiPost<T>(path: string, body: any): Promise<T> {
+    const res = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    if (!res.ok) throw new Error(`API error: ${res.status}`)
+    return res.json()
+}
 
-const INITIAL_VIDEOS: MusicVideo[] = [
-    { id: 'v1', title: 'Run Away (Official MV)', youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', thumbnailUrl: 'https://picsum.photos/seed/mv1/600/340', duration: '3:42', views: 86, publishedAt: '2024-06-15', status: 'published' },
-    { id: 'v2', title: 'Jesus Story (Lyric Video)', youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', thumbnailUrl: 'https://picsum.photos/seed/mv2/600/340', duration: '4:17', views: 116, publishedAt: '2024-03-20', status: 'published' },
-    { id: 'v3', title: '성탄절 악보 - Live Session', youtubeUrl: '', thumbnailUrl: 'https://picsum.photos/seed/mv3/600/340', duration: '5:30', views: 45, publishedAt: '2023-12-01', status: 'draft' },
-]
+async function apiPut<T>(path: string, body: any): Promise<T> {
+    const res = await fetch(path, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    if (!res.ok) throw new Error(`API error: ${res.status}`)
+    return res.json()
+}
+
+async function apiDelete(path: string): Promise<void> {
+    const res = await fetch(path, { method: 'DELETE' })
+    if (!res.ok) throw new Error(`API error: ${res.status}`)
+}
 
 // ─── Shared UI ───────────────────────────────────────────────────────
 function Card({ children, ...props }: any) {
@@ -115,15 +120,20 @@ function AiThumbnailGenerator({ currentUrl, onGenerated }: { currentUrl?: string
     const [prompt, setPrompt] = useState('')
     const [generating, setGenerating] = useState(false)
     const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+    const [error, setError] = useState<string | null>(null)
 
-    const generate = () => {
+    const generate = async () => {
         if (!prompt.trim()) return
         setGenerating(true)
-        setTimeout(() => {
-            const url = randomCover()
-            setPreviewUrl(url)
+        setError(null)
+        try {
+            const data = await apiPost<{ imageUrl: string }>('/api/portfolio/ai-thumbnail', { prompt: prompt.trim() })
+            setPreviewUrl(data.imageUrl)
+        } catch (err: any) {
+            setError('AI 이미지 생성 실패. 다시 시도해주세요.')
+        } finally {
             setGenerating(false)
-        }, 1500)
+        }
     }
 
     return (
@@ -138,6 +148,7 @@ function AiThumbnailGenerator({ currentUrl, onGenerated }: { currentUrl?: string
                     <img src={previewUrl} alt="AI Generated" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </YStack>
             )}
+            {error && <SizableText size="$2" color="$error">{error}</SizableText>}
             <Input
                 size="$3" placeholder="예: 밤하늘에 십자가가 빛나는 앨범 커버"
                 value={prompt} onChangeText={setPrompt}
@@ -176,9 +187,27 @@ export function PortfolioDashboardScreen() {
     const [activeTab, setActiveTab] = useState<DashboardTab>('overview')
     const [vizMode, setVizMode] = useState<VisualizerMode>('circular')
     const [vizTheme, setVizTheme] = useState('ocean')
-    const [releases, setReleases] = useState<Release[]>(INITIAL_RELEASES)
-    const [videos, setVideos] = useState<MusicVideo[]>(INITIAL_VIDEOS)
+    const [releases, setReleases] = useState<Release[]>([])
+    const [videos, setVideos] = useState<MusicVideo[]>([])
     const [nowPlaying, setNowPlaying] = useState<{ title: string; artist: string; coverUrl: string } | null>(null)
+    const [loading, setLoading] = useState(true)
+
+    // Load data from API on mount
+    useEffect(() => {
+        Promise.all([
+            apiGet<any[]>('/api/portfolio/releases').catch(() => []),
+            apiGet<any[]>('/api/portfolio/videos').catch(() => []),
+        ]).then(([rel, vid]) => {
+            setReleases(rel.map((r: any) => ({
+                ...r, year: Number(r.year),
+                tracks: (r.tracks || []).map((t: any) => ({ ...t, plays: t.plays || 0 })),
+            })))
+            setVideos(vid.map((v: any) => ({
+                ...v, views: v.views || 0,
+                publishedAt: v.publishedAt ? new Date(v.publishedAt).toISOString().slice(0, 10) : '',
+            })))
+        }).finally(() => setLoading(false))
+    }, [])
 
     const TABS: { id: DashboardTab; label: string; icon: any }[] = [
         { id: 'overview', label: 'Overview', icon: BarChart3 },
@@ -245,9 +274,14 @@ export function PortfolioDashboardScreen() {
                 })}
             </XStack>
 
-            {activeTab === 'overview' && <OverviewTab releases={releases} videos={videos} onPlay={setNowPlaying} />}
-            {activeTab === 'releases' && <ReleasesTab releases={releases} setReleases={setReleases} onPlay={setNowPlaying} />}
-            {activeTab === 'videos' && <VideosTab videos={videos} setVideos={setVideos} />}
+            {loading && (
+                <Card p="$6" alignItems="center">
+                    <SizableText size="$4" color="$textMuted">데이터를 불러오는 중...</SizableText>
+                </Card>
+            )}
+            {!loading && activeTab === 'overview' && <OverviewTab releases={releases} videos={videos} onPlay={setNowPlaying} />}
+            {!loading && activeTab === 'releases' && <ReleasesTab releases={releases} setReleases={setReleases} onPlay={setNowPlaying} />}
+            {!loading && activeTab === 'videos' && <VideosTab videos={videos} setVideos={setVideos} />}
             {activeTab === 'visualizer' && <VisualizerTab vizMode={vizMode} setVizMode={setVizMode} vizTheme={vizTheme} setVizTheme={setVizTheme} />}
             {activeTab === 'settings' && <SettingsTab />}
         </YStack>
@@ -468,28 +502,43 @@ function ReleasesTab({ releases, setReleases, onPlay }: {
         setShowForm(true)
     }
 
-    const saveRelease = () => {
-        if (!fTitle.trim()) return
-        const data: Release = {
-            id: editingId || genId(),
-            title: fTitle.trim(), artist: fArtist.trim(),
-            year: parseInt(fYear) || 2024, type: fType,
-            coverUrl: fCover || randomCover(),
-            tracks: fTracks.length ? fTracks : [{ id: genId(), title: fTitle.trim(), duration: '0:00', plays: 0 }],
-            status: fStatus,
+    const [saving, setSaving] = useState(false)
+
+    const saveRelease = async () => {
+        if (!fTitle.trim() || saving) return
+        setSaving(true)
+        try {
+            const payload = {
+                title: fTitle.trim(), artist: fArtist.trim(),
+                year: parseInt(fYear) || 2024, type: fType,
+                coverUrl: fCover || undefined,
+                tracks: fTracks.length ? fTracks : [{ title: fTitle.trim(), duration: '0:00', plays: 0 }],
+                status: fStatus,
+            }
+            if (editingId) {
+                const updated = await apiPut<Release>(`/api/portfolio/releases/${editingId}`, payload)
+                setReleases(releases.map(r => r.id === editingId ? { ...updated, tracks: updated.tracks || [] } : r))
+            } else {
+                const created = await apiPost<Release>('/api/portfolio/releases', payload)
+                setReleases([{ ...created, tracks: created.tracks || [] }, ...releases])
+            }
+            setShowForm(false)
+            resetForm()
+        } catch (err) {
+            alert('저장 실패. 다시 시도해주세요.')
+        } finally {
+            setSaving(false)
         }
-        if (editingId) {
-            setReleases(releases.map(r => r.id === editingId ? data : r))
-        } else {
-            setReleases([data, ...releases])
-        }
-        setShowForm(false)
-        resetForm()
     }
 
-    const deleteRelease = (id: string) => {
-        setReleases(releases.filter(r => r.id !== id))
-        if (editingId === id) { setShowForm(false); resetForm() }
+    const deleteRelease = async (id: string) => {
+        try {
+            await apiDelete(`/api/portfolio/releases/${id}`)
+            setReleases(releases.filter(r => r.id !== id))
+            if (editingId === id) { setShowForm(false); resetForm() }
+        } catch {
+            alert('삭제 실패.')
+        }
     }
 
     const addTrackToForm = () => {
@@ -502,22 +551,47 @@ function ReleasesTab({ releases, setReleases, onPlay }: {
         setFTracks(fTracks.filter(t => t.id !== tid))
     }
 
-    // inline add track to existing release
-    const addTrackToRelease = (releaseId: string) => {
-        setReleases(releases.map(r => {
-            if (r.id !== releaseId) return r
-            return { ...r, tracks: [...r.tracks, { id: genId(), title: `New Track ${r.tracks.length + 1}`, duration: '0:00', plays: 0 }] }
-        }))
+    // inline add track to existing release (save via API)
+    const addTrackToRelease = async (releaseId: string) => {
+        const rel = releases.find(r => r.id === releaseId)
+        if (!rel) return
+        const newTracks = [...rel.tracks, { id: genId(), title: `New Track ${rel.tracks.length + 1}`, duration: '0:00', plays: 0 }]
+        try {
+            const updated = await apiPut<Release>(`/api/portfolio/releases/${releaseId}`, { ...rel, tracks: newTracks })
+            setReleases(releases.map(r => r.id === releaseId ? { ...updated, tracks: updated.tracks || [] } : r))
+        } catch { /* optimistic update fallback */
+            setReleases(releases.map(r => r.id === releaseId ? { ...r, tracks: newTracks } : r))
+        }
     }
 
-    // inline regenerate AI cover
-    const regenerateCover = (releaseId: string) => {
-        setReleases(releases.map(r => r.id === releaseId ? { ...r, coverUrl: randomCover() } : r))
+    // inline regenerate AI cover via API
+    const [regenId, setRegenId] = useState<string | null>(null)
+    const regenerateCover = async (releaseId: string) => {
+        const rel = releases.find(r => r.id === releaseId)
+        if (!rel) return
+        setRegenId(releaseId)
+        try {
+            const data = await apiPost<{ imageUrl: string }>('/api/portfolio/ai-thumbnail', { prompt: `${rel.title} ${rel.artist} album cover art` })
+            const updated = await apiPut<Release>(`/api/portfolio/releases/${releaseId}`, { ...rel, coverUrl: data.imageUrl, tracks: rel.tracks })
+            setReleases(releases.map(r => r.id === releaseId ? { ...updated, tracks: updated.tracks || [] } : r))
+        } catch {
+            alert('AI 커버 생성 실패')
+        } finally {
+            setRegenId(null)
+        }
     }
 
-    // toggle publish status
-    const toggleStatus = (releaseId: string) => {
-        setReleases(releases.map(r => r.id === releaseId ? { ...r, status: r.status === 'published' ? 'draft' : 'published' } : r))
+    // toggle publish status (save via API)
+    const toggleStatus = async (releaseId: string) => {
+        const rel = releases.find(r => r.id === releaseId)
+        if (!rel) return
+        const newStatus = rel.status === 'published' ? 'draft' : 'published'
+        try {
+            await apiPut(`/api/portfolio/releases/${releaseId}`, { ...rel, status: newStatus, tracks: rel.tracks })
+            setReleases(releases.map(r => r.id === releaseId ? { ...r, status: newStatus } : r))
+        } catch {
+            alert('상태 변경 실패')
+        }
     }
 
     return (
@@ -558,7 +632,11 @@ function ReleasesTab({ releases, setReleases, onPlay }: {
                                     </YStack>
                                 ) : (
                                     <DragDropZone label="커버 이미지 업로드" accept="image/*" icon={Image}
-                                        onFiles={() => setFCover(randomCover())} />
+                                        onFiles={(files) => {
+                                            // TODO: implement real file upload to Supabase Storage
+                                            // For now, create a local preview URL
+                                            if (files[0]) setFCover(URL.createObjectURL(files[0]))
+                                        }} />
                                 )}
                                 <AiThumbnailGenerator currentUrl={fCover} onGenerated={setFCover} />
                             </YStack>
@@ -646,8 +724,8 @@ function ReleasesTab({ releases, setReleases, onPlay }: {
                                         <SizableText color="$textMuted" fontWeight="600">취소</SizableText>
                                     </Button>
                                     <Button bg="$primary" borderRadius="$3" icon={<Save size={14} color="white" />}
-                                        onPress={saveRelease} opacity={!fTitle.trim() ? 0.5 : 1} disabled={!fTitle.trim()}>
-                                        <SizableText color="white" fontWeight="600">{editingId ? '수정 완료' : '저장'}</SizableText>
+                                        onPress={saveRelease} opacity={!fTitle.trim() || saving ? 0.5 : 1} disabled={!fTitle.trim() || saving}>
+                                        <SizableText color="white" fontWeight="600">{saving ? '저장 중...' : editingId ? '수정 완료' : '저장'}</SizableText>
                                     </Button>
                                 </XStack>
                             </YStack>
@@ -715,8 +793,9 @@ function ReleasesTab({ releases, setReleases, onPlay }: {
                                         <SizableText size="$2" color="$primary" fontWeight="600">트랙 추가</SizableText>
                                     </Button>
                                     <Button size="$3" bg="$primaryContainer" borderRadius="$3" icon={<Sparkles size={14} color="$primary" />}
-                                        onPress={() => regenerateCover(release.id)}>
-                                        <SizableText size="$2" color="$primary" fontWeight="600">AI 커버 재생성</SizableText>
+                                        onPress={() => regenerateCover(release.id)} disabled={regenId === release.id}
+                                        opacity={regenId === release.id ? 0.5 : 1}>
+                                        <SizableText size="$2" color="$primary" fontWeight="600">{regenId === release.id ? 'AI 생성 중...' : 'AI 커버 재생성'}</SizableText>
                                     </Button>
                                     <Button size="$3" bg={release.status === 'published' ? '$surfaceContainerLow' : '$successContainer'} borderRadius="$3"
                                         icon={release.status === 'published' ? <X size={14} color="$textMuted" /> : <Check size={14} color="$success" />}
@@ -767,22 +846,41 @@ function VideosTab({ videos, setVideos }: { videos: MusicVideo[]; setVideos: (v:
         setShowForm(true)
     }
 
-    const saveVideo = () => {
-        if (!fTitle.trim()) return
-        const ytId = extractYouTubeId(fYoutube)
-        const thumb = fThumb || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : randomCover())
-        const data: MusicVideo = {
-            id: editingId || genId(),
-            title: fTitle.trim(), youtubeUrl: fYoutube, thumbnailUrl: thumb,
-            duration: fDuration || '0:00', views: editingId ? (videos.find(v => v.id === editingId)?.views || 0) : 0,
-            publishedAt: fDate || new Date().toISOString().slice(0, 10), status: fStatus,
+    const [saving, setSaving] = useState(false)
+
+    const saveVideo = async () => {
+        if (!fTitle.trim() || saving) return
+        setSaving(true)
+        try {
+            const ytId = extractYouTubeId(fYoutube)
+            const thumb = fThumb || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : undefined)
+            const payload = {
+                title: fTitle.trim(), youtubeUrl: fYoutube || undefined, thumbnailUrl: thumb,
+                duration: fDuration || '0:00', views: editingId ? (videos.find(v => v.id === editingId)?.views || 0) : 0,
+                status: fStatus,
+            }
+            if (editingId) {
+                const updated = await apiPut<MusicVideo>(`/api/portfolio/videos/${editingId}`, payload)
+                setVideos(videos.map(v => v.id === editingId ? { ...updated, publishedAt: new Date(updated.publishedAt).toISOString().slice(0, 10) } : v))
+            } else {
+                const created = await apiPost<MusicVideo>('/api/portfolio/videos', payload)
+                setVideos([{ ...created, publishedAt: new Date(created.publishedAt).toISOString().slice(0, 10) }, ...videos])
+            }
+            setShowForm(false); resetForm()
+        } catch {
+            alert('저장 실패. 다시 시도해주세요.')
+        } finally {
+            setSaving(false)
         }
-        if (editingId) {
-            setVideos(videos.map(v => v.id === editingId ? data : v))
-        } else {
-            setVideos([data, ...videos])
+    }
+
+    const deleteVideo = async (id: string) => {
+        try {
+            await apiDelete(`/api/portfolio/videos/${id}`)
+            setVideos(videos.filter(v => v.id !== id))
+        } catch {
+            alert('삭제 실패.')
         }
-        setShowForm(false); resetForm()
     }
 
     return (
@@ -895,8 +993,8 @@ function VideosTab({ videos, setVideos }: { videos: MusicVideo[]; setVideos: (v:
                                 <SizableText color="$textMuted" fontWeight="600">취소</SizableText>
                             </Button>
                             <Button bg="$primary" borderRadius="$3" icon={<Save size={14} color="white" />}
-                                onPress={saveVideo} opacity={!fTitle.trim() ? 0.5 : 1} disabled={!fTitle.trim()}>
-                                <SizableText color="white" fontWeight="600">{editingId ? '수정 완료' : '저장'}</SizableText>
+                                onPress={saveVideo} opacity={!fTitle.trim() || saving ? 0.5 : 1} disabled={!fTitle.trim() || saving}>
+                                <SizableText color="white" fontWeight="600">{saving ? '저장 중...' : editingId ? '수정 완료' : '저장'}</SizableText>
                             </Button>
                         </XStack>
                     </YStack>
@@ -963,7 +1061,7 @@ function VideosTab({ videos, setVideos }: { videos: MusicVideo[]; setVideos: (v:
                                             <Button size="$2" circular bg="$surfaceHover" icon={<Edit3 size={12} color="$primary" />}
                                                 onPress={() => openEdit(v)} />
                                             <Button size="$2" circular bg="$surfaceHover" icon={<Trash2 size={12} color="$error" />}
-                                                onPress={() => setVideos(videos.filter(vid => vid.id !== v.id))} />
+                                                onPress={() => deleteVideo(v.id)} />
                                         </XStack>
                                     </XStack>
                                 </YStack>
@@ -1085,11 +1183,24 @@ function SettingsTab() {
                         </YStack>
                         <YStack gap="$2">
                             <Button size="$3" bg="$primaryContainer" borderRadius="$3" icon={<Upload size={14} color="$primary" />}
-                                onPress={() => setProfileImg(randomCover())}>
+                                onPress={() => {
+                                    // TODO: real file upload
+                                    const input = document.createElement('input')
+                                    input.type = 'file'; input.accept = 'image/*'
+                                    input.onchange = (e: any) => {
+                                        if (e.target.files?.[0]) setProfileImg(URL.createObjectURL(e.target.files[0]))
+                                    }
+                                    input.click()
+                                }}>
                                 <SizableText color="$primary" fontWeight="600" size="$2">사진 변경</SizableText>
                             </Button>
                             <Button size="$3" chromeless icon={<Sparkles size={14} color="$primary" />}
-                                onPress={() => setProfileImg(randomCover())}>
+                                onPress={async () => {
+                                    try {
+                                        const data = await apiPost<{ imageUrl: string }>('/api/portfolio/ai-thumbnail', { prompt: `${artistName} profile photo, professional musician portrait` })
+                                        setProfileImg(data.imageUrl)
+                                    } catch { alert('AI 프로필 생성 실패') }
+                                }}>
                                 <SizableText color="$primary" fontWeight="600" size="$2">AI 프로필 생성</SizableText>
                             </Button>
                         </YStack>
