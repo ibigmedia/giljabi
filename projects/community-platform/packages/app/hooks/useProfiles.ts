@@ -196,6 +196,7 @@ export function useUpdateProfileRole() {
 export interface AdminUpdateProfileData {
     profileId: string
     username?: string
+    email?: string
     bio?: string
     church?: string
     churchRole?: string
@@ -209,6 +210,7 @@ export function useAdminUpdateProfile() {
         mutationFn: async (data: AdminUpdateProfileData) => {
             const updates: Partial<Profile> = {
                 ...(data.username !== undefined && { username: data.username }),
+                ...(data.email !== undefined && { email: data.email }),
                 ...(data.bio !== undefined && { bio: data.bio }),
                 ...(data.church !== undefined && { church: data.church }),
                 ...(data.churchRole !== undefined && { churchRole: data.churchRole }),

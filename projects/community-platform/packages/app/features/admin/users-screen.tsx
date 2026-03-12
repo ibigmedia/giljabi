@@ -27,6 +27,7 @@ export function AdminUsersScreen() {
     const [editingUserId, setEditingUserId] = useState<string | null>(null)
     const [editForm, setEditForm] = useState({
         username: '',
+        email: '',
         bio: '',
         church: '',
         churchRole: '',
@@ -48,6 +49,7 @@ export function AdminUsersScreen() {
         setEditingUserId(user.id)
         setEditForm({
             username: user.username || '',
+            email: user.email || '',
             bio: user.bio || '',
             church: user.church || '',
             churchRole: user.churchRole || '',
@@ -60,6 +62,7 @@ export function AdminUsersScreen() {
         updateProfile({
             profileId: userId,
             username: editForm.username,
+            email: editForm.email,
             bio: editForm.bio,
             church: editForm.church,
             churchRole: editForm.churchRole,
@@ -231,6 +234,19 @@ export function AdminUsersScreen() {
                                                             placeholder="사용자 이름"
                                                         />
                                                     </YStack>
+                                                    <YStack flex={1} minWidth={200} gap="$1.5">
+                                                        <SizableText size="$2" color="$textMuted" fontWeight="600">이메일</SizableText>
+                                                        <Input
+                                                            size="$3"
+                                                            value={editForm.email}
+                                                            onChangeText={(v: string) => setEditForm(f => ({ ...f, email: v }))}
+                                                            placeholder="이메일 주소"
+                                                            keyboardType="email-address"
+                                                        />
+                                                    </YStack>
+                                                </XStack>
+
+                                                <XStack gap="$4" flexWrap="wrap">
                                                     <YStack flex={1} minWidth={200} gap="$1.5">
                                                         <SizableText size="$2" color="$textMuted" fontWeight="600">출석교회</SizableText>
                                                         <Input

@@ -66,6 +66,15 @@ export default function AuthSessionPage() {
                 return
             }
 
+            // 기존 유저인데 이메일이 없으면 업데이트
+            if (user.email) {
+                await supabase
+                    .from('Profile')
+                    .update({ email: user.email })
+                    .eq('userId', user.id)
+                    .is('email', null)
+            }
+
             if (!profile.isApproved) {
                 await supabase.auth.signOut()
                 setStatus('승인 대기 중입니다.')
