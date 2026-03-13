@@ -232,13 +232,20 @@ function AiThumbnailGenerator({ onGenerated }: { currentUrl?: string; onGenerate
                         </Button>
                         <Button size="$3" borderRadius="$3" icon={<Download size={14} color="$primary" />}
                             bg="$surfaceContainerHigh" borderWidth={1} borderColor="$outlineVariant"
-                            onPress={() => {
-                                const a = document.createElement('a')
-                                a.href = previewUrl
-                                a.download = `ai-thumbnail-${Date.now()}.png`
-                                a.target = '_blank'
-                                a.rel = 'noopener'
-                                a.click()
+                            onPress={async () => {
+                                try {
+                                    const res = await fetch(`/api/portfolio/download-image?url=${encodeURIComponent(previewUrl)}`)
+                                    if (!res.ok) throw new Error('Download failed')
+                                    const blob = await res.blob()
+                                    const url = URL.createObjectURL(blob)
+                                    const a = document.createElement('a')
+                                    a.href = url
+                                    a.download = `ai-thumbnail-${Date.now()}.png`
+                                    document.body.appendChild(a)
+                                    a.click()
+                                    document.body.removeChild(a)
+                                    URL.revokeObjectURL(url)
+                                } catch { alert('다운로드 실패. 이미지를 우클릭하여 저장해 주세요.') }
                             }}>
                             <SizableText color="$primary" fontWeight="600" size="$2">다운로드</SizableText>
                         </Button>

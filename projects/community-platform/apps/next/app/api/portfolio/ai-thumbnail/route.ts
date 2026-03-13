@@ -101,18 +101,22 @@ async function generateWithGemini(
     prompt: string,
 ): Promise<{ buffer: Buffer; mimeType: string } | null> {
     const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`,
         {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 contents: [{
                     parts: [{
-                        text: `Generate an album cover art image: ${prompt}. Make it visually stunning, artistic, and suitable as a music album thumbnail. Square format.`,
+                        text: `Generate an album cover art image: ${prompt}. Make it visually stunning, artistic, and suitable as a music album thumbnail.`,
                     }],
                 }],
                 generationConfig: {
                     responseModalities: ['TEXT', 'IMAGE'],
+                    imageConfig: {
+                        aspectRatio: '1:1',
+                        imageSize: '1K',
+                    },
                 },
             }),
             signal: AbortSignal.timeout(30000),
