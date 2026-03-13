@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { YStack, XStack, SizableText, Button, Input, TextArea, Separator } from '@my/ui'
 import {
     Music, Disc, Video, BarChart3, Palette, Settings, Plus, Trash2, Edit3, Eye, Save,
-    Upload, Image, Sparkles, Play, Youtube, X, Check,
+    Upload, Image, Sparkles, Play, Youtube, X, Check, Download,
     Clock, TrendingUp, Headphones, ExternalLink, FileAudio, Wand2,
 } from '@tamagui/lucide-icons'
 import { AudioVisualizer, THEMES } from './audio-visualizer'
@@ -229,6 +229,18 @@ function AiThumbnailGenerator({ onGenerated }: { currentUrl?: string; onGenerate
                         <Button size="$3" bg="$success" borderRadius="$3" icon={<Check size={14} color="white" />}
                             onPress={() => { onGenerated(previewUrl); setPreviewUrl(null); setPrompt('') }}>
                             <SizableText color="white" fontWeight="600" size="$2">적용</SizableText>
+                        </Button>
+                        <Button size="$3" borderRadius="$3" icon={<Download size={14} color="$primary" />}
+                            bg="$surfaceContainerHigh" borderWidth={1} borderColor="$outlineVariant"
+                            onPress={() => {
+                                const a = document.createElement('a')
+                                a.href = previewUrl
+                                a.download = `ai-thumbnail-${Date.now()}.png`
+                                a.target = '_blank'
+                                a.rel = 'noopener'
+                                a.click()
+                            }}>
+                            <SizableText color="$primary" fontWeight="600" size="$2">다운로드</SizableText>
                         </Button>
                         <Button size="$3" bg="$error" borderRadius="$3" icon={<X size={14} color="white" />}
                             onPress={() => setPreviewUrl(null)}>

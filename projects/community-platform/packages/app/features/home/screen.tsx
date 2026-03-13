@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { YStack, XStack, ScrollView, H2, H3, Paragraph, SizableText, Button, Separator } from '@my/ui'
-import { Heart, Layers, TrendingUp, Zap, BookOpen, Wifi, Users, ChevronDown, Music, Code, Globe, ArrowRight, Play, Video, Pause, X } from '@tamagui/lucide-icons'
+import { Heart, Layers, TrendingUp, Zap, BookOpen, Wifi, Users, ChevronDown, ChevronUp, Music, Code, Globe, ArrowRight, Play, Video, Pause, X, Disc } from '@tamagui/lucide-icons'
 import { useRouter } from 'solito/navigation'
 import { useCurrentUserProfile } from '../../hooks/useProfiles'
 
@@ -36,7 +36,7 @@ function usePortfolioData() {
 
 // Media player state — manages audio + YouTube with no duplicate playback
 type PlayingMedia =
-    | { type: 'audio'; trackTitle: string; artist: string; audioUrl: string; coverUrl?: string }
+    | { type: 'audio'; trackTitle: string; artist: string; audioUrl: string; coverUrl?: string; releaseTitle?: string }
     | { type: 'youtube'; videoId: string; title: string }
     | null
 
@@ -44,53 +44,84 @@ function useMediaPlayer() {
     const [playing, setPlaying] = useState<PlayingMedia>(null)
     const [audioPaused, setAudioPaused] = useState(false)
     const audioRef = useRef<HTMLAudioElement | null>(null)
+    const channelRef = useRef<BroadcastChannel | null>(null)
 
-    const playAudio = useCallback((track: { title: string; audioUrl: string; artist?: string; coverUrl?: string }) => {
-        // Stop any current audio
-        if (audioRef.current) {
-            audioRef.current.pause()
-            audioRef.current.src = ''
-        }
-        // Create new audio
+    // BroadcastChannel for cross-page audio stop
+    useEffect(() => {
+        try {
+            const ch = new BroadcastChannel('giljabi-media')
+            channelRef.current = ch
+            ch.onmessage = (e) => {
+                if (e.data === 'stop') {
+                    if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = '' }
+                    setPlaying(null)
+                    setAudioPaused(false)
+                }
+            }
+            return () => ch.close()
+        } catch { /* BroadcastChannel not supported */ }
+    }, [])
+
+    const broadcastStop = () => {
+        try { channelRef.current?.postMessage('stop') } catch {}
+    }
+
+    const playAudio = useCallback((track: { title: string; audioUrl: string; artist?: string; coverUrl?: string; releaseTitle?: string }) => {
+        broadcastStop()
+        if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = '' }
         const audio = new Audio(track.audioUrl)
         audioRef.current = audio
         audio.play().catch(() => {})
         audio.onended = () => { setPlaying(null); setAudioPaused(false) }
-        setPlaying({ type: 'audio', trackTitle: track.title, artist: track.artist || '', audioUrl: track.audioUrl, coverUrl: track.coverUrl })
+        setPlaying({ type: 'audio', trackTitle: track.title, artist: track.artist || '', audioUrl: track.audioUrl, coverUrl: track.coverUrl, releaseTitle: track.releaseTitle })
         setAudioPaused(false)
     }, [])
 
     const playYouTube = useCallback((videoId: string, title: string) => {
-        // Mute audio when YouTube starts
-        if (audioRef.current) {
-            audioRef.current.pause()
-        }
+        broadcastStop()
+        if (audioRef.current) { audioRef.current.pause() }
         setPlaying({ type: 'youtube', videoId, title })
         setAudioPaused(false)
     }, [])
 
     const togglePause = useCallback(() => {
         if (playing?.type === 'audio' && audioRef.current) {
-            if (audioPaused) {
-                audioRef.current.play().catch(() => {})
-                setAudioPaused(false)
-            } else {
-                audioRef.current.pause()
-                setAudioPaused(true)
-            }
+            if (audioPaused) { audioRef.current.play().catch(() => {}); setAudioPaused(false) }
+            else { audioRef.current.pause(); setAudioPaused(true) }
         }
     }, [playing, audioPaused])
 
     const stop = useCallback(() => {
-        if (audioRef.current) {
-            audioRef.current.pause()
-            audioRef.current.src = ''
-        }
+        if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = '' }
         setPlaying(null)
         setAudioPaused(false)
     }, [])
 
     return { playing, audioPaused, playAudio, playYouTube, togglePause, stop }
+}
+
+// Release type labels and order
+const RELEASE_TYPE_ORDER = ['싱글', 'Single', 'EP', '앨범', 'Album', 'LP'] as const
+const RELEASE_TYPE_LABELS: Record<string, string> = {
+    '싱글': '싱글 Singles', 'Single': '싱글 Singles', 'single': '싱글 Singles',
+    'EP': 'EP',
+    '앨범': '앨범 Albums', 'Album': '앨범 Albums', 'album': '앨범 Albums', 'LP': '앨범 Albums',
+}
+function getTypeGroup(type: string): string {
+    const lower = type.toLowerCase()
+    if (lower === 'single' || lower === '싱글') return 'singles'
+    if (lower === 'ep') return 'ep'
+    return 'albums'
+}
+function getTypeLabel(group: string): string {
+    if (group === 'singles') return '싱글 Singles'
+    if (group === 'ep') return 'EP'
+    return '앨범 Albums'
+}
+function getTypeIcon(group: string) {
+    if (group === 'singles') return Music
+    if (group === 'ep') return Disc
+    return Disc
 }
 
 const HERO_CSS = `
@@ -187,8 +218,8 @@ const HERO_CSS = `
     cursor: pointer;
   }
   .portfolio-album-card:hover {
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: 0 20px 40px rgba(79,124,255,0.15);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(79,124,255,0.12);
   }
   .portfolio-video-card {
     transition: transform 0.25s ease;
@@ -211,6 +242,8 @@ const HERO_CSS = `
   .portfolio-video-card:hover .portfolio-play-overlay {
     opacity: 1;
   }
+  .track-row-home { transition: background 0.15s; border-radius: 6px; }
+  .track-row-home:hover { background: rgba(255,255,255,0.04) !important; }
   .equalizer-bar {
     display: inline-block;
     width: 3px;
@@ -269,10 +302,28 @@ export function HomeScreen() {
     const router = useRouter()
     const { data: profile } = useCurrentUserProfile()
     const { releases, videos, loaded: portfolioLoaded } = usePortfolioData()
-    const featuredRelease = releases[0]
     const totalTracks = releases.reduce((s, r) => s + (r.tracks?.length || 0), 0)
     const media = useMediaPlayer()
     const [overlayVideo, setOverlayVideo] = useState<{ ytId: string; title: string } | null>(null)
+    const [expandedRelease, setExpandedRelease] = useState<string | null>(null)
+
+    // Group releases by type
+    const releaseGroups = React.useMemo(() => {
+        const groups: Record<string, PortfolioRelease[]> = {}
+        releases.forEach(r => {
+            const g = getTypeGroup(r.type)
+            if (!groups[g]) groups[g] = []
+            groups[g]!.push(r)
+        })
+        // Return in order: singles, ep, albums
+        const ordered: { group: string; label: string; releases: PortfolioRelease[] }[] = []
+        for (const g of ['singles', 'ep', 'albums']) {
+            if (groups[g] && groups[g]!.length > 0) {
+                ordered.push({ group: g, label: getTypeLabel(g), releases: groups[g]! })
+            }
+        }
+        return ordered
+    }, [releases])
 
     return (
         <>
@@ -461,68 +512,155 @@ export function HomeScreen() {
                         </YStack>
                     ) : (
                     <>
-                        {/* All Releases - Compact List */}
-                        {releases.length > 0 && (
-                            <YStack gap="$3">
-                                {releases.map((album) => {
-                                    const firstTrack = album.tracks?.[0]
-                                    const isPlaying = media.playing?.type === 'audio' && (media.playing as any).trackTitle === firstTrack?.title
+                        {/* ── Releases grouped by type ── */}
+                        {releaseGroups.map(({ group, label, releases: groupReleases }) => (
+                            <YStack key={group} gap="$3">
+                                {/* Group header */}
+                                <XStack alignItems="center" gap="$2">
+                                    <YStack width={3} height={18} borderRadius={2} bg={group === 'singles' ? '#4F7CFF' : group === 'ep' ? '#7B61FF' : '#FF6B6B'} />
+                                    <SizableText color="white" size="$4" fontWeight="700">{label}</SizableText>
+                                    <SizableText color="rgba(255,255,255,0.3)" size="$2" ml="$1">{groupReleases.length}</SizableText>
+                                </XStack>
+
+                                {groupReleases.map((album) => {
+                                    const tracks = album.tracks || []
+                                    const playableTracks = tracks.filter((t: any) => t.audioUrl)
+                                    const isExpanded = expandedRelease === album.id
+                                    const currentlyPlayingTrack = media.playing?.type === 'audio' ? (media.playing as any).trackTitle : null
+                                    const isAlbumPlaying = tracks.some((t: any) => t.title === currentlyPlayingTrack)
+
                                     return (
-                                    <XStack
-                                        key={album.id}
-                                        bg="rgba(255,255,255,0.04)"
-                                        borderRadius="$4"
-                                        overflow="hidden"
-                                        borderWidth={1}
-                                        borderColor={isPlaying ? 'rgba(79,124,255,0.3)' : 'rgba(255,255,255,0.06)'}
-                                        alignItems="center"
-                                        gap="$3"
-                                        pr="$4"
-                                        cursor="pointer"
-                                        hoverStyle={{ bg: 'rgba(255,255,255,0.06)' }}
-                                        onPress={() => {
-                                            if (firstTrack?.audioUrl) {
-                                                if (isPlaying) { media.togglePause() }
-                                                else { media.playAudio({ title: firstTrack.title, audioUrl: firstTrack.audioUrl, artist: album.artist, coverUrl: album.coverUrl }) }
-                                            } else { router.push('/portfolio') }
-                                        }}
-                                    >
-                                        {/* Cover */}
-                                        <YStack width={72} height={72} position="relative" overflow="hidden">
-                                            {/* @ts-ignore */}
-                                            <img src={album.coverUrl || `https://picsum.photos/seed/${album.id}/200/200`} alt={album.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                            {firstTrack?.audioUrl && (
-                                                <YStack position="absolute" top={0} left={0} right={0} bottom={0} alignItems="center" justifyContent="center" bg="rgba(0,0,0,0.3)" opacity={isPlaying ? 1 : 0} hoverStyle={{ opacity: 1 }}>
-                                                    {isPlaying && !media.audioPaused ? <Pause size={20} color="white" /> : <Play size={20} color="white" />}
+                                        <YStack key={album.id}
+                                            borderRadius="$4" overflow="hidden"
+                                            // @ts-ignore
+                                            style={{
+                                                background: isAlbumPlaying ? 'rgba(79,124,255,0.06)' : 'rgba(255,255,255,0.03)',
+                                                border: isAlbumPlaying ? '1px solid rgba(79,124,255,0.2)' : '1px solid rgba(255,255,255,0.05)',
+                                            }}
+                                        >
+                                            {/* Album row */}
+                                            <XStack
+                                                alignItems="center" gap="$3" p="$3" pr="$4"
+                                                cursor="pointer"
+                                                hoverStyle={{ bg: 'rgba(255,255,255,0.03)' }}
+                                                onPress={() => setExpandedRelease(isExpanded ? null : album.id)}
+                                            >
+                                                {/* Cover */}
+                                                <YStack width={64} height={64} borderRadius="$3" overflow="hidden" position="relative">
+                                                    {/* @ts-ignore */}
+                                                    <img src={album.coverUrl || `https://picsum.photos/seed/${album.id}/200/200`} alt={album.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                    {isAlbumPlaying && !media.audioPaused && (
+                                                        <YStack position="absolute" top={0} left={0} right={0} bottom={0} alignItems="center" justifyContent="center" bg="rgba(0,0,0,0.4)">
+                                                            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 16 }}>
+                                                                <span className="equalizer-bar" />
+                                                                <span className="equalizer-bar" />
+                                                                <span className="equalizer-bar" />
+                                                                <span className="equalizer-bar" />
+                                                            </div>
+                                                        </YStack>
+                                                    )}
+                                                </YStack>
+
+                                                {/* Info */}
+                                                <YStack flex={1} gap="$0.5">
+                                                    <SizableText color="white" size="$3" fontWeight="700" numberOfLines={1}>{album.title}</SizableText>
+                                                    <SizableText color="rgba(255,255,255,0.45)" size="$2" numberOfLines={1}>{album.artist} · {album.year} · {tracks.length}곡</SizableText>
+                                                </YStack>
+
+                                                {/* Play all button */}
+                                                {playableTracks.length > 0 && (
+                                                    <YStack
+                                                        width={32} height={32} borderRadius="$full" alignItems="center" justifyContent="center"
+                                                        bg={isAlbumPlaying ? '#4F7CFF' : 'rgba(255,255,255,0.08)'}
+                                                        cursor="pointer"
+                                                        onPress={(e: any) => {
+                                                            e.stopPropagation()
+                                                            if (isAlbumPlaying) { media.togglePause() }
+                                                            else {
+                                                                const first = playableTracks[0]
+                                                                media.playAudio({ title: first.title, audioUrl: first.audioUrl, artist: album.artist, coverUrl: album.coverUrl, releaseTitle: album.title })
+                                                            }
+                                                        }}
+                                                    >
+                                                        {isAlbumPlaying && !media.audioPaused
+                                                            ? <Pause size={14} color="white" />
+                                                            : <Play size={14} color="white" />
+                                                        }
+                                                    </YStack>
+                                                )}
+
+                                                {/* Expand toggle */}
+                                                <YStack width={28} height={28} borderRadius="$full" alignItems="center" justifyContent="center"
+                                                    bg="rgba(255,255,255,0.05)">
+                                                    {isExpanded
+                                                        ? <ChevronUp size={14} color="rgba(255,255,255,0.4)" />
+                                                        : <ChevronDown size={14} color="rgba(255,255,255,0.4)" />
+                                                    }
+                                                </YStack>
+                                            </XStack>
+
+                                            {/* Expanded tracklist */}
+                                            {isExpanded && tracks.length > 0 && (
+                                                <YStack pb="$2">
+                                                    <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(79,124,255,0.2), transparent)', margin: '0 16px' }} />
+                                                    {tracks.map((track: any, idx: number) => {
+                                                        const isCurrentTrack = media.playing?.type === 'audio' && (media.playing as any).trackTitle === track.title
+                                                        const isPlayingThis = isCurrentTrack && !media.audioPaused
+                                                        return (
+                                                            <div key={track.id || idx} className="track-row-home">
+                                                                <XStack
+                                                                    px="$4" py="$2.5" gap="$3" alignItems="center"
+                                                                    cursor={track.audioUrl ? 'pointer' : 'default'}
+                                                                    opacity={track.audioUrl ? 1 : 0.4}
+                                                                    onPress={() => {
+                                                                        if (track.audioUrl) {
+                                                                            media.playAudio({ title: track.title, audioUrl: track.audioUrl, artist: album.artist, coverUrl: album.coverUrl, releaseTitle: album.title })
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    <YStack width={24} alignItems="center">
+                                                                        {isPlayingThis ? (
+                                                                            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 1.5, height: 12 }}>
+                                                                                <span style={{ width: 2, background: '#4F7CFF', borderRadius: 1, animation: 'equalize 0.5s ease-in-out infinite alternate' }} />
+                                                                                <span style={{ width: 2, background: '#4F7CFF', borderRadius: 1, animation: 'equalize 0.5s ease-in-out infinite alternate 0.15s' }} />
+                                                                                <span style={{ width: 2, background: '#4F7CFF', borderRadius: 1, animation: 'equalize 0.5s ease-in-out infinite alternate 0.3s' }} />
+                                                                            </div>
+                                                                        ) : isCurrentTrack ? (
+                                                                            <Pause size={12} color="#4F7CFF" />
+                                                                        ) : (
+                                                                            <SizableText size="$2" color="rgba(255,255,255,0.3)" fontWeight="500">{idx + 1}</SizableText>
+                                                                        )}
+                                                                    </YStack>
+                                                                    <SizableText
+                                                                        flex={1} size="$3" numberOfLines={1}
+                                                                        color={isCurrentTrack ? '#4F7CFF' : 'rgba(255,255,255,0.85)'}
+                                                                        fontWeight={isCurrentTrack ? '700' : '500'}
+                                                                    >
+                                                                        {track.title}
+                                                                    </SizableText>
+                                                                    {track.duration && (
+                                                                        <SizableText size="$1" color="rgba(255,255,255,0.25)">{track.duration}</SizableText>
+                                                                    )}
+                                                                </XStack>
+                                                            </div>
+                                                        )
+                                                    })}
                                                 </YStack>
                                             )}
                                         </YStack>
-                                        {/* Info */}
-                                        <YStack flex={1} gap="$0.5" py="$2">
-                                            <SizableText color="white" size="$3" fontWeight="700" numberOfLines={1}>{album.title}</SizableText>
-                                            <SizableText color="rgba(255,255,255,0.5)" size="$2" numberOfLines={1}>{album.artist} · {album.year} · {album.type} · {album.tracks?.length || 0}곡</SizableText>
-                                        </YStack>
-                                        {/* Play indicator */}
-                                        {isPlaying && !media.audioPaused && (
-                                            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 16 }}>
-                                                <span className="equalizer-bar" style={{ height: 8 }} />
-                                                <span className="equalizer-bar" style={{ height: 14 }} />
-                                                <span className="equalizer-bar" style={{ height: 6 }} />
-                                                <span className="equalizer-bar" style={{ height: 12 }} />
-                                            </div>
-                                        )}
-                                    </XStack>
                                     )
                                 })}
                             </YStack>
-                        )}
+                        ))}
 
                         {/* All Videos */}
                         {videos.length > 0 && (
                             <YStack gap="$3">
                                 <XStack alignItems="center" gap="$2" mt="$2">
+                                    <YStack width={3} height={18} borderRadius={2} bg="#7B61FF" />
                                     <Video size={16} color="#7B61FF" />
                                     <SizableText color="white" size="$4" fontWeight="700">Videos</SizableText>
+                                    <SizableText color="rgba(255,255,255,0.3)" size="$2" ml="$1">{videos.length}</SizableText>
                                 </XStack>
                                 <XStack gap="$3" flexWrap="wrap">
                                     {videos.map((mv) => {
@@ -593,7 +731,9 @@ export function HomeScreen() {
                                     )}
                                     <YStack flex={1}>
                                         <SizableText color="white" size="$3" fontWeight="700" numberOfLines={1}>{(media.playing as any).trackTitle}</SizableText>
-                                        <SizableText color="rgba(255,255,255,0.5)" size="$2" numberOfLines={1}>{(media.playing as any).artist}</SizableText>
+                                        <SizableText color="rgba(255,255,255,0.5)" size="$2" numberOfLines={1}>
+                                            {(media.playing as any).artist}{(media.playing as any).releaseTitle ? ` — ${(media.playing as any).releaseTitle}` : ''}
+                                        </SizableText>
                                     </YStack>
                                     <XStack gap="$2">
                                         <YStack width={38} height={38} borderRadius="$full" bg="#4F7CFF" alignItems="center" justifyContent="center"

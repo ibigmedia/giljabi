@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { YStack, XStack, SizableText, ScrollView, Separator } from '@my/ui'
 import { Play, Pause, SkipForward, SkipBack, X, Music, Video, Clock, Eye, ChevronDown, ChevronUp, Volume2 } from '@tamagui/lucide-icons'
@@ -21,17 +21,51 @@ function formatPlays(n: number) {
     return String(n)
 }
 
+// Release type grouping
+function getTypeGroup(type: string): string {
+    const lower = type.toLowerCase()
+    if (lower === 'single' || lower === '싱글') return 'singles'
+    if (lower === 'ep') return 'ep'
+    return 'albums'
+}
+function getTypeLabel(group: string): string {
+    if (group === 'singles') return '싱글 Singles'
+    if (group === 'ep') return 'EP'
+    return '앨범 Albums'
+}
+
 // --- Sticky Player Hook ---
 function usePlayer() {
     const audioRef = useRef<HTMLAudioElement | null>(null)
+    const channelRef = useRef<BroadcastChannel | null>(null)
     const [current, setCurrent] = useState<{ track: Track; release: Release } | null>(null)
     const [paused, setPaused] = useState(false)
     const [progress, setProgress] = useState(0)
     const [duration, setDuration] = useState(0)
     const [playlist, setPlaylist] = useState<{ track: Track; release: Release }[]>([])
 
+    // BroadcastChannel for cross-page audio stop
+    useEffect(() => {
+        try {
+            const ch = new BroadcastChannel('giljabi-media')
+            channelRef.current = ch
+            ch.onmessage = (e) => {
+                if (e.data === 'stop') {
+                    if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = '' }
+                    setCurrent(null); setPaused(false); setProgress(0)
+                }
+            }
+            return () => ch.close()
+        } catch { /* BroadcastChannel not supported */ }
+    }, [])
+
+    const broadcastStop = () => {
+        try { channelRef.current?.postMessage('stop') } catch {}
+    }
+
     const play = useCallback((track: Track, release: Release, allTracks?: { track: Track; release: Release }[]) => {
         if (!track.audioUrl) return
+        broadcastStop()
         if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = '' }
         const audio = new Audio(track.audioUrl)
         audioRef.current = audio
@@ -189,6 +223,23 @@ export function PortfolioScreen() {
     const allTracks = releases.flatMap(r => r.tracks.filter(t => t.audioUrl).map(t => ({ track: t, release: r })))
     const totalTracks = releases.reduce((s, r) => s + r.tracks.length, 0)
 
+    // Group releases by type
+    const releaseGroups = useMemo(() => {
+        const groups: Record<string, Release[]> = {}
+        releases.forEach(r => {
+            const g = getTypeGroup(r.type)
+            if (!groups[g]) groups[g] = []
+            groups[g]!.push(r)
+        })
+        const ordered: { group: string; label: string; releases: Release[] }[] = []
+        for (const g of ['singles', 'ep', 'albums']) {
+            if (groups[g] && groups[g]!.length > 0) {
+                ordered.push({ group: g, label: getTypeLabel(g), releases: groups[g]! })
+            }
+        }
+        return ordered
+    }, [releases])
+
     const playRelease = (release: Release) => {
         const playable = release.tracks.filter(t => t.audioUrl)
         if (playable.length === 0) return
@@ -250,9 +301,20 @@ export function PortfolioScreen() {
                                 <SizableText size="$7" fontWeight="800" color="white">Music</SizableText>
                             </XStack>
 
-                            {/* Releases */}
+                            {/* Releases grouped by type */}
+                            {releaseGroups.map(({ group, label, releases: groupReleases }) => (
+                            <YStack key={group} gap="$4">
+                                {/* Group sub-header */}
+                                <XStack alignItems="center" gap="$2">
+                                    <YStack width={3} height={16} borderRadius={2} bg={group === 'singles' ? '#4F7CFF' : group === 'ep' ? '#7B61FF' : '#FF6B6B'} />
+                                    <SizableText size="$5" fontWeight="700" color="white">{label}</SizableText>
+                                    <YStack bg="rgba(255,255,255,0.06)" borderRadius="$2" px="$2" py="$0.5" ml="$1">
+                                        <SizableText size="$1" color="rgba(255,255,255,0.4)" fontWeight="600">{groupReleases.length}</SizableText>
+                                    </YStack>
+                                </XStack>
+
                             <YStack gap="$5">
-                                {releases.map((release, rIdx) => {
+                                {groupReleases.map((release, rIdx) => {
                                     const isExpanded = expandedRelease === release.id
                                     const isCurrentRelease = player.current?.release.id === release.id
                                     const playableTracks = release.tracks.filter(t => t.audioUrl)
@@ -409,6 +471,8 @@ export function PortfolioScreen() {
                                     )
                                 })}
                             </YStack>
+                            </YStack>
+                            ))}
                         </YStack>
                     )}
 
