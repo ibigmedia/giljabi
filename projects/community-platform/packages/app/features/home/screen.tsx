@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { YStack, XStack, ScrollView, H2, H3, Paragraph, SizableText, Button, Separator } from '@my/ui'
-import { Heart, Layers, TrendingUp, Zap, BookOpen, Wifi, Users, ChevronDown, Music, Code, Globe, ArrowRight, Play, Headphones, Video, Disc, ExternalLink, Pause, X, Volume2 } from '@tamagui/lucide-icons'
+import { Heart, Layers, TrendingUp, Zap, BookOpen, Wifi, Users, ChevronDown, Music, Code, Globe, ArrowRight, Play, Video, Pause, X } from '@tamagui/lucide-icons'
 import { useRouter } from 'solito/navigation'
 import { useCurrentUserProfile } from '../../hooks/useProfiles'
 
@@ -405,302 +405,202 @@ export function HomeScreen() {
 
             {/* ===== Portfolio / Music Showcase Section ===== */}
             <div className="portfolio-section">
-                <YStack maxWidth={1080} alignSelf="center" width="100%" px="$4" py="$12" gap="$8" position="relative" zIndex={1}>
+                <YStack maxWidth={1080} alignSelf="center" width="100%" px="$4" py="$10" gap="$6" position="relative" zIndex={1}>
 
                     {/* Section Header */}
-                    <YStack alignItems="center" gap="$3">
-                        <XStack alignItems="center" gap="$2">
-                            <div style={{ display: 'flex', alignItems: 'flex-end', height: 24 }}>
-                                <span className="equalizer-bar" />
-                                <span className="equalizer-bar" />
-                                <span className="equalizer-bar" />
-                                <span className="equalizer-bar" />
-                                <span className="equalizer-bar" />
-                            </div>
+                    <XStack justifyContent="space-between" alignItems="flex-end" flexWrap="wrap" gap="$3">
+                        <YStack gap="$1">
                             <SizableText color="#4F7CFF" fontWeight="700" size="$2" letterSpacing={2}>SOUND & VISION</SizableText>
-                            <div style={{ display: 'flex', alignItems: 'flex-end', height: 24 }}>
-                                <span className="equalizer-bar" />
-                                <span className="equalizer-bar" />
-                                <span className="equalizer-bar" />
-                                <span className="equalizer-bar" />
-                                <span className="equalizer-bar" />
-                            </div>
-                        </XStack>
-                        <H3 color="white" fontWeight="800" fontSize={26} textAlign="center">
-                            음악과 영상으로 전하는 메시지
-                        </H3>
-                        <Paragraph color="rgba(255,255,255,0.6)" size="$4" textAlign="center" maxWidth={500}>
-                            사운드스케이프와 감성적 리듬으로 만들어진 창작물들.{'\n'}듣고, 보고, 함께 경험하세요.
-                        </Paragraph>
-                    </YStack>
-
-                    {/* Featured Release - Hero Card */}
-                    {featuredRelease ? (
-                    <div className="portfolio-album-card">
-                        <YStack bg="rgba(255,255,255,0.06)" borderRadius="$6" overflow="hidden" borderWidth={1} borderColor="rgba(255,255,255,0.08)">
-                            <XStack flexWrap="wrap" className="portfolio-featured-grid">
-                                <YStack width={320} minWidth={280} height={320} position="relative" overflow="hidden"
-                                    onPress={() => {
-                                        const track = featuredRelease.tracks?.[0]
-                                        if (track?.audioUrl) {
-                                            media.playAudio({ title: track.title, audioUrl: track.audioUrl, artist: featuredRelease.artist, coverUrl: featuredRelease.coverUrl })
-                                        }
-                                    }}
-                                    cursor={featuredRelease.tracks?.[0]?.audioUrl ? 'pointer' : 'default'}
-                                >
-                                    {/* @ts-ignore */}
-                                    <img src={featuredRelease.coverUrl || `https://picsum.photos/seed/${featuredRelease.id}/640/640`} alt={featuredRelease.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                    <div className="portfolio-play-overlay">
-                                        <YStack width={72} height={72} borderRadius={36} bg="rgba(79,124,255,0.9)" alignItems="center" justifyContent="center">
-                                            {media.playing?.type === 'audio' && (media.playing as any).trackTitle === featuredRelease.tracks?.[0]?.title
-                                                ? <Volume2 size={32} color="white" />
-                                                : <Play size={32} color="white" />}
-                                        </YStack>
-                                    </div>
-                                    <YStack position="absolute" top="$3" left="$3" bg="#4F7CFF" borderRadius="$full" px="$3" py="$1">
-                                        <SizableText color="white" size="$1" fontWeight="700" letterSpacing={1}>NEW RELEASE</SizableText>
-                                    </YStack>
-                                </YStack>
-                                <YStack flex={1} minWidth={300} p="$6" gap="$4" justifyContent="center" className="portfolio-featured-info">
-                                    <YStack gap="$1">
-                                        <SizableText color="rgba(255,255,255,0.5)" size="$2" fontWeight="600">{featuredRelease.year} · {featuredRelease.type}</SizableText>
-                                        <SizableText color="white" size="$9" fontWeight="900" letterSpacing={-1}>{featuredRelease.title}</SizableText>
-                                        <SizableText color="#4F7CFF" size="$3" fontWeight="600">{featuredRelease.artist}</SizableText>
-                                    </YStack>
-                                    <Paragraph color="rgba(255,255,255,0.6)" size="$3" lineHeight={22}>
-                                        {featuredRelease.tracks?.length ? `${featuredRelease.tracks.length}곡 수록` : '최신 발매'}
-                                    </Paragraph>
-                                    <XStack gap="$3" mt="$1" flexWrap="wrap">
-                                        <XStack alignItems="center" gap="$2" bg="#4F7CFF" borderRadius="$full" paddingHorizontal="$4" paddingVertical="$2.5" cursor="pointer" hoverStyle={{ opacity: 0.9 }} onPress={() => router.push('/portfolio')}>
-                                            <Headphones size={16} color="white" />
-                                            <SizableText color="white" fontWeight="700" size="$3">지금 듣기</SizableText>
-                                        </XStack>
-                                        <XStack alignItems="center" gap="$2" borderWidth={1} borderColor="rgba(255,255,255,0.2)" borderRadius="$full" paddingHorizontal="$4" paddingVertical="$2.5" cursor="pointer" hoverStyle={{ bg: 'rgba(255,255,255,0.08)' }} onPress={() => router.push('/portfolio')}>
-                                            <Disc size={16} color="rgba(255,255,255,0.6)" />
-                                            <SizableText color="white" fontWeight="600" size="$3">디스코그래피</SizableText>
-                                        </XStack>
-                                    </XStack>
-                                    <XStack gap="$6" mt="$2">
-                                        <YStack>
-                                            <SizableText color="white" size="$5" fontWeight="800">{releases.length}</SizableText>
-                                            <SizableText color="rgba(255,255,255,0.5)" size="$1" fontWeight="500">Releases</SizableText>
-                                        </YStack>
-                                        <YStack>
-                                            <SizableText color="white" size="$5" fontWeight="800">{videos.length}</SizableText>
-                                            <SizableText color="rgba(255,255,255,0.5)" size="$1" fontWeight="500">Videos</SizableText>
-                                        </YStack>
-                                        <YStack>
-                                            <SizableText color="white" size="$5" fontWeight="800">{totalTracks}</SizableText>
-                                            <SizableText color="rgba(255,255,255,0.5)" size="$1" fontWeight="500">Tracks</SizableText>
-                                        </YStack>
-                                    </XStack>
-                                </YStack>
-                            </XStack>
+                            <H3 color="white" fontWeight="800" fontSize={24}>음악과 영상 포트폴리오</H3>
                         </YStack>
-                    </div>
-                    ) : !portfolioLoaded ? null : (
-                    <div className="portfolio-album-card">
-                        <YStack bg="rgba(255,255,255,0.06)" borderRadius="$6" p="$8" alignItems="center" gap="$3" borderWidth={1} borderColor="rgba(255,255,255,0.08)">
-                            <Music size={40} color="rgba(255,255,255,0.3)" />
-                            <SizableText color="rgba(255,255,255,0.5)" size="$4">발매된 음반이 없습니다</SizableText>
-                            <SizableText color="rgba(255,255,255,0.3)" size="$2">관리자 대시보드에서 음반을 추가하세요</SizableText>
+                        {(releases.length > 0 || videos.length > 0) && (
+                            <XStack gap="$4">
+                                <SizableText color="rgba(255,255,255,0.4)" size="$2">{releases.length} releases · {totalTracks} tracks · {videos.length} videos</SizableText>
+                            </XStack>
+                        )}
+                    </XStack>
+
+                    {!portfolioLoaded ? null : releases.length === 0 && videos.length === 0 ? (
+                        <YStack bg="rgba(255,255,255,0.04)" borderRadius="$5" p="$8" alignItems="center" gap="$2">
+                            <Music size={36} color="rgba(255,255,255,0.2)" />
+                            <SizableText color="rgba(255,255,255,0.4)" size="$3">발매된 콘텐츠가 없습니다</SizableText>
                         </YStack>
-                    </div>
-                    )}
-
-                    {/* Albums Grid */}
-                    <YStack gap="$4">
-                        <XStack justifyContent="space-between" alignItems="center">
-                            <XStack alignItems="center" gap="$2">
-                                <Disc size={18} color="#4F7CFF" />
-                                <SizableText color="white" size="$5" fontWeight="700">Discography</SizableText>
-                            </XStack>
-                            <XStack
-                                alignItems="center"
-                                gap="$1"
-                                cursor="pointer"
-                                hoverStyle={{ opacity: 0.8 }}
-                                onPress={() => router.push('/portfolio')}
-                            >
-                                <SizableText color="#4F7CFF" size="$3" fontWeight="600">전체보기</SizableText>
-                                <ArrowRight size={14} color="#4F7CFF" />
-                            </XStack>
-                        </XStack>
-
-                        <XStack gap="$4" flexWrap="wrap">
-                            {releases.slice(0, 4).map((album) => {
-                                const firstTrack = album.tracks?.[0]
-                                const isPlaying = media.playing?.type === 'audio' && (media.playing as any).trackTitle === firstTrack?.title
-                                return (
-                                <div key={album.id} className="portfolio-album-card" style={{ flex: '1 1 180px', minWidth: 160, maxWidth: 220 }}>
-                                    <YStack bg="rgba(255,255,255,0.06)" borderRadius="$5" overflow="hidden" borderWidth={1} borderColor="rgba(255,255,255,0.08)" gap="$2"
+                    ) : (
+                    <>
+                        {/* All Releases - Compact List */}
+                        {releases.length > 0 && (
+                            <YStack gap="$3">
+                                {releases.map((album) => {
+                                    const firstTrack = album.tracks?.[0]
+                                    const isPlaying = media.playing?.type === 'audio' && (media.playing as any).trackTitle === firstTrack?.title
+                                    return (
+                                    <XStack
+                                        key={album.id}
+                                        bg="rgba(255,255,255,0.04)"
+                                        borderRadius="$4"
+                                        overflow="hidden"
+                                        borderWidth={1}
+                                        borderColor={isPlaying ? 'rgba(79,124,255,0.3)' : 'rgba(255,255,255,0.06)'}
+                                        alignItems="center"
+                                        gap="$3"
+                                        pr="$4"
+                                        cursor="pointer"
+                                        hoverStyle={{ bg: 'rgba(255,255,255,0.06)' }}
                                         onPress={() => {
                                             if (firstTrack?.audioUrl) {
                                                 if (isPlaying) { media.togglePause() }
                                                 else { media.playAudio({ title: firstTrack.title, audioUrl: firstTrack.audioUrl, artist: album.artist, coverUrl: album.coverUrl }) }
                                             } else { router.push('/portfolio') }
                                         }}
-                                        cursor="pointer"
                                     >
-                                        <YStack width="100%" aspectRatio={1} position="relative" overflow="hidden">
+                                        {/* Cover */}
+                                        <YStack width={72} height={72} position="relative" overflow="hidden">
                                             {/* @ts-ignore */}
-                                            <img src={album.coverUrl || `https://picsum.photos/seed/${album.id}/400/400`} alt={album.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                            <div className="portfolio-play-overlay">
-                                                <YStack width={44} height={44} borderRadius={22} bg="rgba(79,124,255,0.9)" alignItems="center" justifyContent="center">
-                                                    {isPlaying ? <Pause size={20} color="white" /> : <Play size={20} color="white" />}
+                                            <img src={album.coverUrl || `https://picsum.photos/seed/${album.id}/200/200`} alt={album.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            {firstTrack?.audioUrl && (
+                                                <YStack position="absolute" top={0} left={0} right={0} bottom={0} alignItems="center" justifyContent="center" bg="rgba(0,0,0,0.3)" opacity={isPlaying ? 1 : 0} hoverStyle={{ opacity: 1 }}>
+                                                    {isPlaying && !media.audioPaused ? <Pause size={20} color="white" /> : <Play size={20} color="white" />}
                                                 </YStack>
-                                            </div>
-                                        </YStack>
-                                        <YStack px="$3" pb="$3">
-                                            <SizableText color="white" size="$3" fontWeight="700" numberOfLines={1}>{album.title}</SizableText>
-                                            <SizableText color="rgba(255,255,255,0.5)" size="$2">{album.year} · {album.type}</SizableText>
-                                        </YStack>
-                                    </YStack>
-                                </div>
-                                )
-                            })}
-                            {releases.length === 0 && portfolioLoaded && (
-                                <SizableText color="rgba(255,255,255,0.4)" size="$3" textAlign="center" width="100%">발매된 음반이 없습니다</SizableText>
-                            )}
-                        </XStack>
-                    </YStack>
-
-                    {/* Music Videos */}
-                    <YStack gap="$4">
-                        <XStack justifyContent="space-between" alignItems="center">
-                            <XStack alignItems="center" gap="$2">
-                                <Video size={18} color="#7B61FF" />
-                                <SizableText color="white" size="$5" fontWeight="700">Featured Videos</SizableText>
-                            </XStack>
-                            <XStack
-                                alignItems="center"
-                                gap="$1"
-                                cursor="pointer"
-                                hoverStyle={{ opacity: 0.8 }}
-                                onPress={() => router.push('/portfolio')}
-                            >
-                                <SizableText color="#4F7CFF" size="$3" fontWeight="600">더보기</SizableText>
-                                <ArrowRight size={14} color="#4F7CFF" />
-                            </XStack>
-                        </XStack>
-
-                        <XStack gap="$4" flexWrap="wrap">
-                            {videos.slice(0, 4).map((mv) => {
-                                const ytId = mv.youtubeUrl ? extractYouTubeId(mv.youtubeUrl) : null
-                                const thumb = mv.thumbnailUrl || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : `https://picsum.photos/seed/${mv.id}/600/340`)
-                                const isPlayingThis = media.playing?.type === 'youtube' && (media.playing as any).videoId === ytId
-                                return (
-                                <div key={mv.id} className="portfolio-video-card" style={{ flex: '1 1 300px', minWidth: 280 }}>
-                                    <YStack bg="rgba(255,255,255,0.06)" borderRadius="$5" overflow="hidden" borderWidth={1} borderColor="rgba(255,255,255,0.08)" gap="$2">
-                                        <YStack width="100%" aspectRatio={16 / 9} position="relative" overflow="hidden"
-                                            onPress={() => {
-                                                if (isPlayingThis) { media.stop() }
-                                                else if (ytId) { media.playYouTube(ytId, mv.title) }
-                                            }}
-                                            cursor="pointer"
-                                        >
-                                            {isPlayingThis && ytId ? (
-                                                <>
-                                                    {/* @ts-ignore */}
-                                                    <iframe
-                                                        src={`https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0`}
-                                                        style={{ width: '100%', height: '100%', border: 'none', position: 'absolute', top: 0, left: 0 }}
-                                                        allow="autoplay; encrypted-media"
-                                                        allowFullScreen
-                                                    />
-                                                    <YStack position="absolute" top="$2" right="$2" bg="rgba(0,0,0,0.6)" borderRadius="$full" p="$1.5" cursor="pointer" zIndex={10}
-                                                        onPress={(e: any) => { e.stopPropagation(); media.stop() }}>
-                                                        <X size={16} color="white" />
-                                                    </YStack>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    {/* @ts-ignore */}
-                                                    <img src={thumb} alt={mv.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                    <div className="portfolio-play-overlay">
-                                                        <YStack width={56} height={56} borderRadius={28} bg="rgba(79,124,255,0.9)" alignItems="center" justifyContent="center">
-                                                            <Play size={24} color="white" />
-                                                        </YStack>
-                                                    </div>
-                                                    <YStack position="absolute" bottom="$2" right="$2" bg="rgba(0,0,0,0.75)" borderRadius="$2" px="$2" py="$1">
-                                                        <SizableText color="white" size="$1" fontWeight="600">{mv.duration}</SizableText>
-                                                    </YStack>
-                                                </>
                                             )}
                                         </YStack>
-                                        <XStack px="$4" pb="$3" justifyContent="space-between" alignItems="center">
-                                            <YStack flex={1}>
-                                                <SizableText color="white" size="$4" fontWeight="700">{mv.title}</SizableText>
-                                                <SizableText color="rgba(255,255,255,0.5)" size="$2">{mv.views} views</SizableText>
-                                            </YStack>
-                                        </XStack>
-                                    </YStack>
-                                </div>
-                                )
-                            })}
-                            {videos.length === 0 && portfolioLoaded && (
-                                <SizableText color="rgba(255,255,255,0.4)" size="$3" textAlign="center" width="100%">뮤직비디오가 없습니다</SizableText>
-                            )}
-                        </XStack>
-                    </YStack>
+                                        {/* Info */}
+                                        <YStack flex={1} gap="$0.5" py="$2">
+                                            <SizableText color="white" size="$3" fontWeight="700" numberOfLines={1}>{album.title}</SizableText>
+                                            <SizableText color="rgba(255,255,255,0.5)" size="$2" numberOfLines={1}>{album.artist} · {album.year} · {album.type} · {album.tracks?.length || 0}곡</SizableText>
+                                        </YStack>
+                                        {/* Play indicator */}
+                                        {isPlaying && !media.audioPaused && (
+                                            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 16 }}>
+                                                <span className="equalizer-bar" style={{ height: 8 }} />
+                                                <span className="equalizer-bar" style={{ height: 14 }} />
+                                                <span className="equalizer-bar" style={{ height: 6 }} />
+                                                <span className="equalizer-bar" style={{ height: 12 }} />
+                                            </div>
+                                        )}
+                                    </XStack>
+                                    )
+                                })}
+                            </YStack>
+                        )}
 
-                    {/* Now Playing Mini Bar */}
-                    {media.playing?.type === 'audio' && (
-                        <div style={{ position: 'sticky', bottom: 16, zIndex: 50 }}>
-                            <XStack
-                                bg="rgba(20,20,40,0.95)"
-                                borderRadius="$5"
-                                borderWidth={1}
-                                borderColor="rgba(79,124,255,0.3)"
-                                p="$3"
-                                gap="$3"
-                                alignItems="center"
-                                // @ts-ignore
-                                style={{ backdropFilter: 'blur(20px)', boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}
-                            >
-                                {(media.playing as any).coverUrl && (
-                                    <YStack width={48} height={48} borderRadius="$3" overflow="hidden">
-                                        {/* @ts-ignore */}
-                                        <img src={(media.playing as any).coverUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                    </YStack>
-                                )}
-                                <YStack flex={1}>
-                                    <SizableText color="white" size="$3" fontWeight="700" numberOfLines={1}>{(media.playing as any).trackTitle}</SizableText>
-                                    <SizableText color="rgba(255,255,255,0.5)" size="$2" numberOfLines={1}>{(media.playing as any).artist}</SizableText>
-                                </YStack>
-                                <XStack gap="$2">
-                                    <YStack width={40} height={40} borderRadius="$full" bg="rgba(79,124,255,0.8)" alignItems="center" justifyContent="center"
-                                        cursor="pointer" onPress={media.togglePause}>
-                                        {media.audioPaused ? <Play size={18} color="white" /> : <Pause size={18} color="white" />}
-                                    </YStack>
-                                    <YStack width={40} height={40} borderRadius="$full" bg="rgba(255,255,255,0.1)" alignItems="center" justifyContent="center"
-                                        cursor="pointer" onPress={media.stop}>
-                                        <X size={18} color="rgba(255,255,255,0.6)" />
-                                    </YStack>
+                        {/* All Videos */}
+                        {videos.length > 0 && (
+                            <YStack gap="$3">
+                                <XStack alignItems="center" gap="$2" mt="$2">
+                                    <Video size={16} color="#7B61FF" />
+                                    <SizableText color="white" size="$4" fontWeight="700">Videos</SizableText>
                                 </XStack>
-                            </XStack>
-                        </div>
-                    )}
+                                <XStack gap="$3" flexWrap="wrap">
+                                    {videos.map((mv) => {
+                                        const ytId = mv.youtubeUrl ? extractYouTubeId(mv.youtubeUrl) : null
+                                        const thumb = mv.thumbnailUrl || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : '')
+                                        const isPlayingThis = media.playing?.type === 'youtube' && (media.playing as any).videoId === ytId
+                                        return (
+                                        <YStack key={mv.id} width="48%" minWidth={260} gap="$2">
+                                            <div className="portfolio-video-card">
+                                                <YStack width="100%" aspectRatio={16 / 9} borderRadius="$4" overflow="hidden" position="relative"
+                                                    onPress={() => {
+                                                        if (isPlayingThis) { media.stop() }
+                                                        else if (ytId) { media.playYouTube(ytId, mv.title) }
+                                                    }}
+                                                    cursor="pointer"
+                                                >
+                                                    {isPlayingThis && ytId ? (
+                                                        <>
+                                                            {/* @ts-ignore */}
+                                                            <iframe
+                                                                src={`https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0`}
+                                                                style={{ width: '100%', height: '100%', border: 'none' }}
+                                                                allow="autoplay; encrypted-media" allowFullScreen
+                                                            />
+                                                            <YStack position="absolute" top="$2" right="$2" bg="rgba(0,0,0,0.7)" borderRadius="$full" p="$1.5" cursor="pointer" zIndex={10}
+                                                                onPress={(e: any) => { e.stopPropagation(); media.stop() }}>
+                                                                <X size={14} color="white" />
+                                                            </YStack>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            {thumb ? (
+                                                                // @ts-ignore
+                                                                <img src={thumb} alt={mv.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                            ) : (
+                                                                <YStack flex={1} bg="rgba(79,124,255,0.1)" alignItems="center" justifyContent="center">
+                                                                    <Video size={32} color="rgba(255,255,255,0.2)" />
+                                                                </YStack>
+                                                            )}
+                                                            <div className="portfolio-play-overlay">
+                                                                <YStack width={48} height={48} borderRadius={24} bg="rgba(255,0,0,0.85)" alignItems="center" justifyContent="center">
+                                                                    <Play size={22} color="white" />
+                                                                </YStack>
+                                                            </div>
+                                                            {mv.duration && mv.duration !== '0:00' && (
+                                                                <YStack position="absolute" bottom="$2" right="$2" bg="rgba(0,0,0,0.8)" borderRadius="$2" px="$2" py="$0.5">
+                                                                    <SizableText color="white" size="$1" fontWeight="600">{mv.duration}</SizableText>
+                                                                </YStack>
+                                                            )}
+                                                        </>
+                                                    )}
+                                                </YStack>
+                                            </div>
+                                            <SizableText color="white" size="$3" fontWeight="600" numberOfLines={1}>{mv.title}</SizableText>
+                                            <SizableText color="rgba(255,255,255,0.4)" size="$1">{mv.views > 0 ? `${mv.views} views` : ''}</SizableText>
+                                        </YStack>
+                                        )
+                                    })}
+                                </XStack>
+                            </YStack>
+                        )}
 
-                    {/* CTA to Portfolio */}
-                    <div style={{ alignSelf: 'center', display: 'flex' }}>
-                        <XStack
-                            alignItems="center"
-                            gap="$2"
-                            borderRadius="$full"
-                            paddingHorizontal="$6"
-                            paddingVertical="$3.5"
-                            cursor="pointer"
-                            hoverStyle={{ opacity: 0.9 }}
+                        {/* Now Playing Mini Bar */}
+                        {media.playing?.type === 'audio' && (
+                            <div style={{ position: 'sticky', bottom: 16, zIndex: 50 }}>
+                                <XStack
+                                    bg="rgba(20,20,40,0.95)"
+                                    borderRadius="$4"
+                                    borderWidth={1}
+                                    borderColor="rgba(79,124,255,0.3)"
+                                    p="$3"
+                                    gap="$3"
+                                    alignItems="center"
+                                    // @ts-ignore
+                                    style={{ backdropFilter: 'blur(20px)', boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}
+                                >
+                                    {(media.playing as any).coverUrl && (
+                                        <YStack width={44} height={44} borderRadius="$2" overflow="hidden">
+                                            {/* @ts-ignore */}
+                                            <img src={(media.playing as any).coverUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        </YStack>
+                                    )}
+                                    <YStack flex={1}>
+                                        <SizableText color="white" size="$3" fontWeight="700" numberOfLines={1}>{(media.playing as any).trackTitle}</SizableText>
+                                        <SizableText color="rgba(255,255,255,0.5)" size="$2" numberOfLines={1}>{(media.playing as any).artist}</SizableText>
+                                    </YStack>
+                                    <XStack gap="$2">
+                                        <YStack width={38} height={38} borderRadius="$full" bg="#4F7CFF" alignItems="center" justifyContent="center"
+                                            cursor="pointer" onPress={media.togglePause}>
+                                            {media.audioPaused ? <Play size={16} color="white" /> : <Pause size={16} color="white" />}
+                                        </YStack>
+                                        <YStack width={38} height={38} borderRadius="$full" bg="rgba(255,255,255,0.1)" alignItems="center" justifyContent="center"
+                                            cursor="pointer" onPress={media.stop}>
+                                            <X size={16} color="rgba(255,255,255,0.6)" />
+                                        </YStack>
+                                    </XStack>
+                                </XStack>
+                            </div>
+                        )}
+
+                        {/* CTA */}
+                        <XStack alignSelf="center" alignItems="center" gap="$2" borderRadius="$full" paddingHorizontal="$5" paddingVertical="$3" cursor="pointer" hoverStyle={{ opacity: 0.9 }}
                             onPress={() => router.push('/portfolio')}
                             // @ts-ignore
                             style={{ background: 'linear-gradient(135deg, #4F7CFF, #7B61FF)' }}
                         >
-                            <Music size={18} color="white" />
-                            <SizableText color="white" fontWeight="700" size="$4">포트폴리오 전체 보기</SizableText>
-                            <ExternalLink size={16} color="rgba(255,255,255,0.7)" />
+                            <Music size={16} color="white" />
+                            <SizableText color="white" fontWeight="700" size="$3">포트폴리오 전체 보기</SizableText>
+                            <ArrowRight size={14} color="rgba(255,255,255,0.7)" />
                         </XStack>
-                    </div>
+                    </>
+                    )}
 
                 </YStack>
             </div>

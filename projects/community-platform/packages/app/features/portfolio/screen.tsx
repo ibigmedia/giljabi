@@ -1,33 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { YStack, XStack, SizableText, Button, ScrollView, Separator } from '@my/ui'
-import { Play, ExternalLink, ChevronRight, Music } from '@tamagui/lucide-icons'
-import { AudioVisualizer } from './audio-visualizer'
-import type { VisualizerMode } from './audio-visualizer'
+import { Play, Pause, SkipForward, SkipBack, X, Music, Video, Clock, Eye, ChevronDown, ChevronUp, Volume2 } from '@tamagui/lucide-icons'
 
 // --- Types ---
-type Release = {
-    id: string
-    title: string
-    artist: string
-    year: number
-    type: string
-    coverUrl: string
-    status: string
-    tracks: { id: string; title: string; duration: string; plays: number; audioUrl?: string }[]
-}
-
-type MusicVideo = {
-    id: string
-    title: string
-    youtubeUrl: string
-    thumbnailUrl: string
-    duration: string
-    views: number
-    status: string
-    publishedAt: string
-}
+type Track = { id: string; title: string; duration: string; plays: number; audioUrl?: string; position: number }
+type Release = { id: string; title: string; artist: string; year: number; type: string; coverUrl: string; status: string; tracks: Track[] }
+type MusicVideo = { id: string; title: string; youtubeUrl: string; thumbnailUrl: string; duration: string; views: number; status: string; publishedAt: string }
 
 function extractYouTubeId(url: string): string | null {
     if (!url) return null
@@ -35,34 +15,106 @@ function extractYouTubeId(url: string): string | null {
     return m ? m[1]! : null
 }
 
-// Map DB type to display type
-function displayType(t: string) {
-    if (t === 'Album') return 'Studio Album'
-    return t
+function formatPlays(n: number) {
+    if (n >= 1000) return `${(n / 1000).toFixed(1)}K`
+    return String(n)
 }
 
-const TABS = ['All Releases', 'Studio Albums', 'EPs', 'Singles'] as const
+// --- Sticky Player Hook ---
+function usePlayer() {
+    const audioRef = useRef<HTMLAudioElement | null>(null)
+    const [current, setCurrent] = useState<{ track: Track; release: Release } | null>(null)
+    const [paused, setPaused] = useState(false)
+    const [progress, setProgress] = useState(0)
+    const [duration, setDuration] = useState(0)
+    const [playlist, setPlaylist] = useState<{ track: Track; release: Release }[]>([])
+
+    const play = useCallback((track: Track, release: Release, allTracks?: { track: Track; release: Release }[]) => {
+        if (!track.audioUrl) return
+        if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = '' }
+        const audio = new Audio(track.audioUrl)
+        audioRef.current = audio
+        audio.play().catch(() => { })
+        audio.ontimeupdate = () => setProgress(audio.currentTime)
+        audio.onloadedmetadata = () => setDuration(audio.duration)
+        audio.onended = () => next()
+        setCurrent({ track, release })
+        setPaused(false)
+        if (allTracks) setPlaylist(allTracks)
+    }, [])
+
+    const togglePause = useCallback(() => {
+        if (!audioRef.current) return
+        if (paused) { audioRef.current.play().catch(() => { }); setPaused(false) }
+        else { audioRef.current.pause(); setPaused(true) }
+    }, [paused])
+
+    const stop = useCallback(() => {
+        if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = '' }
+        setCurrent(null); setPaused(false); setProgress(0)
+    }, [])
+
+    const seek = useCallback((pct: number) => {
+        if (audioRef.current && duration) { audioRef.current.currentTime = pct * duration }
+    }, [duration])
+
+    const next = useCallback(() => {
+        if (!current || playlist.length === 0) return
+        const idx = playlist.findIndex(p => p.track.id === current.track.id)
+        const nextItem = playlist[idx + 1]
+        if (nextItem) play(nextItem.track, nextItem.release, playlist)
+        else stop()
+    }, [current, playlist, play, stop])
+
+    const prev = useCallback(() => {
+        if (!current || playlist.length === 0) return
+        const idx = playlist.findIndex(p => p.track.id === current.track.id)
+        const prevItem = playlist[idx - 1]
+        if (prevItem) play(prevItem.track, prevItem.release, playlist)
+    }, [current, playlist, play])
+
+    return { current, paused, progress, duration, play, togglePause, stop, seek, next, prev }
+}
+
+function formatTime(s: number) {
+    if (!s || isNaN(s)) return '0:00'
+    const m = Math.floor(s / 60)
+    const sec = Math.floor(s % 60)
+    return `${m}:${sec.toString().padStart(2, '0')}`
+}
+
+const PAGE_CSS = `
+  .portfolio-page { background: #060612; min-height: 100vh; }
+  .track-row { transition: background 0.15s; }
+  .track-row:hover { background: rgba(255,255,255,0.04) !important; }
+  .video-card { transition: transform 0.2s; cursor: pointer; }
+  .video-card:hover { transform: scale(1.02); }
+  .video-card:hover .video-play-btn { opacity: 1 !important; }
+  .progress-bar { cursor: pointer; position: relative; }
+  .progress-bar:hover .progress-thumb { opacity: 1; }
+  .progress-thumb { opacity: 0; transition: opacity 0.15s; }
+  .release-card { transition: transform 0.2s, box-shadow 0.2s; }
+  .release-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.3); }
+`
 
 export function PortfolioScreen() {
     const [releases, setReleases] = useState<Release[]>([])
     const [videos, setVideos] = useState<MusicVideo[]>([])
     const [loading, setLoading] = useState(true)
-    const [activeTab, setActiveTab] = useState<typeof TABS[number]>('All Releases')
-    const [selectedRelease, setSelectedRelease] = useState<Release | null>(null)
-    const [selectedTrack, setSelectedTrack] = useState<{ title: string; artist: string; audioUrl?: string } | null>(null)
-    const [vizMode, setVizMode] = useState<VisualizerMode>('circular')
+    const [expandedRelease, setExpandedRelease] = useState<string | null>(null)
     const [playingVideoId, setPlayingVideoId] = useState<string | null>(null)
+    const [activeSection, setActiveSection] = useState<'music' | 'videos'>('music')
+    const player = usePlayer()
 
-    // Load published releases and videos from API
     useEffect(() => {
         Promise.all([
             fetch('/api/portfolio/releases').then(r => r.ok ? r.json() : []).catch(() => []),
             fetch('/api/portfolio/videos').then(r => r.ok ? r.json() : []).catch(() => []),
         ]).then(([rel, vid]) => {
-            // Only show published items
             const pubReleases = (rel as any[]).filter((r: any) => r.status === 'published').map((r: any) => ({
                 ...r, year: Number(r.year),
-                tracks: (r.tracks || []).map((t: any) => ({ ...t, plays: t.plays || 0 })),
+                tracks: (r.tracks || []).map((t: any, i: number) => ({ ...t, plays: t.plays || 0, position: t.position || i }))
+                    .sort((a: Track, b: Track) => a.position - b.position),
             }))
             const pubVideos = (vid as any[]).filter((v: any) => v.status === 'published').map((v: any) => ({
                 ...v, views: v.views || 0,
@@ -70,359 +122,401 @@ export function PortfolioScreen() {
             }))
             setReleases(pubReleases)
             setVideos(pubVideos)
-            // Select first release/track by default
-            if (pubReleases.length > 0) {
-                setSelectedRelease(pubReleases[0])
-                if (pubReleases[0].tracks?.[0]) setSelectedTrack({ title: pubReleases[0].tracks[0].title, artist: pubReleases[0].artist, audioUrl: pubReleases[0].tracks[0].audioUrl })
-            }
+            if (pubReleases.length > 0) setExpandedRelease(pubReleases[0]!.id)
         }).finally(() => setLoading(false))
     }, [])
 
-    const filteredReleases = releases.filter(r => {
-        if (activeTab === 'All Releases') return true
-        if (activeTab === 'Studio Albums') return r.type === 'Album'
-        if (activeTab === 'EPs') return r.type === 'EP'
-        if (activeTab === 'Singles') return r.type === 'Single'
-        return true
-    })
+    // Build flat playlist from all releases
+    const allTracks = releases.flatMap(r => r.tracks.filter(t => t.audioUrl).map(t => ({ track: t, release: r })))
+    const totalTracks = releases.reduce((s, r) => s + r.tracks.length, 0)
 
-    const latestRelease = releases[0]
+    const playRelease = (release: Release) => {
+        const playable = release.tracks.filter(t => t.audioUrl)
+        if (playable.length === 0) return
+        const relPlaylist = playable.map(t => ({ track: t, release }))
+        player.play(playable[0]!, release, relPlaylist)
+        setPlayingVideoId(null)
+    }
+
+    const playTrack = (track: Track, release: Release) => {
+        if (!track.audioUrl) return
+        player.play(track, release, allTracks)
+        setPlayingVideoId(null)
+    }
+
+    const playVideo = (videoId: string) => {
+        player.stop()
+        setPlayingVideoId(videoId)
+    }
 
     return (
-        <ScrollView flex={1} bg="#060612">
-            <YStack maxWidth={1200} alignSelf="center" width="100%" px="$5" py="$8" gap="$8">
+        <ScrollView flex={1}>
+            <style dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
+            <div className="portfolio-page">
+                <YStack maxWidth={960} alignSelf="center" width="100%" px="$4" pt="$8" pb={player.current ? 120 : 40} gap="$6">
 
-                {/* Hero Header */}
-                <YStack gap="$3">
-                    <XStack gap="$3" alignItems="center">
-                        <YStack
-                            width={44}
-                            height={44}
-                            borderRadius="$3"
-                            alignItems="center"
-                            justifyContent="center"
-                            // @ts-ignore
-                            style={{ background: 'linear-gradient(135deg, #4F7CFF, #7B61FF)' }}
-                        >
-                            <Music size={24} color="white" />
-                        </YStack>
-                        <SizableText size="$5" fontWeight="600" color="rgba(255,255,255,0.9)">Artist Portfolio</SizableText>
-                    </XStack>
-                    <SizableText size="$9" fontWeight="900" color="white" letterSpacing={-1}>
-                        Discography & Portfolio
-                    </SizableText>
-                    <SizableText size="$4" color="rgba(255,255,255,0.5)" maxWidth={600}>
-                        Exploring the soundscapes and visual journeys. 음악과 기술(Sound & Tech)로 섬기는 크리에이티브 미션.
-                    </SizableText>
-                </YStack>
-
-                {loading && (
-                    <YStack p="$8" alignItems="center">
-                        <SizableText size="$4" color="rgba(255,255,255,0.5)">Loading...</SizableText>
+                    {/* Header */}
+                    <YStack gap="$2">
+                        <SizableText size="$10" fontWeight="900" color="white" letterSpacing={-1}>Portfolio</SizableText>
+                        <SizableText size="$3" color="rgba(255,255,255,0.5)">
+                            {releases.length} releases · {totalTracks} tracks · {videos.length} videos
+                        </SizableText>
                     </YStack>
-                )}
 
-                {!loading && releases.length === 0 && videos.length === 0 && (
-                    <YStack p="$8" alignItems="center" gap="$3">
-                        <SizableText size="$5" color="rgba(255,255,255,0.5)">아직 발행된 콘텐츠가 없습니다.</SizableText>
-                        <SizableText size="$3" color="rgba(255,255,255,0.3)">관리자 대시보드에서 릴리스와 비디오를 추가해주세요.</SizableText>
-                    </YStack>
-                )}
-
-                {!loading && releases.length > 0 && (
-                    <>
-                        {/* Tabs */}
-                        <XStack gap="$1" borderBottomWidth={1} borderColor="rgba(255,255,255,0.1)">
-                            {TABS.map(tab => (
-                                <Button
-                                    key={tab}
-                                    bg="transparent"
-                                    borderRadius={0}
-                                    borderBottomWidth={2}
-                                    borderColor={activeTab === tab ? '#4F7CFF' : 'transparent'}
-                                    paddingHorizontal="$4"
-                                    paddingVertical="$3"
-                                    onPress={() => setActiveTab(tab)}
+                    {/* Section Tabs */}
+                    <XStack gap="$1" borderBottomWidth={1} borderColor="rgba(255,255,255,0.1)">
+                        {[
+                            { key: 'music' as const, label: 'Music', icon: Music, count: releases.length },
+                            { key: 'videos' as const, label: 'Videos', icon: Video, count: videos.length },
+                        ].map(tab => (
+                            <XStack
+                                key={tab.key}
+                                alignItems="center"
+                                gap="$2"
+                                paddingHorizontal="$4"
+                                paddingVertical="$3"
+                                borderBottomWidth={2}
+                                borderColor={activeSection === tab.key ? '#4F7CFF' : 'transparent'}
+                                cursor="pointer"
+                                onPress={() => setActiveSection(tab.key)}
+                            >
+                                <tab.icon size={16} color={activeSection === tab.key ? '#4F7CFF' : 'rgba(255,255,255,0.5)'} />
+                                <SizableText
+                                    size="$3"
+                                    color={activeSection === tab.key ? '#4F7CFF' : 'rgba(255,255,255,0.5)'}
+                                    fontWeight={activeSection === tab.key ? '700' : '500'}
                                 >
-                                    <SizableText
-                                        size="$3"
-                                        color={activeTab === tab ? '#4F7CFF' : 'rgba(255,255,255,0.5)'}
-                                        fontWeight={activeTab === tab ? '700' : '500'}
-                                    >
-                                        {tab}
-                                    </SizableText>
-                                </Button>
-                            ))}
-                        </XStack>
-
-                        {/* Albums & EPs Grid */}
-                        <YStack gap="$4">
-                            <XStack justifyContent="space-between" alignItems="center">
-                                <SizableText size="$6" fontWeight="800" color="white">Albums & EPs</SizableText>
+                                    {tab.label}
+                                </SizableText>
+                                <SizableText
+                                    size="$1"
+                                    color={activeSection === tab.key ? '#4F7CFF' : 'rgba(255,255,255,0.3)'}
+                                    bg={activeSection === tab.key ? 'rgba(79,124,255,0.15)' : 'rgba(255,255,255,0.06)'}
+                                    px="$2" py="$0.5" borderRadius="$full"
+                                >
+                                    {tab.count}
+                                </SizableText>
                             </XStack>
+                        ))}
+                    </XStack>
 
-                            <XStack flexWrap="wrap" gap="$4">
-                                {filteredReleases.map(release => (
-                                    <YStack
-                                        key={release.id}
-                                        width="18%"
-                                        minWidth={150}
-                                        cursor="pointer"
-                                        hoverStyle={{ opacity: 0.85 }}
-                                        onPress={() => {
-                                            setSelectedRelease(release)
-                                            if (release.tracks?.[0]) setSelectedTrack({ title: release.tracks[0].title, artist: release.artist, audioUrl: release.tracks[0].audioUrl })
-                                        }}
-                                        gap="$2"
-                                    >
-                                        <YStack
-                                            width="100%"
-                                            aspectRatio={1}
-                                            borderRadius="$4"
-                                            overflow="hidden"
-                                            position="relative"
-                                            elevation="$1"
-                                        >
-                                            {release.coverUrl ? (
-                                                // @ts-ignore
-                                                <img src={release.coverUrl} alt={release.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                            ) : (
-                                                <YStack flex={1} bg="rgba(79,124,255,0.2)" alignItems="center" justifyContent="center">
-                                                    <Music size={40} color="rgba(255,255,255,0.3)" />
-                                                </YStack>
-                                            )}
-                                            {/* Play overlay */}
-                                            <YStack
-                                                position="absolute"
-                                                top={0} left={0} right={0} bottom={0}
-                                                alignItems="center"
-                                                justifyContent="center"
-                                                opacity={0}
-                                                hoverStyle={{ opacity: 1 }}
-                                                // @ts-ignore
-                                                style={{ background: 'rgba(0,0,0,0.5)', transition: 'opacity 0.2s' }}
-                                            >
-                                                <YStack
-                                                    width={48} height={48}
-                                                    borderRadius={24}
-                                                    bg="white"
-                                                    alignItems="center"
-                                                    justifyContent="center"
-                                                >
-                                                    <Play size={24} color="#060612" />
-                                                </YStack>
-                                            </YStack>
-                                        </YStack>
-                                        <SizableText size="$3" fontWeight="700" color="white" numberOfLines={1}>{release.title}</SizableText>
-                                        <SizableText size="$2" color="rgba(255,255,255,0.4)">{release.year} · {displayType(release.type)}</SizableText>
-                                    </YStack>
-                                ))}
-                            </XStack>
+                    {loading && (
+                        <YStack p="$10" alignItems="center">
+                            <SizableText color="rgba(255,255,255,0.5)" size="$4">Loading...</SizableText>
                         </YStack>
-                    </>
-                )}
+                    )}
 
-                {/* Featured Videos */}
-                {!loading && videos.length > 0 && (
-                    <YStack gap="$4">
-                        <XStack justifyContent="space-between" alignItems="center">
-                            <SizableText size="$6" fontWeight="800" color="white">Featured Videos</SizableText>
-                        </XStack>
-
-                        <XStack gap="$4" flexWrap="wrap">
-                            {videos.map(mv => {
-                                const ytId = extractYouTubeId(mv.youtubeUrl)
-                                const isPlaying = playingVideoId === mv.id
+                    {/* ===== MUSIC SECTION ===== */}
+                    {!loading && activeSection === 'music' && (
+                        <YStack gap="$5">
+                            {releases.length === 0 ? (
+                                <YStack p="$8" alignItems="center" gap="$3">
+                                    <Music size={48} color="rgba(255,255,255,0.2)" />
+                                    <SizableText size="$5" color="rgba(255,255,255,0.4)">아직 발행된 음반이 없습니다</SizableText>
+                                </YStack>
+                            ) : releases.map(release => {
+                                const isExpanded = expandedRelease === release.id
+                                const isCurrentRelease = player.current?.release.id === release.id
+                                const playableTracks = release.tracks.filter(t => t.audioUrl)
                                 return (
-                                    <YStack key={mv.id} flex={1} minWidth={280} maxWidth="49%" gap="$2" cursor="pointer" hoverStyle={{ opacity: 0.9 }}>
-                                        <YStack
-                                            width="100%"
-                                            aspectRatio={16 / 9}
-                                            borderRadius="$5"
-                                            overflow="hidden"
-                                            position="relative"
-                                        >
-                                            {isPlaying && ytId ? (
-                                                // @ts-ignore
-                                                <iframe src={`https://www.youtube.com/embed/${ytId}?autoplay=1`}
-                                                    style={{ width: '100%', height: '100%', border: 'none' }}
-                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
-                                            ) : (
-                                                <>
-                                                    {mv.thumbnailUrl ? (
-                                                        // @ts-ignore
-                                                        <img src={mv.thumbnailUrl} alt={mv.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                    ) : ytId ? (
-                                                        // @ts-ignore
-                                                        <img src={`https://img.youtube.com/vi/${ytId}/hqdefault.jpg`} alt={mv.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                    ) : (
-                                                        <YStack flex={1} bg="rgba(79,124,255,0.1)" alignItems="center" justifyContent="center">
-                                                            <Play size={40} color="rgba(255,255,255,0.3)" />
-                                                        </YStack>
-                                                    )}
-                                                    <YStack
-                                                        position="absolute"
-                                                        top={0} left={0} right={0} bottom={0}
-                                                        alignItems="center"
-                                                        justifyContent="center"
-                                                        // @ts-ignore
-                                                        style={{ background: 'rgba(0,0,0,0.3)' }}
-                                                        onPress={() => ytId && setPlayingVideoId(mv.id)}
-                                                    >
-                                                        <YStack
-                                                            width={64} height={64}
-                                                            borderRadius={32}
-                                                            bg="rgba(255,255,255,0.9)"
-                                                            alignItems="center"
-                                                            justifyContent="center"
-                                                        >
-                                                            <Play size={32} color="#060612" />
-                                                        </YStack>
+                                    <YStack key={release.id} borderRadius="$5" overflow="hidden" bg="rgba(255,255,255,0.03)" borderWidth={1} borderColor={isCurrentRelease ? 'rgba(79,124,255,0.3)' : 'rgba(255,255,255,0.06)'}>
+                                        {/* Release Header */}
+                                        <XStack p="$4" gap="$4" alignItems="center" flexWrap="wrap">
+                                            {/* Cover Art */}
+                                            <YStack
+                                                width={80} height={80} borderRadius="$3" overflow="hidden"
+                                                cursor={playableTracks.length > 0 ? 'pointer' : 'default'}
+                                                onPress={() => playableTracks.length > 0 && playRelease(release)}
+                                                position="relative"
+                                            >
+                                                {release.coverUrl ? (
+                                                    // @ts-ignore
+                                                    <img src={release.coverUrl} alt={release.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                ) : (
+                                                    <YStack flex={1} bg="rgba(79,124,255,0.15)" alignItems="center" justifyContent="center">
+                                                        <Music size={32} color="rgba(255,255,255,0.3)" />
                                                     </YStack>
-                                                </>
-                                            )}
-                                        </YStack>
-                                        <SizableText size="$4" fontWeight="700" color="white">{mv.title}</SizableText>
-                                        <SizableText size="$2" color="rgba(255,255,255,0.4)">{mv.views} views · {mv.publishedAt}</SizableText>
+                                                )}
+                                                {playableTracks.length > 0 && (
+                                                    <YStack position="absolute" top={0} left={0} right={0} bottom={0} alignItems="center" justifyContent="center" bg="rgba(0,0,0,0.3)" opacity={isCurrentRelease && !player.paused ? 1 : 0} hoverStyle={{ opacity: 1 }}>
+                                                        {isCurrentRelease && !player.paused
+                                                            ? <Volume2 size={24} color="white" />
+                                                            : <Play size={24} color="white" />
+                                                        }
+                                                    </YStack>
+                                                )}
+                                            </YStack>
+
+                                            {/* Release Info */}
+                                            <YStack flex={1} gap="$1" minWidth={200}>
+                                                <SizableText size="$5" fontWeight="800" color="white">{release.title}</SizableText>
+                                                <XStack gap="$2" alignItems="center" flexWrap="wrap">
+                                                    <SizableText size="$2" color="#4F7CFF" fontWeight="600">{release.artist}</SizableText>
+                                                    <SizableText size="$2" color="rgba(255,255,255,0.3)">·</SizableText>
+                                                    <SizableText size="$2" color="rgba(255,255,255,0.4)">{release.year}</SizableText>
+                                                    <SizableText size="$2" color="rgba(255,255,255,0.3)">·</SizableText>
+                                                    <SizableText size="$2" color="rgba(255,255,255,0.4)">{release.type}</SizableText>
+                                                    <SizableText size="$2" color="rgba(255,255,255,0.3)">·</SizableText>
+                                                    <SizableText size="$2" color="rgba(255,255,255,0.4)">{release.tracks.length}곡</SizableText>
+                                                </XStack>
+                                            </YStack>
+
+                                            {/* Play All + Expand */}
+                                            <XStack gap="$2" alignItems="center">
+                                                {playableTracks.length > 0 && (
+                                                    <Button
+                                                        size="$3"
+                                                        bg="#4F7CFF"
+                                                        borderRadius="$full"
+                                                        icon={isCurrentRelease && !player.paused ? <Pause size={14} color="white" /> : <Play size={14} color="white" />}
+                                                        onPress={() => {
+                                                            if (isCurrentRelease && !player.paused) player.togglePause()
+                                                            else playRelease(release)
+                                                        }}
+                                                    >
+                                                        <SizableText color="white" size="$2" fontWeight="700">
+                                                            {isCurrentRelease && !player.paused ? 'Pause' : 'Play All'}
+                                                        </SizableText>
+                                                    </Button>
+                                                )}
+                                                <YStack
+                                                    width={36} height={36} borderRadius="$full"
+                                                    bg="rgba(255,255,255,0.06)" alignItems="center" justifyContent="center"
+                                                    cursor="pointer"
+                                                    onPress={() => setExpandedRelease(isExpanded ? null : release.id)}
+                                                >
+                                                    {isExpanded ? <ChevronUp size={18} color="rgba(255,255,255,0.5)" /> : <ChevronDown size={18} color="rgba(255,255,255,0.5)" />}
+                                                </YStack>
+                                            </XStack>
+                                        </XStack>
+
+                                        {/* Track List */}
+                                        {isExpanded && (
+                                            <YStack>
+                                                <Separator borderColor="rgba(255,255,255,0.06)" />
+                                                {/* Column Headers */}
+                                                <XStack px="$4" py="$2" gap="$3" alignItems="center">
+                                                    <SizableText width={28} textAlign="center" size="$1" color="rgba(255,255,255,0.3)" fontWeight="600">#</SizableText>
+                                                    <SizableText flex={1} size="$1" color="rgba(255,255,255,0.3)" fontWeight="600">TITLE</SizableText>
+                                                    <SizableText width={50} textAlign="right" size="$1" color="rgba(255,255,255,0.3)" fontWeight="600">PLAYS</SizableText>
+                                                    <SizableText width={50} textAlign="right" size="$1" color="rgba(255,255,255,0.3)" fontWeight="600">
+                                                        <Clock size={12} color="rgba(255,255,255,0.3)" />
+                                                    </SizableText>
+                                                </XStack>
+                                                {release.tracks.map((track, idx) => {
+                                                    const isCurrent = player.current?.track.id === track.id
+                                                    const isPlayingThis = isCurrent && !player.paused
+                                                    return (
+                                                        <div key={track.id} className="track-row">
+                                                            <XStack
+                                                                px="$4" py="$3" gap="$3" alignItems="center"
+                                                                bg={isCurrent ? 'rgba(79,124,255,0.08)' : 'transparent'}
+                                                                cursor={track.audioUrl ? 'pointer' : 'default'}
+                                                                onPress={() => playTrack(track, release)}
+                                                            >
+                                                                {/* Track Number / Play Icon */}
+                                                                <YStack width={28} alignItems="center" justifyContent="center">
+                                                                    {isPlayingThis ? (
+                                                                        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 1, height: 14 }}>
+                                                                            <span style={{ width: 2, height: '60%', background: '#4F7CFF', borderRadius: 1, animation: 'equalize 0.6s ease-in-out infinite alternate' }} />
+                                                                            <span style={{ width: 2, height: '100%', background: '#4F7CFF', borderRadius: 1, animation: 'equalize 0.6s ease-in-out infinite alternate 0.2s' }} />
+                                                                            <span style={{ width: 2, height: '40%', background: '#4F7CFF', borderRadius: 1, animation: 'equalize 0.6s ease-in-out infinite alternate 0.4s' }} />
+                                                                        </div>
+                                                                    ) : isCurrent ? (
+                                                                        <Pause size={14} color="#4F7CFF" />
+                                                                    ) : track.audioUrl ? (
+                                                                        <SizableText size="$2" color="rgba(255,255,255,0.4)" fontWeight="500">{idx + 1}</SizableText>
+                                                                    ) : (
+                                                                        <SizableText size="$2" color="rgba(255,255,255,0.2)" fontWeight="500">{idx + 1}</SizableText>
+                                                                    )}
+                                                                </YStack>
+
+                                                                {/* Title */}
+                                                                <SizableText
+                                                                    flex={1} size="$3" numberOfLines={1}
+                                                                    color={isCurrent ? '#4F7CFF' : track.audioUrl ? 'white' : 'rgba(255,255,255,0.35)'}
+                                                                    fontWeight={isCurrent ? '700' : '500'}
+                                                                >
+                                                                    {track.title}
+                                                                </SizableText>
+
+                                                                {/* Plays */}
+                                                                <SizableText width={50} textAlign="right" size="$2" color="rgba(255,255,255,0.3)">
+                                                                    {track.plays > 0 ? formatPlays(track.plays) : '-'}
+                                                                </SizableText>
+
+                                                                {/* Duration */}
+                                                                <SizableText width={50} textAlign="right" size="$2" color="rgba(255,255,255,0.3)">
+                                                                    {track.duration}
+                                                                </SizableText>
+                                                            </XStack>
+                                                        </div>
+                                                    )
+                                                })}
+                                            </YStack>
+                                        )}
                                     </YStack>
                                 )
                             })}
-                        </XStack>
-                    </YStack>
-                )}
+                        </YStack>
+                    )}
 
-                {/* Audio Player / Visualizer Section */}
-                {!loading && releases.length > 0 && (
-                    <YStack gap="$4">
-                        <SizableText size="$6" fontWeight="800" color="white">Now Playing</SizableText>
-
-                        {/* Visualizer mode selector */}
-                        <XStack gap="$2">
-                            {(['circular', 'bars', 'wave'] as const).map(m => (
-                                <Button
-                                    key={m}
-                                    size="$3"
-                                    bg={vizMode === m ? '#4F7CFF' : 'rgba(255,255,255,0.08)'}
-                                    borderRadius="$3"
-                                    onPress={() => setVizMode(m)}
-                                >
-                                    <SizableText color={vizMode === m ? 'white' : 'rgba(255,255,255,0.5)'} size="$2" fontWeight="600">
-                                        {m === 'circular' ? 'Circular' : m === 'bars' ? 'Bars' : 'Wave'}
-                                    </SizableText>
-                                </Button>
-                            ))}
-                        </XStack>
-
-                        <XStack gap="$5" flexWrap="wrap">
-                            {/* Track list sidebar */}
-                            <YStack width={260} gap="$2">
-                                <SizableText size="$3" fontWeight="700" color="rgba(255,255,255,0.6)" mb="$2">Up Next</SizableText>
-                                {releases.flatMap(r => (r.tracks || []).map(t => ({ ...t, artist: r.artist, release: r }))).slice(0, 5).map((track, i) => (
-                                    <XStack
-                                        key={i}
-                                        p="$3"
-                                        borderRadius="$3"
-                                        bg={selectedTrack?.title === track.title ? 'rgba(79,124,255,0.15)' : 'transparent'}
-                                        borderWidth={selectedTrack?.title === track.title ? 1 : 0}
-                                        borderColor="#4F7CFF"
-                                        cursor="pointer"
-                                        hoverStyle={{ bg: 'rgba(255,255,255,0.05)' }}
-                                        gap="$3"
-                                        alignItems="center"
-                                        onPress={() => setSelectedTrack({ title: track.title, artist: track.artist, audioUrl: track.audioUrl })}
-                                    >
-                                        <YStack width={40} height={40} borderRadius="$2" overflow="hidden">
-                                            {track.release.coverUrl ? (
-                                                // @ts-ignore
-                                                <img src={track.release.coverUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                            ) : (
-                                                <YStack flex={1} bg="rgba(79,124,255,0.2)" alignItems="center" justifyContent="center">
-                                                    <Music size={16} color="rgba(255,255,255,0.3)" />
-                                                </YStack>
-                                            )}
-                                        </YStack>
-                                        <YStack flex={1}>
-                                            <SizableText size="$3" fontWeight="600" color="white" numberOfLines={1}>{track.title}</SizableText>
-                                            <SizableText size="$2" color="rgba(255,255,255,0.4)">{track.artist}</SizableText>
-                                        </YStack>
-                                        <SizableText size="$2" color="rgba(255,255,255,0.3)">{track.duration}</SizableText>
-                                    </XStack>
-                                ))}
-                            </YStack>
-
-                            {/* Main visualizer */}
-                            <YStack flex={1} minWidth={400}>
-                                <AudioVisualizer
-                                    audioUrl={selectedTrack?.audioUrl}
-                                    trackTitle={selectedTrack?.title || 'Select a track'}
-                                    artist={selectedTrack?.artist || ''}
-                                    coverArt={selectedRelease?.coverUrl}
-                                    mode={vizMode}
-                                    theme="ocean"
-                                />
-                            </YStack>
-                        </XStack>
-                    </YStack>
-                )}
-
-                {/* New Release Feature */}
-                {!loading && latestRelease && (
-                    <YStack
-                        borderRadius="$6"
-                        overflow="hidden"
-                        // @ts-ignore
-                        style={{ background: 'linear-gradient(135deg, rgba(79,124,255,0.08), rgba(123,97,255,0.08))' }}
-                    >
-                        <XStack p="$6" gap="$6" flexWrap="wrap" alignItems="center">
-                            <YStack width={200} height={200} borderRadius="$5" overflow="hidden" elevation="$2">
-                                {latestRelease.coverUrl ? (
-                                    // @ts-ignore
-                                    <img src={latestRelease.coverUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                ) : (
-                                    <YStack flex={1} bg="rgba(79,124,255,0.2)" alignItems="center" justifyContent="center">
-                                        <Music size={60} color="rgba(255,255,255,0.3)" />
-                                    </YStack>
-                                )}
-                            </YStack>
-                            <YStack flex={1} minWidth={250} gap="$3">
-                                <YStack bg="rgba(79,124,255,0.2)" borderRadius="$2" px="$3" py="$1" alignSelf="flex-start">
-                                    <SizableText size="$1" fontWeight="700" color="#4F7CFF" letterSpacing={2}>NEW RELEASE</SizableText>
+                    {/* ===== VIDEOS SECTION ===== */}
+                    {!loading && activeSection === 'videos' && (
+                        <YStack gap="$4">
+                            {videos.length === 0 ? (
+                                <YStack p="$8" alignItems="center" gap="$3">
+                                    <Video size={48} color="rgba(255,255,255,0.2)" />
+                                    <SizableText size="$5" color="rgba(255,255,255,0.4)">아직 발행된 영상이 없습니다</SizableText>
                                 </YStack>
-                                <SizableText size="$9" fontWeight="900" color="white">{latestRelease.title}</SizableText>
-                                <SizableText size="$3" color="rgba(255,255,255,0.5)" lineHeight={22}>
-                                    {latestRelease.artist} · {latestRelease.year} · {displayType(latestRelease.type)} · {latestRelease.tracks.length}곡
-                                </SizableText>
-                                <XStack gap="$3" mt="$2">
-                                    <Button
-                                        // @ts-ignore
-                                        style={{ background: 'linear-gradient(135deg, #4F7CFF, #7B61FF)' }}
-                                        borderRadius="$full"
-                                        paddingHorizontal="$5"
-                                        icon={<Play size={16} color="white" />}
-                                        onPress={() => {
-                                            setSelectedRelease(latestRelease)
-                                            if (latestRelease.tracks?.[0]) setSelectedTrack({ title: latestRelease.tracks[0].title, artist: latestRelease.artist, audioUrl: latestRelease.tracks[0].audioUrl })
-                                        }}
-                                    >
-                                        <SizableText color="white" fontWeight="700">Play Now</SizableText>
-                                    </Button>
-                                    <Button
-                                        bg="rgba(255,255,255,0.08)"
-                                        borderRadius="$full"
-                                        paddingHorizontal="$5"
-                                        borderWidth={1}
-                                        borderColor="rgba(255,255,255,0.15)"
-                                        icon={<ExternalLink size={16} color="white" />}
-                                    >
-                                        <SizableText color="white" fontWeight="600">Share</SizableText>
-                                    </Button>
+                            ) : (
+                                <XStack gap="$4" flexWrap="wrap">
+                                    {videos.map(mv => {
+                                        const ytId = extractYouTubeId(mv.youtubeUrl)
+                                        const isPlaying = playingVideoId === mv.id
+                                        const thumb = mv.thumbnailUrl || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : '')
+                                        return (
+                                            <YStack key={mv.id} width="48%" minWidth={280} gap="$2">
+                                                <div className="video-card">
+                                                    <YStack width="100%" aspectRatio={16 / 9} borderRadius="$4" overflow="hidden" position="relative">
+                                                        {isPlaying && ytId ? (
+                                                            <>
+                                                                {/* @ts-ignore */}
+                                                                <iframe
+                                                                    src={`https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0`}
+                                                                    style={{ width: '100%', height: '100%', border: 'none' }}
+                                                                    allow="autoplay; encrypted-media" allowFullScreen
+                                                                />
+                                                                <YStack
+                                                                    position="absolute" top="$2" right="$2"
+                                                                    bg="rgba(0,0,0,0.7)" borderRadius="$full" p="$1.5"
+                                                                    cursor="pointer" zIndex={10}
+                                                                    onPress={() => setPlayingVideoId(null)}
+                                                                >
+                                                                    <X size={14} color="white" />
+                                                                </YStack>
+                                                            </>
+                                                        ) : (
+                                                            <YStack
+                                                                flex={1}
+                                                                cursor={ytId ? 'pointer' : 'default'}
+                                                                onPress={() => { if (ytId) playVideo(mv.id) }}
+                                                            >
+                                                                {thumb ? (
+                                                                    // @ts-ignore
+                                                                    <img src={thumb} alt={mv.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                                ) : (
+                                                                    <YStack flex={1} bg="rgba(79,124,255,0.1)" alignItems="center" justifyContent="center">
+                                                                        <Video size={40} color="rgba(255,255,255,0.2)" />
+                                                                    </YStack>
+                                                                )}
+                                                                {/* Play button overlay */}
+                                                                <YStack
+                                                                    className="video-play-btn"
+                                                                    position="absolute" top={0} left={0} right={0} bottom={0}
+                                                                    alignItems="center" justifyContent="center"
+                                                                    bg="rgba(0,0,0,0.3)" opacity={0}
+                                                                >
+                                                                    <YStack width={56} height={56} borderRadius={28} bg="rgba(255,0,0,0.85)" alignItems="center" justifyContent="center">
+                                                                        <Play size={28} color="white" />
+                                                                    </YStack>
+                                                                </YStack>
+                                                                {/* Duration badge */}
+                                                                {mv.duration && mv.duration !== '0:00' && (
+                                                                    <YStack position="absolute" bottom="$2" right="$2" bg="rgba(0,0,0,0.8)" borderRadius="$2" px="$2" py="$0.5">
+                                                                        <SizableText color="white" size="$1" fontWeight="600">{mv.duration}</SizableText>
+                                                                    </YStack>
+                                                                )}
+                                                            </YStack>
+                                                        )}
+                                                    </YStack>
+                                                </div>
+                                                <SizableText size="$3" fontWeight="700" color="white" numberOfLines={2}>{mv.title}</SizableText>
+                                                <XStack gap="$2" alignItems="center">
+                                                    {mv.views > 0 && (
+                                                        <XStack gap="$1" alignItems="center">
+                                                            <Eye size={12} color="rgba(255,255,255,0.4)" />
+                                                            <SizableText size="$1" color="rgba(255,255,255,0.4)">{formatPlays(mv.views)}</SizableText>
+                                                        </XStack>
+                                                    )}
+                                                    {mv.publishedAt && (
+                                                        <SizableText size="$1" color="rgba(255,255,255,0.3)">{mv.publishedAt}</SizableText>
+                                                    )}
+                                                </XStack>
+                                            </YStack>
+                                        )
+                                    })}
                                 </XStack>
-                            </YStack>
-                        </XStack>
-                    </YStack>
-                )}
+                            )}
+                        </YStack>
+                    )}
+                </YStack>
 
-            </YStack>
+                {/* ===== STICKY PLAYER BAR ===== */}
+                {player.current && (
+                    <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100 }}>
+                        {/* Progress bar - clickable */}
+                        <div
+                            className="progress-bar"
+                            style={{ height: 4, background: 'rgba(255,255,255,0.08)', cursor: 'pointer' }}
+                            onClick={(e) => {
+                                const rect = e.currentTarget.getBoundingClientRect()
+                                player.seek((e.clientX - rect.left) / rect.width)
+                            }}
+                        >
+                            <div style={{
+                                height: '100%',
+                                width: player.duration ? `${(player.progress / player.duration) * 100}%` : '0%',
+                                background: '#4F7CFF',
+                                borderRadius: 2,
+                                transition: 'width 0.3s linear',
+                            }} />
+                        </div>
+                        <div style={{ background: 'rgba(10,10,25,0.97)', backdropFilter: 'blur(20px)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                            <XStack maxWidth={960} alignSelf="center" width="100%" px="$4" py="$3" gap="$3" alignItems="center">
+                                {/* Cover */}
+                                <YStack width={48} height={48} borderRadius="$2" overflow="hidden">
+                                    {player.current.release.coverUrl ? (
+                                        // @ts-ignore
+                                        <img src={player.current.release.coverUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    ) : (
+                                        <YStack flex={1} bg="rgba(79,124,255,0.15)" alignItems="center" justifyContent="center">
+                                            <Music size={20} color="rgba(255,255,255,0.3)" />
+                                        </YStack>
+                                    )}
+                                </YStack>
+
+                                {/* Track Info */}
+                                <YStack flex={1} gap="$0.5" minWidth={0}>
+                                    <SizableText color="white" size="$3" fontWeight="700" numberOfLines={1}>{player.current.track.title}</SizableText>
+                                    <SizableText color="rgba(255,255,255,0.5)" size="$2" numberOfLines={1}>{player.current.release.artist} — {player.current.release.title}</SizableText>
+                                </YStack>
+
+                                {/* Time */}
+                                <SizableText color="rgba(255,255,255,0.4)" size="$1" display="none" $sm={{ display: 'flex' }}>
+                                    {formatTime(player.progress)} / {formatTime(player.duration)}
+                                </SizableText>
+
+                                {/* Controls */}
+                                <XStack gap="$2" alignItems="center">
+                                    <YStack width={36} height={36} borderRadius="$full" alignItems="center" justifyContent="center" cursor="pointer" hoverStyle={{ bg: 'rgba(255,255,255,0.08)' }} onPress={player.prev}>
+                                        <SkipBack size={16} color="rgba(255,255,255,0.6)" />
+                                    </YStack>
+                                    <YStack width={42} height={42} borderRadius="$full" bg="#4F7CFF" alignItems="center" justifyContent="center" cursor="pointer" onPress={player.togglePause}>
+                                        {player.paused ? <Play size={20} color="white" /> : <Pause size={20} color="white" />}
+                                    </YStack>
+                                    <YStack width={36} height={36} borderRadius="$full" alignItems="center" justifyContent="center" cursor="pointer" hoverStyle={{ bg: 'rgba(255,255,255,0.08)' }} onPress={player.next}>
+                                        <SkipForward size={16} color="rgba(255,255,255,0.6)" />
+                                    </YStack>
+                                    <YStack width={36} height={36} borderRadius="$full" alignItems="center" justifyContent="center" cursor="pointer" hoverStyle={{ bg: 'rgba(255,255,255,0.08)' }} onPress={player.stop}>
+                                        <X size={16} color="rgba(255,255,255,0.4)" />
+                                    </YStack>
+                                </XStack>
+                            </XStack>
+                        </div>
+                    </div>
+                )}
+            </div>
         </ScrollView>
     )
 }

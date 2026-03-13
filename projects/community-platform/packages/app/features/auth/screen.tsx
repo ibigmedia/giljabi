@@ -5,7 +5,7 @@ import { Button, XStack, YStack, Input, Spinner, Separator, SizableText } from '
 import { Platform } from 'react-native'
 import * as WebBrowser from 'expo-web-browser'
 import { makeRedirectUri } from 'expo-auth-session'
-import { Github, Chrome } from '@tamagui/lucide-icons'
+import { Chrome } from '@tamagui/lucide-icons'
 import { supabase } from '../../utils/supabase'
 
 if (Platform.OS !== 'web') {
@@ -223,32 +223,19 @@ export function AuthScreen() {
                     <Separator borderColor="$outlineVariant" flex={1} />
                 </XStack>
 
-                <YStack gap="$2.5" width="100%">
-                    <Button
-                        icon={<Github size={18} color="$onSurface" />}
-                        onPress={() => handleOAuth('github')}
-                        disabled={loading}
-                        bg="$surfaceContainerLow"
-                        borderWidth={1}
-                        borderColor="$outlineVariant"
-                        borderRadius="$button"
-                        hoverStyle={{ bg: '$surfaceContainerHigh' }}
-                    >
-                        <SizableText color="$onSurface" fontWeight="600">Github로 계속하기</SizableText>
-                    </Button>
-                    <Button
-                        icon={<Chrome size={18} color="$onSurface" />}
-                        onPress={() => handleOAuth('google')}
-                        disabled={loading}
-                        bg="$surfaceContainerLow"
-                        borderWidth={1}
-                        borderColor="$outlineVariant"
-                        borderRadius="$button"
-                        hoverStyle={{ bg: '$surfaceContainerHigh' }}
-                    >
-                        <SizableText color="$onSurface" fontWeight="600">Google로 계속하기</SizableText>
-                    </Button>
-                </YStack>
+                <Button
+                    icon={<Chrome size={18} color="$onSurface" />}
+                    onPress={() => handleOAuth('google')}
+                    disabled={loading}
+                    bg="$surfaceContainerLow"
+                    borderWidth={1}
+                    borderColor="$outlineVariant"
+                    borderRadius="$button"
+                    hoverStyle={{ bg: '$surfaceContainerHigh' }}
+                    width="100%"
+                >
+                    <SizableText color="$onSurface" fontWeight="600">Google로 계속하기</SizableText>
+                </Button>
 
                 <XStack justify="center" gap="$2" mt="$3">
                     <SizableText color="$onSurfaceVariant" size="$3">
