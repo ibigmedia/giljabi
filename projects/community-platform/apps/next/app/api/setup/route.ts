@@ -102,6 +102,20 @@ export async function GET() {
         const { error: e2 } = await sb.from('Track').select('id').limit(1)
         const { error: e3 } = await sb.from('MusicVideo').select('id').limit(1)
 
+        // Ensure storage bucket exists
+        let storageStatus = 'skipped'
+        try {
+            const { data: buckets } = await sb.storage.listBuckets()
+            if (!buckets?.find(b => b.name === 'portfolio')) {
+                await sb.storage.createBucket('portfolio', { public: true, fileSizeLimit: 52428800 })
+                storageStatus = 'created'
+            } else {
+                storageStatus = 'OK'
+            }
+        } catch (sErr: any) {
+            storageStatus = sErr.message
+        }
+
         return NextResponse.json({
             success: true,
             message: 'Portfolio tables setup complete!',
@@ -110,6 +124,7 @@ export async function GET() {
                 Track: !e2 ? 'OK' : e2.message,
                 MusicVideo: !e3 ? 'OK' : e3.message,
             },
+            storage: storageStatus,
         })
     } catch (err: any) {
         return NextResponse.json({ error: err.message }, { status: 500 })

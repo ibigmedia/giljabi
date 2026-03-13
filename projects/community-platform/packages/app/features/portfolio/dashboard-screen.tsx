@@ -62,6 +62,18 @@ async function apiDelete(path: string): Promise<void> {
     if (!res.ok) throw new Error(`API error: ${res.status}`)
 }
 
+async function uploadFile(file: File, folder: string): Promise<{ url: string; name: string }> {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('folder', folder)
+    const res = await fetch('/api/portfolio/upload', { method: 'POST', body: formData })
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Upload failed' }))
+        throw new Error(err.error || `Upload error: ${res.status}`)
+    }
+    return res.json()
+}
+
 // ─── Shared UI ───────────────────────────────────────────────────────
 function Card({ children, ...props }: any) {
     return (
@@ -79,15 +91,33 @@ function Badge({ label, color, bg }: { label: string; color?: any; bg?: any }) {
     )
 }
 
-function DragDropZone({ label, accept, icon: Icon, onFiles }: { label: string; accept: string; icon: any; onFiles?: (f: FileList) => void }) {
+function DragDropZone({ label, accept, icon: Icon, onFiles, folder, onUploaded }: { label: string; accept: string; icon: any; onFiles?: (f: FileList) => void; folder?: string; onUploaded?: (url: string, name: string) => void }) {
     const inputRef = useRef<HTMLInputElement>(null)
     const [isDragging, setIsDragging] = useState(false)
     const [fileName, setFileName] = useState<string | null>(null)
+    const [uploading, setUploading] = useState(false)
+    const [uploadError, setUploadError] = useState<string | null>(null)
 
-    const handleFiles = useCallback((files: FileList) => {
-        setFileName(files[0]?.name || null)
+    const handleFiles = useCallback(async (files: FileList) => {
+        const file = files[0]
+        if (!file) return
+        setFileName(file.name)
+        setUploadError(null)
         onFiles?.(files)
-    }, [onFiles])
+
+        // Auto-upload if folder and onUploaded are provided
+        if (folder && onUploaded) {
+            setUploading(true)
+            try {
+                const result = await uploadFile(file, folder)
+                onUploaded(result.url, file.name)
+            } catch (err: any) {
+                setUploadError(err.message || '업로드 실패')
+            } finally {
+                setUploading(false)
+            }
+        }
+    }, [onFiles, folder, onUploaded])
 
     return (
         <YStack
@@ -103,11 +133,12 @@ function DragDropZone({ label, accept, icon: Icon, onFiles }: { label: string; a
             onDragLeave={() => setIsDragging(false)}
             onDrop={(e: any) => { e.preventDefault(); setIsDragging(false); if (e.dataTransfer?.files?.length) handleFiles(e.dataTransfer.files) }}
         >
-            <YStack bg={fileName ? '$successContainer' : '$primaryContainer'} p="$2.5" borderRadius="$full">
-                {fileName ? <Check size={20} color="$success" /> : <Icon size={20} color="$primary" />}
+            <YStack bg={uploading ? '$primaryContainer' : fileName ? '$successContainer' : '$primaryContainer'} p="$2.5" borderRadius="$full">
+                {uploading ? <Upload size={20} color="$primary" /> : fileName ? <Check size={20} color="$success" /> : <Icon size={20} color="$primary" />}
             </YStack>
-            <SizableText size="$3" fontWeight="600" color="$textMain">{fileName || label}</SizableText>
-            <SizableText size="$2" color="$textMuted">{fileName ? '클릭하여 변경' : '드래그 앤 드롭 또는 클릭'}</SizableText>
+            <SizableText size="$3" fontWeight="600" color="$textMain">{uploading ? '업로드 중...' : fileName || label}</SizableText>
+            <SizableText size="$2" color="$textMuted">{uploading ? '잠시 기다려주세요' : fileName ? '클릭하여 변경' : '드래그 앤 드롭 또는 클릭'}</SizableText>
+            {uploadError && <SizableText size="$2" color="$error">{uploadError}</SizableText>}
             {/* @ts-ignore */}
             <input ref={inputRef} type="file" accept={accept} style={{ display: 'none' }}
                 onChange={(e: any) => { if (e.target.files?.length) handleFiles(e.target.files) }} />
@@ -639,11 +670,8 @@ function ReleasesTab({ releases, setReleases, onPlay }: {
                                     </YStack>
                                 ) : (
                                     <DragDropZone label="커버 이미지 업로드" accept="image/*" icon={Image}
-                                        onFiles={(files) => {
-                                            // TODO: implement real file upload to Supabase Storage
-                                            // For now, create a local preview URL
-                                            if (files[0]) setFCover(URL.createObjectURL(files[0]))
-                                        }} />
+                                        folder="covers"
+                                        onUploaded={(url) => setFCover(url)} />
                                 )}
                                 <AiThumbnailGenerator currentUrl={fCover} onGenerated={setFCover} />
                             </YStack>
@@ -701,11 +729,10 @@ function ReleasesTab({ releases, setReleases, onPlay }: {
                                         </Button>
                                     </XStack>
                                     <DragDropZone label="음원 파일 업로드 (MP3, WAV, FLAC)" accept="audio/*" icon={FileAudio}
-                                        onFiles={(files) => {
-                                            Array.from(files).forEach(f => {
-                                                const name = f.name.replace(/\.[^.]+$/, '')
-                                                setFTracks(prev => [...prev, { id: genId(), title: name, duration: '0:00', plays: 0 }])
-                                            })
+                                        folder="audio"
+                                        onUploaded={(url, name) => {
+                                            const trackName = name.replace(/\.[^.]+$/, '')
+                                            setFTracks(prev => [...prev, { id: genId(), title: trackName, duration: '0:00', plays: 0, audioUrl: url }])
                                         }} />
                                 </YStack>
 
@@ -973,9 +1000,14 @@ function VideosTab({ videos, setVideos }: { videos: MusicVideo[]; setVideos: (v:
                                     </Button>
                                 </XStack>
                             ) : (
-                                <SizableText size="$2" color="$textMuted">
-                                    {ytPreviewId ? 'YouTube 썸네일이 자동으로 사용됩니다. AI로 커스텀 생성도 가능합니다.' : '썸네일을 업로드하거나 AI로 생성하세요.'}
-                                </SizableText>
+                                <YStack gap="$2">
+                                    <SizableText size="$2" color="$textMuted">
+                                        {ytPreviewId ? 'YouTube 썸네일이 자동으로 사용됩니다. AI로 커스텀 생성도 가능합니다.' : '썸네일을 업로드하거나 AI로 생성하세요.'}
+                                    </SizableText>
+                                    <DragDropZone label="썸네일 이미지 업로드" accept="image/*" icon={Image}
+                                        folder="thumbnails"
+                                        onUploaded={(url) => setFThumb(url)} />
+                                </YStack>
                             )}
                             <AiThumbnailGenerator currentUrl={fThumb} onGenerated={setFThumb} />
                         </YStack>
