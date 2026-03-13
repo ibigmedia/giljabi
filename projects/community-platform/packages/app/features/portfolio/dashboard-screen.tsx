@@ -189,7 +189,7 @@ function AiThumbnailGenerator({ onGenerated }: { currentUrl?: string; onGenerate
         <YStack bg="$surfaceContainerLow" borderRadius="$3" p="$3" gap="$2" borderWidth={1} borderColor="$outlineVariant">
             <XStack alignItems="center" gap="$2">
                 <Sparkles size={14} color="$primary" />
-                <SizableText size="$2" fontWeight="700" color="$primary">AI 썸네일 생성</SizableText>
+                <SizableText size="$2" fontWeight="700" color="$primary">AI 썸네일 생성 (Gemini 나노바나나)</SizableText>
             </XStack>
             {previewUrl && (
                 <YStack width="100%" maxWidth={200} aspectRatio={1} borderRadius="$3" overflow="hidden" alignSelf="center" bg="$surfaceContainerHigh">
