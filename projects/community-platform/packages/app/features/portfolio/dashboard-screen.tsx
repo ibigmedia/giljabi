@@ -153,16 +153,21 @@ function AiThumbnailGenerator({ onGenerated }: { currentUrl?: string; onGenerate
     const [previewUrl, setPreviewUrl] = useState<string | null>(null)
     const [error, setError] = useState<string | null>(null)
 
+    const [optimized, setOptimized] = useState<string | null>(null)
+
     const generate = async () => {
         if (!prompt.trim()) return
         setGenerating(true)
         setError(null)
+        setOptimized(null)
         try {
-            const data = await apiPost<{ imageUrl: string }>('/api/portfolio/ai-thumbnail', { prompt: prompt.trim() })
-            // Show the URL immediately — the <img> tag will handle loading
+            const data = await apiPost<{ imageUrl: string; optimizedPrompt?: string }>('/api/portfolio/ai-thumbnail', { prompt: prompt.trim() })
             setPreviewUrl(data.imageUrl)
+            if (data.optimizedPrompt && data.optimizedPrompt !== prompt.trim()) {
+                setOptimized(data.optimizedPrompt)
+            }
         } catch (err: any) {
-            setError('AI 이미지 생성 실패. 영어 프롬프트로 다시 시도해주세요. (예: "night sky with cross album cover")')
+            setError('AI 이미지 생성 실패. 다시 시도해주세요.')
         } finally {
             setGenerating(false)
         }
@@ -172,7 +177,7 @@ function AiThumbnailGenerator({ onGenerated }: { currentUrl?: string; onGenerate
         <YStack bg="$surfaceContainerLow" borderRadius="$3" p="$3" gap="$2" borderWidth={1} borderColor="$outlineVariant">
             <XStack alignItems="center" gap="$2">
                 <Sparkles size={14} color="$primary" />
-                <SizableText size="$2" fontWeight="700" color="$primary">AI 썸네일 생성</SizableText>
+                <SizableText size="$2" fontWeight="700" color="$primary">AI 썸네일 생성 (Claude + Pollinations)</SizableText>
             </XStack>
             {previewUrl && (
                 <YStack width="100%" maxWidth={200} aspectRatio={1} borderRadius="$3" overflow="hidden" alignSelf="center" bg="$surfaceContainerHigh">
@@ -186,6 +191,7 @@ function AiThumbnailGenerator({ onGenerated }: { currentUrl?: string; onGenerate
                     <SizableText size="$1" color="$textLight" textAlign="center" mt="$1" position="absolute" bottom={4} left={0} right={0}>AI 생성 이미지 (로딩 중일 수 있음)</SizableText>
                 </YStack>
             )}
+            {optimized && <SizableText size="$1" color="$textMuted" numberOfLines={2}>Claude 최적화: {optimized}</SizableText>}
             {error && <SizableText size="$2" color="$error">{error}</SizableText>}
             <Input
                 size="$3" placeholder="예: 밤하늘에 십자가가 빛나는 앨범 커버"
