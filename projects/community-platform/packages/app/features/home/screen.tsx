@@ -305,7 +305,26 @@ export function HomeScreen() {
     const totalTracks = releases.reduce((s, r) => s + (r.tracks?.length || 0), 0)
     const media = useMediaPlayer()
     const [overlayVideo, setOverlayVideo] = useState<{ ytId: string; title: string } | null>(null)
-    const [expandedRelease, setExpandedRelease] = useState<string | null>(null)
+    const [expandedReleases, setExpandedReleases] = useState<Set<string>>(new Set())
+
+    const toggleExpand = (id: string) => {
+        setExpandedReleases(prev => {
+            const next = new Set(prev)
+            if (next.has(id)) next.delete(id)
+            else next.add(id)
+            return next
+        })
+    }
+
+    // Auto-expand albums on load
+    useEffect(() => {
+        if (releases.length > 0) {
+            const albumIds = releases
+                .filter(r => getTypeGroup(r.type) === 'albums')
+                .map(r => r.id)
+            if (albumIds.length > 0) setExpandedReleases(new Set(albumIds))
+        }
+    }, [releases])
 
     // Group releases by type
     const releaseGroups = React.useMemo(() => {
@@ -525,7 +544,7 @@ export function HomeScreen() {
                                 {groupReleases.map((album) => {
                                     const tracks = album.tracks || []
                                     const playableTracks = tracks.filter((t: any) => t.audioUrl)
-                                    const isExpanded = expandedRelease === album.id
+                                    const isExpanded = expandedReleases.has(album.id)
                                     const currentlyPlayingTrack = media.playing?.type === 'audio' ? (media.playing as any).trackTitle : null
                                     const isAlbumPlaying = tracks.some((t: any) => t.title === currentlyPlayingTrack)
 
@@ -543,7 +562,7 @@ export function HomeScreen() {
                                                 alignItems="center" gap="$3" p="$3" pr="$4"
                                                 cursor="pointer"
                                                 hoverStyle={{ bg: 'rgba(255,255,255,0.03)' }}
-                                                onPress={() => setExpandedRelease(isExpanded ? null : album.id)}
+                                                onPress={() => toggleExpand(album.id)}
                                             >
                                                 {/* Cover */}
                                                 <YStack width={64} height={64} borderRadius="$3" overflow="hidden" position="relative">
@@ -569,10 +588,12 @@ export function HomeScreen() {
 
                                                 {/* Play all button */}
                                                 {playableTracks.length > 0 && (
-                                                    <YStack
-                                                        width={32} height={32} borderRadius="$full" alignItems="center" justifyContent="center"
-                                                        bg={isAlbumPlaying ? '#4F7CFF' : 'rgba(255,255,255,0.08)'}
-                                                        cursor="pointer"
+                                                    <XStack
+                                                        alignItems="center" gap="$2" px="$3.5" py="$2"
+                                                        borderRadius="$full" cursor="pointer"
+                                                        // @ts-ignore
+                                                        style={{ background: isAlbumPlaying ? 'linear-gradient(135deg, #4F7CFF, #6366F1)' : 'rgba(255,255,255,0.08)' }}
+                                                        hoverStyle={{ opacity: 0.85 }}
                                                         onPress={(e: any) => {
                                                             e.stopPropagation()
                                                             if (isAlbumPlaying) { media.togglePause() }
@@ -586,12 +607,15 @@ export function HomeScreen() {
                                                             ? <Pause size={14} color="white" />
                                                             : <Play size={14} color="white" />
                                                         }
-                                                    </YStack>
+                                                        <SizableText color="white" size="$2" fontWeight="600">
+                                                            {isAlbumPlaying && !media.audioPaused ? '일시정지' : '들어보기'}
+                                                        </SizableText>
+                                                    </XStack>
                                                 )}
 
                                                 {/* Expand toggle */}
-                                                <YStack width={28} height={28} borderRadius="$full" alignItems="center" justifyContent="center"
-                                                    bg="rgba(255,255,255,0.05)">
+                                                <YStack width={32} height={32} borderRadius="$full" alignItems="center" justifyContent="center"
+                                                    bg="rgba(255,255,255,0.05)" hoverStyle={{ bg: 'rgba(255,255,255,0.1)' }}>
                                                     {isExpanded
                                                         ? <ChevronUp size={14} color="rgba(255,255,255,0.4)" />
                                                         : <ChevronDown size={14} color="rgba(255,255,255,0.4)" />

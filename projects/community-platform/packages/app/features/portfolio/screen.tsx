@@ -196,9 +196,18 @@ export function PortfolioScreen() {
     const [releases, setReleases] = useState<Release[]>([])
     const [videos, setVideos] = useState<MusicVideo[]>([])
     const [loading, setLoading] = useState(true)
-    const [expandedRelease, setExpandedRelease] = useState<string | null>(null)
+    const [expandedReleases, setExpandedReleases] = useState<Set<string>>(new Set())
     const [overlayVideo, setOverlayVideo] = useState<{ ytId: string; title: string } | null>(null)
     const player = usePlayer()
+
+    const toggleExpand = (id: string) => {
+        setExpandedReleases(prev => {
+            const next = new Set(prev)
+            if (next.has(id)) next.delete(id)
+            else next.add(id)
+            return next
+        })
+    }
 
     useEffect(() => {
         Promise.all([
@@ -216,7 +225,9 @@ export function PortfolioScreen() {
             }))
             setReleases(pubReleases)
             setVideos(pubVideos)
-            if (pubReleases.length > 0) setExpandedRelease(pubReleases[0]!.id)
+            // Auto-expand albums (not singles)
+            const albumIds = pubReleases.filter((r: any) => getTypeGroup(r.type) === 'albums').map((r: any) => r.id)
+            setExpandedReleases(new Set(albumIds.length > 0 ? albumIds : pubReleases.length > 0 ? [pubReleases[0]!.id] : []))
         }).finally(() => setLoading(false))
     }, [])
 
@@ -315,7 +326,7 @@ export function PortfolioScreen() {
 
                             <YStack gap="$5">
                                 {groupReleases.map((release, rIdx) => {
-                                    const isExpanded = expandedRelease === release.id
+                                    const isExpanded = expandedReleases.has(release.id)
                                     const isCurrentRelease = player.current?.release.id === release.id
                                     const playableTracks = release.tracks.filter(t => t.audioUrl)
                                     return (
@@ -385,32 +396,32 @@ export function PortfolioScreen() {
                                                 <XStack gap="$2" alignItems="center">
                                                     {playableTracks.length > 0 && (
                                                         <XStack
-                                                            alignItems="center" gap="$2" px="$4" py="$2.5"
+                                                            alignItems="center" gap="$2" px="$5" py="$3"
                                                             borderRadius="$full" cursor="pointer"
                                                             // @ts-ignore
-                                                            style={{ background: 'linear-gradient(135deg, #4F7CFF, #6366F1)' }}
-                                                            hoverStyle={{ opacity: 0.9 }}
+                                                            style={{ background: isCurrentRelease && !player.paused ? 'linear-gradient(135deg, #6366F1, #4F7CFF)' : 'linear-gradient(135deg, #4F7CFF, #6366F1)' }}
+                                                            hoverStyle={{ opacity: 0.85 }}
                                                             onPress={() => {
                                                                 if (isCurrentRelease && !player.paused) player.togglePause()
                                                                 else playRelease(release)
                                                             }}
                                                         >
                                                             {isCurrentRelease && !player.paused
-                                                                ? <Pause size={14} color="white" />
-                                                                : <Play size={14} color="white" />
+                                                                ? <Pause size={16} color="white" />
+                                                                : <Play size={16} color="white" />
                                                             }
-                                                            <SizableText color="white" size="$2" fontWeight="700">
-                                                                {isCurrentRelease && !player.paused ? 'Pause' : 'Play'}
+                                                            <SizableText color="white" size="$3" fontWeight="700">
+                                                                {isCurrentRelease && !player.paused ? '일시정지' : '들어보기'}
                                                             </SizableText>
                                                         </XStack>
                                                     )}
                                                     <YStack
-                                                        width={36} height={36} borderRadius="$full"
+                                                        width={40} height={40} borderRadius="$full"
                                                         bg="rgba(255,255,255,0.06)" alignItems="center" justifyContent="center"
                                                         cursor="pointer" hoverStyle={{ bg: 'rgba(255,255,255,0.1)' }}
-                                                        onPress={() => setExpandedRelease(isExpanded ? null : release.id)}
+                                                        onPress={() => toggleExpand(release.id)}
                                                     >
-                                                        {isExpanded ? <ChevronUp size={16} color="rgba(255,255,255,0.5)" /> : <ChevronDown size={16} color="rgba(255,255,255,0.5)" />}
+                                                        {isExpanded ? <ChevronUp size={18} color="rgba(255,255,255,0.5)" /> : <ChevronDown size={18} color="rgba(255,255,255,0.5)" />}
                                                     </YStack>
                                                 </XStack>
                                             </XStack>
