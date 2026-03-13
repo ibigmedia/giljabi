@@ -192,13 +192,13 @@ export function PortfolioScreen() {
         const playable = release.tracks.filter(t => t.audioUrl)
         if (playable.length === 0) return
         player.play(playable[0]!, release, playable.map(t => ({ track: t, release })))
-        setPlayingVideoId(null)
+        setOverlayVideo(null)
     }
 
     const playTrack = (track: Track, release: Release) => {
         if (!track.audioUrl) return
         player.play(track, release, allTracks)
-        setPlayingVideoId(null)
+        setOverlayVideo(null)
     }
 
     const openVideoOverlay = (ytId: string, title: string) => {
