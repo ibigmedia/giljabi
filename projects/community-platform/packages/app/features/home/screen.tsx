@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { YStack, XStack, ScrollView, H2, H3, Paragraph, SizableText, Button, Separator } from '@my/ui'
-import { Heart, Layers, TrendingUp, Zap, BookOpen, Wifi, Users, ChevronDown, Music, Code, Globe, ArrowRight, Play, Headphones, Video, Disc, ExternalLink } from '@tamagui/lucide-icons'
+import { Heart, Layers, TrendingUp, Zap, BookOpen, Wifi, Users, ChevronDown, Music, Code, Globe, ArrowRight, Play, Headphones, Video, Disc, ExternalLink, Pause, X, Volume2 } from '@tamagui/lucide-icons'
 import { useRouter } from 'solito/navigation'
 import { useCurrentUserProfile } from '../../hooks/useProfiles'
 
@@ -31,6 +31,65 @@ function usePortfolioData() {
     }, [])
 
     return { releases, videos, loaded }
+}
+
+// Media player state — manages audio + YouTube with no duplicate playback
+type PlayingMedia =
+    | { type: 'audio'; trackTitle: string; artist: string; audioUrl: string; coverUrl?: string }
+    | { type: 'youtube'; videoId: string; title: string }
+    | null
+
+function useMediaPlayer() {
+    const [playing, setPlaying] = useState<PlayingMedia>(null)
+    const [audioPaused, setAudioPaused] = useState(false)
+    const audioRef = useRef<HTMLAudioElement | null>(null)
+
+    const playAudio = useCallback((track: { title: string; audioUrl: string; artist?: string; coverUrl?: string }) => {
+        // Stop any current audio
+        if (audioRef.current) {
+            audioRef.current.pause()
+            audioRef.current.src = ''
+        }
+        // Create new audio
+        const audio = new Audio(track.audioUrl)
+        audioRef.current = audio
+        audio.play().catch(() => {})
+        audio.onended = () => { setPlaying(null); setAudioPaused(false) }
+        setPlaying({ type: 'audio', trackTitle: track.title, artist: track.artist || '', audioUrl: track.audioUrl, coverUrl: track.coverUrl })
+        setAudioPaused(false)
+    }, [])
+
+    const playYouTube = useCallback((videoId: string, title: string) => {
+        // Mute audio when YouTube starts
+        if (audioRef.current) {
+            audioRef.current.pause()
+        }
+        setPlaying({ type: 'youtube', videoId, title })
+        setAudioPaused(false)
+    }, [])
+
+    const togglePause = useCallback(() => {
+        if (playing?.type === 'audio' && audioRef.current) {
+            if (audioPaused) {
+                audioRef.current.play().catch(() => {})
+                setAudioPaused(false)
+            } else {
+                audioRef.current.pause()
+                setAudioPaused(true)
+            }
+        }
+    }, [playing, audioPaused])
+
+    const stop = useCallback(() => {
+        if (audioRef.current) {
+            audioRef.current.pause()
+            audioRef.current.src = ''
+        }
+        setPlaying(null)
+        setAudioPaused(false)
+    }, [])
+
+    return { playing, audioPaused, playAudio, playYouTube, togglePause, stop }
 }
 
 const HERO_CSS = `
@@ -180,6 +239,7 @@ export function HomeScreen() {
     const { releases, videos, loaded: portfolioLoaded } = usePortfolioData()
     const featuredRelease = releases[0]
     const totalTracks = releases.reduce((s, r) => s + (r.tracks?.length || 0), 0)
+    const media = useMediaPlayer()
 
     return (
         <ScrollView flex={1} bg="$backgroundBody">
@@ -379,12 +439,22 @@ export function HomeScreen() {
                     <div className="portfolio-album-card">
                         <YStack bg="rgba(255,255,255,0.06)" borderRadius="$6" overflow="hidden" borderWidth={1} borderColor="rgba(255,255,255,0.08)">
                             <XStack flexWrap="wrap" className="portfolio-featured-grid">
-                                <YStack width={320} minWidth={280} height={320} position="relative" overflow="hidden">
+                                <YStack width={320} minWidth={280} height={320} position="relative" overflow="hidden"
+                                    onPress={() => {
+                                        const track = featuredRelease.tracks?.[0]
+                                        if (track?.audioUrl) {
+                                            media.playAudio({ title: track.title, audioUrl: track.audioUrl, artist: featuredRelease.artist, coverUrl: featuredRelease.coverUrl })
+                                        }
+                                    }}
+                                    cursor={featuredRelease.tracks?.[0]?.audioUrl ? 'pointer' : 'default'}
+                                >
                                     {/* @ts-ignore */}
                                     <img src={featuredRelease.coverUrl || `https://picsum.photos/seed/${featuredRelease.id}/640/640`} alt={featuredRelease.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                     <div className="portfolio-play-overlay">
                                         <YStack width={72} height={72} borderRadius={36} bg="rgba(79,124,255,0.9)" alignItems="center" justifyContent="center">
-                                            <Play size={32} color="white" />
+                                            {media.playing?.type === 'audio' && (media.playing as any).trackTitle === featuredRelease.tracks?.[0]?.title
+                                                ? <Volume2 size={32} color="white" />
+                                                : <Play size={32} color="white" />}
                                         </YStack>
                                     </div>
                                     <YStack position="absolute" top="$3" left="$3" bg="#4F7CFF" borderRadius="$full" px="$3" py="$1">
@@ -458,15 +528,26 @@ export function HomeScreen() {
                         </XStack>
 
                         <XStack gap="$4" flexWrap="wrap">
-                            {releases.slice(0, 4).map((album) => (
+                            {releases.slice(0, 4).map((album) => {
+                                const firstTrack = album.tracks?.[0]
+                                const isPlaying = media.playing?.type === 'audio' && (media.playing as any).trackTitle === firstTrack?.title
+                                return (
                                 <div key={album.id} className="portfolio-album-card" style={{ flex: '1 1 180px', minWidth: 160, maxWidth: 220 }}>
-                                    <YStack bg="rgba(255,255,255,0.06)" borderRadius="$5" overflow="hidden" borderWidth={1} borderColor="rgba(255,255,255,0.08)" gap="$2" onPress={() => router.push('/portfolio')}>
+                                    <YStack bg="rgba(255,255,255,0.06)" borderRadius="$5" overflow="hidden" borderWidth={1} borderColor="rgba(255,255,255,0.08)" gap="$2"
+                                        onPress={() => {
+                                            if (firstTrack?.audioUrl) {
+                                                if (isPlaying) { media.togglePause() }
+                                                else { media.playAudio({ title: firstTrack.title, audioUrl: firstTrack.audioUrl, artist: album.artist, coverUrl: album.coverUrl }) }
+                                            } else { router.push('/portfolio') }
+                                        }}
+                                        cursor="pointer"
+                                    >
                                         <YStack width="100%" aspectRatio={1} position="relative" overflow="hidden">
                                             {/* @ts-ignore */}
                                             <img src={album.coverUrl || `https://picsum.photos/seed/${album.id}/400/400`} alt={album.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                             <div className="portfolio-play-overlay">
                                                 <YStack width={44} height={44} borderRadius={22} bg="rgba(79,124,255,0.9)" alignItems="center" justifyContent="center">
-                                                    <Play size={20} color="white" />
+                                                    {isPlaying ? <Pause size={20} color="white" /> : <Play size={20} color="white" />}
                                                 </YStack>
                                             </div>
                                         </YStack>
@@ -476,7 +557,8 @@ export function HomeScreen() {
                                         </YStack>
                                     </YStack>
                                 </div>
-                            ))}
+                                )
+                            })}
                             {releases.length === 0 && portfolioLoaded && (
                                 <SizableText color="rgba(255,255,255,0.4)" size="$3" textAlign="center" width="100%">발매된 음반이 없습니다</SizableText>
                             )}
@@ -506,20 +588,45 @@ export function HomeScreen() {
                             {videos.slice(0, 4).map((mv) => {
                                 const ytId = mv.youtubeUrl ? extractYouTubeId(mv.youtubeUrl) : null
                                 const thumb = mv.thumbnailUrl || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : `https://picsum.photos/seed/${mv.id}/600/340`)
+                                const isPlayingThis = media.playing?.type === 'youtube' && (media.playing as any).videoId === ytId
                                 return (
                                 <div key={mv.id} className="portfolio-video-card" style={{ flex: '1 1 300px', minWidth: 280 }}>
-                                    <YStack bg="rgba(255,255,255,0.06)" borderRadius="$5" overflow="hidden" borderWidth={1} borderColor="rgba(255,255,255,0.08)" gap="$2" onPress={() => router.push('/portfolio')}>
-                                        <YStack width="100%" aspectRatio={16 / 9} position="relative" overflow="hidden">
-                                            {/* @ts-ignore */}
-                                            <img src={thumb} alt={mv.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                            <div className="portfolio-play-overlay">
-                                                <YStack width={56} height={56} borderRadius={28} bg="rgba(79,124,255,0.9)" alignItems="center" justifyContent="center">
-                                                    <Play size={24} color="white" />
-                                                </YStack>
-                                            </div>
-                                            <YStack position="absolute" bottom="$2" right="$2" bg="rgba(0,0,0,0.75)" borderRadius="$2" px="$2" py="$1">
-                                                <SizableText color="white" size="$1" fontWeight="600">{mv.duration}</SizableText>
-                                            </YStack>
+                                    <YStack bg="rgba(255,255,255,0.06)" borderRadius="$5" overflow="hidden" borderWidth={1} borderColor="rgba(255,255,255,0.08)" gap="$2">
+                                        <YStack width="100%" aspectRatio={16 / 9} position="relative" overflow="hidden"
+                                            onPress={() => {
+                                                if (isPlayingThis) { media.stop() }
+                                                else if (ytId) { media.playYouTube(ytId, mv.title) }
+                                            }}
+                                            cursor="pointer"
+                                        >
+                                            {isPlayingThis && ytId ? (
+                                                <>
+                                                    {/* @ts-ignore */}
+                                                    <iframe
+                                                        src={`https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0`}
+                                                        style={{ width: '100%', height: '100%', border: 'none', position: 'absolute', top: 0, left: 0 }}
+                                                        allow="autoplay; encrypted-media"
+                                                        allowFullScreen
+                                                    />
+                                                    <YStack position="absolute" top="$2" right="$2" bg="rgba(0,0,0,0.6)" borderRadius="$full" p="$1.5" cursor="pointer" zIndex={10}
+                                                        onPress={(e: any) => { e.stopPropagation(); media.stop() }}>
+                                                        <X size={16} color="white" />
+                                                    </YStack>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    {/* @ts-ignore */}
+                                                    <img src={thumb} alt={mv.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                    <div className="portfolio-play-overlay">
+                                                        <YStack width={56} height={56} borderRadius={28} bg="rgba(79,124,255,0.9)" alignItems="center" justifyContent="center">
+                                                            <Play size={24} color="white" />
+                                                        </YStack>
+                                                    </div>
+                                                    <YStack position="absolute" bottom="$2" right="$2" bg="rgba(0,0,0,0.75)" borderRadius="$2" px="$2" py="$1">
+                                                        <SizableText color="white" size="$1" fontWeight="600">{mv.duration}</SizableText>
+                                                    </YStack>
+                                                </>
+                                            )}
                                         </YStack>
                                         <XStack px="$4" pb="$3" justifyContent="space-between" alignItems="center">
                                             <YStack flex={1}>
@@ -536,6 +643,44 @@ export function HomeScreen() {
                             )}
                         </XStack>
                     </YStack>
+
+                    {/* Now Playing Mini Bar */}
+                    {media.playing?.type === 'audio' && (
+                        <div style={{ position: 'sticky', bottom: 16, zIndex: 50 }}>
+                            <XStack
+                                bg="rgba(20,20,40,0.95)"
+                                borderRadius="$5"
+                                borderWidth={1}
+                                borderColor="rgba(79,124,255,0.3)"
+                                p="$3"
+                                gap="$3"
+                                alignItems="center"
+                                // @ts-ignore
+                                style={{ backdropFilter: 'blur(20px)', boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}
+                            >
+                                {(media.playing as any).coverUrl && (
+                                    <YStack width={48} height={48} borderRadius="$3" overflow="hidden">
+                                        {/* @ts-ignore */}
+                                        <img src={(media.playing as any).coverUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    </YStack>
+                                )}
+                                <YStack flex={1}>
+                                    <SizableText color="white" size="$3" fontWeight="700" numberOfLines={1}>{(media.playing as any).trackTitle}</SizableText>
+                                    <SizableText color="rgba(255,255,255,0.5)" size="$2" numberOfLines={1}>{(media.playing as any).artist}</SizableText>
+                                </YStack>
+                                <XStack gap="$2">
+                                    <YStack width={40} height={40} borderRadius="$full" bg="rgba(79,124,255,0.8)" alignItems="center" justifyContent="center"
+                                        cursor="pointer" onPress={media.togglePause}>
+                                        {media.audioPaused ? <Play size={18} color="white" /> : <Pause size={18} color="white" />}
+                                    </YStack>
+                                    <YStack width={40} height={40} borderRadius="$full" bg="rgba(255,255,255,0.1)" alignItems="center" justifyContent="center"
+                                        cursor="pointer" onPress={media.stop}>
+                                        <X size={18} color="rgba(255,255,255,0.6)" />
+                                    </YStack>
+                                </XStack>
+                            </XStack>
+                        </div>
+                    )}
 
                     {/* CTA to Portfolio */}
                     <div style={{ alignSelf: 'center', display: 'flex' }}>
