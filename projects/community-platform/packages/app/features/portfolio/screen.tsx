@@ -345,10 +345,10 @@ export function PortfolioScreen() {
                                             }}
                                         >
                                             {/* Release Header */}
-                                            <XStack p="$5" gap="$5" alignItems="center" flexWrap="wrap">
+                                            <XStack p="$4" gap="$4" alignItems="center" flexWrap="wrap">
                                                 {/* Cover */}
                                                 <YStack
-                                                    width={100} height={100} borderRadius="$4" overflow="hidden"
+                                                    width={64} height={64} borderRadius="$3" overflow="hidden"
                                                     cursor={playableTracks.length > 0 ? 'pointer' : 'default'}
                                                     onPress={() => playableTracks.length > 0 && playRelease(release)}
                                                     position="relative"
@@ -361,7 +361,7 @@ export function PortfolioScreen() {
                                                         <YStack flex={1} alignItems="center" justifyContent="center"
                                                             // @ts-ignore
                                                             style={{ background: 'linear-gradient(135deg, rgba(79,124,255,0.3), rgba(123,97,255,0.2))' }}>
-                                                            <Music size={36} color="rgba(255,255,255,0.4)" />
+                                                            <Music size={24} color="rgba(255,255,255,0.4)" />
                                                         </YStack>
                                                     )}
                                                     {playableTracks.length > 0 && (
@@ -370,18 +370,18 @@ export function PortfolioScreen() {
                                                             // @ts-ignore
                                                             style={{ transition: 'opacity 0.2s' }}>
                                                             {isCurrentRelease && !player.paused
-                                                                ? <Volume2 size={28} color="white" />
-                                                                : <Play size={28} color="white" />
+                                                                ? <Volume2 size={20} color="white" />
+                                                                : <Play size={20} color="white" />
                                                             }
                                                         </YStack>
                                                     )}
                                                 </YStack>
 
                                                 {/* Info */}
-                                                <YStack flex={1} gap="$2" minWidth={200}>
-                                                    <YStack gap="$1">
-                                                        <SizableText size="$6" fontWeight="800" color="white" letterSpacing={-0.5}>{release.title}</SizableText>
-                                                        <SizableText size="$3" color="#4F7CFF" fontWeight="600">{release.artist}</SizableText>
+                                                <YStack flex={1} gap="$1" minWidth={200}>
+                                                    <YStack gap="$0.5">
+                                                        <SizableText size="$4" fontWeight="700" color="white">{release.title}</SizableText>
+                                                        <SizableText size="$2" color="#4F7CFF" fontWeight="600">{release.artist}</SizableText>
                                                     </YStack>
                                                     <XStack gap="$3" alignItems="center">
                                                         <YStack bg="rgba(255,255,255,0.06)" borderRadius="$2" px="$2.5" py="$1">
