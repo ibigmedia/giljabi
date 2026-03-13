@@ -87,18 +87,35 @@ const PAGE_CSS = `
   .portfolio-page {
     background: linear-gradient(180deg, #08081a 0%, #0c0c24 30%, #060618 100%);
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .portfolio-inner {
+    width: 100%;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 48px 24px 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 56px;
   }
   .track-row { transition: background 0.15s; border-radius: 8px; margin: 0 8px; }
   .track-row:hover { background: rgba(255,255,255,0.04) !important; }
   .video-card { transition: transform 0.25s, box-shadow 0.25s; cursor: pointer; border-radius: 12px; overflow: hidden; }
   .video-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,0.4); }
   .video-card:hover .video-play-btn { opacity: 1 !important; }
-  .progress-bar { cursor: pointer; }
-  .progress-bar:hover { height: 6px !important; }
+  .player-bar-progress { cursor: pointer; }
+  .player-bar-progress:hover { height: 6px !important; }
   .section-divider {
     height: 1px;
     background: linear-gradient(90deg, transparent, rgba(79,124,255,0.3), transparent);
     margin: 20px 0;
+  }
+  .video-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
   }
   @keyframes equalize {
     0% { height: 4px; }
@@ -166,7 +183,7 @@ export function PortfolioScreen() {
         <ScrollView flex={1}>
             <style dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
             <div className="portfolio-page">
-                <YStack maxWidth={960} alignSelf="center" width="100%" px="$4" pt="$8" pb={player.current ? 120 : 60} gap="$10">
+                <div className="portfolio-inner">
 
                     {/* ===== HEADER ===== */}
                     <YStack gap="$3" className="fade-in">
@@ -375,13 +392,13 @@ export function PortfolioScreen() {
                                 <SizableText size="$7" fontWeight="800" color="white">Videos</SizableText>
                             </XStack>
 
-                            <XStack gap="$4" flexWrap="wrap">
+                            <div className="video-grid">
                                 {videos.map(mv => {
                                     const ytId = extractYouTubeId(mv.youtubeUrl)
                                     const isPlaying = playingVideoId === mv.id
                                     const thumb = mv.thumbnailUrl || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : '')
                                     return (
-                                        <YStack key={mv.id} width="48%" minWidth={280} gap="$2.5">
+                                        <YStack key={mv.id} gap="$2.5">
                                             <div className="video-card">
                                                 <YStack width="100%" aspectRatio={16 / 9} position="relative" bg="#0a0a1a">
                                                     {isPlaying && ytId ? (
@@ -455,7 +472,7 @@ export function PortfolioScreen() {
                                         </YStack>
                                     )
                                 })}
-                            </XStack>
+                            </div>
                         </YStack>
                     )}
 
@@ -468,30 +485,37 @@ export function PortfolioScreen() {
                         </YStack>
                     )}
 
-                </YStack>
-
-                {/* ===== STICKY PLAYER BAR ===== */}
-                {player.current && (
-                    <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100 }}>
-                        <div
-                            className="progress-bar"
-                            style={{ height: 3, background: 'rgba(255,255,255,0.06)', transition: 'height 0.15s' }}
-                            onClick={(e) => {
-                                const rect = e.currentTarget.getBoundingClientRect()
-                                player.seek((e.clientX - rect.left) / rect.width)
+                    {/* ===== PLAYER BAR (inline, bottom of page) ===== */}
+                    {player.current && (
+                        <YStack
+                            borderRadius="$5" overflow="hidden"
+                            // @ts-ignore
+                            style={{
+                                background: 'rgba(255,255,255,0.03)',
+                                border: '1px solid rgba(79,124,255,0.15)',
                             }}
                         >
-                            <div style={{
-                                height: '100%',
-                                width: player.duration ? `${(player.progress / player.duration) * 100}%` : '0%',
-                                background: 'linear-gradient(90deg, #4F7CFF, #6366F1)',
-                                borderRadius: 2,
-                                transition: 'width 0.3s linear',
-                            }} />
-                        </div>
-                        <div style={{ background: 'rgba(8,8,26,0.97)', backdropFilter: 'blur(24px)', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-                            <XStack maxWidth={960} alignSelf="center" width="100%" px="$4" py="$3" gap="$3" alignItems="center">
-                                <YStack width={48} height={48} borderRadius="$3" overflow="hidden" elevation="$1">
+                            {/* Progress bar */}
+                            <div
+                                className="player-bar-progress"
+                                style={{ height: 3, background: 'rgba(255,255,255,0.06)', transition: 'height 0.15s' }}
+                                onClick={(e) => {
+                                    const rect = e.currentTarget.getBoundingClientRect()
+                                    player.seek((e.clientX - rect.left) / rect.width)
+                                }}
+                            >
+                                <div style={{
+                                    height: '100%',
+                                    width: player.duration ? `${(player.progress / player.duration) * 100}%` : '0%',
+                                    background: 'linear-gradient(90deg, #4F7CFF, #6366F1)',
+                                    borderRadius: 2,
+                                    transition: 'width 0.3s linear',
+                                }} />
+                            </div>
+
+                            <XStack px="$5" py="$4" gap="$4" alignItems="center" flexWrap="wrap">
+                                {/* Cover */}
+                                <YStack width={56} height={56} borderRadius="$3" overflow="hidden" elevation="$1">
                                     {player.current.release.coverUrl ? (
                                         // @ts-ignore
                                         <img src={player.current.release.coverUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -504,35 +528,39 @@ export function PortfolioScreen() {
                                     )}
                                 </YStack>
 
-                                <YStack flex={1} gap="$0.5" minWidth={0}>
-                                    <SizableText color="white" size="$3" fontWeight="700" numberOfLines={1}>{player.current.track.title}</SizableText>
+                                {/* Track info */}
+                                <YStack flex={1} gap="$1" minWidth={0}>
+                                    <SizableText color="white" size="$4" fontWeight="700" numberOfLines={1}>{player.current.track.title}</SizableText>
                                     <SizableText color="rgba(255,255,255,0.45)" size="$2" numberOfLines={1}>{player.current.release.artist} — {player.current.release.title}</SizableText>
                                 </YStack>
 
-                                <SizableText color="rgba(255,255,255,0.3)" size="$1">
+                                {/* Time */}
+                                <SizableText color="rgba(255,255,255,0.3)" size="$2">
                                     {formatTime(player.progress)} / {formatTime(player.duration)}
                                 </SizableText>
 
-                                <XStack gap="$1.5" alignItems="center">
-                                    <YStack width={34} height={34} borderRadius="$full" alignItems="center" justifyContent="center" cursor="pointer" hoverStyle={{ bg: 'rgba(255,255,255,0.08)' }} onPress={player.prev}>
-                                        <SkipBack size={15} color="rgba(255,255,255,0.5)" />
+                                {/* Controls */}
+                                <XStack gap="$2" alignItems="center">
+                                    <YStack width={36} height={36} borderRadius="$full" alignItems="center" justifyContent="center" cursor="pointer" hoverStyle={{ bg: 'rgba(255,255,255,0.08)' }} onPress={player.prev}>
+                                        <SkipBack size={16} color="rgba(255,255,255,0.5)" />
                                     </YStack>
-                                    <YStack width={42} height={42} borderRadius="$full" alignItems="center" justifyContent="center" cursor="pointer" onPress={player.togglePause}
+                                    <YStack width={46} height={46} borderRadius="$full" alignItems="center" justifyContent="center" cursor="pointer" onPress={player.togglePause}
                                         // @ts-ignore
                                         style={{ background: 'linear-gradient(135deg, #4F7CFF, #6366F1)' }}>
-                                        {player.paused ? <Play size={18} color="white" /> : <Pause size={18} color="white" />}
+                                        {player.paused ? <Play size={20} color="white" /> : <Pause size={20} color="white" />}
                                     </YStack>
-                                    <YStack width={34} height={34} borderRadius="$full" alignItems="center" justifyContent="center" cursor="pointer" hoverStyle={{ bg: 'rgba(255,255,255,0.08)' }} onPress={player.next}>
-                                        <SkipForward size={15} color="rgba(255,255,255,0.5)" />
+                                    <YStack width={36} height={36} borderRadius="$full" alignItems="center" justifyContent="center" cursor="pointer" hoverStyle={{ bg: 'rgba(255,255,255,0.08)' }} onPress={player.next}>
+                                        <SkipForward size={16} color="rgba(255,255,255,0.5)" />
                                     </YStack>
-                                    <YStack width={34} height={34} borderRadius="$full" alignItems="center" justifyContent="center" cursor="pointer" hoverStyle={{ bg: 'rgba(255,255,255,0.08)' }} onPress={player.stop}>
+                                    <YStack width={36} height={36} borderRadius="$full" alignItems="center" justifyContent="center" cursor="pointer" hoverStyle={{ bg: 'rgba(255,255,255,0.08)' }} onPress={player.stop}>
                                         <X size={14} color="rgba(255,255,255,0.3)" />
                                     </YStack>
                                 </XStack>
                             </XStack>
-                        </div>
-                    </div>
-                )}
+                        </YStack>
+                    )}
+
+                </div>
             </div>
         </ScrollView>
     )
