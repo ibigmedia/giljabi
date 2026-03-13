@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { YStack, XStack, SizableText, ScrollView, Separator } from '@my/ui'
 import { Play, Pause, SkipForward, SkipBack, X, Music, Video, Clock, Eye, ChevronDown, ChevronUp, Volume2 } from '@tamagui/lucide-icons'
 
@@ -207,6 +208,7 @@ export function PortfolioScreen() {
     }
 
     return (
+        <>
         <ScrollView flex={1}>
             <style dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
             <div className="portfolio-page">
@@ -567,24 +569,26 @@ export function PortfolioScreen() {
 
                 </div>
 
-                {/* ===== VIDEO OVERLAY MODAL ===== */}
-                {overlayVideo && (
-                    <div className="video-overlay" onClick={() => setOverlayVideo(null)}>
-                        <div className="video-overlay-content" onClick={(e) => e.stopPropagation()}>
-                            <div className="video-overlay-close" onClick={() => setOverlayVideo(null)}>
-                                <X size={18} color="white" />
-                            </div>
-                            {/* @ts-ignore */}
-                            <iframe
-                                src={`https://www.youtube.com/embed/${overlayVideo.ytId}?autoplay=1&rel=0`}
-                                allow="autoplay; encrypted-media; fullscreen"
-                                allowFullScreen
-                            />
-                            <div className="video-overlay-title">{overlayVideo.title}</div>
-                        </div>
-                    </div>
-                )}
             </div>
         </ScrollView>
+        {overlayVideo && typeof document !== 'undefined' && createPortal(
+            <div className="video-overlay" onClick={() => setOverlayVideo(null)}>
+                <style dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
+                <div className="video-overlay-content" onClick={(e) => e.stopPropagation()}>
+                    <div className="video-overlay-close" onClick={() => setOverlayVideo(null)}>
+                        <X size={18} color="white" />
+                    </div>
+                    {/* @ts-ignore */}
+                    <iframe
+                        src={`https://www.youtube.com/embed/${overlayVideo.ytId}?autoplay=1&rel=0`}
+                        allow="autoplay; encrypted-media; fullscreen"
+                        allowFullScreen
+                    />
+                    <div className="video-overlay-title">{overlayVideo.title}</div>
+                </div>
+            </div>,
+            document.body
+        )}
+        </>
     )
 }

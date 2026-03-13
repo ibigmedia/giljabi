@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { YStack, XStack, ScrollView, H2, H3, Paragraph, SizableText, Button, Separator } from '@my/ui'
 import { Heart, Layers, TrendingUp, Zap, BookOpen, Wifi, Users, ChevronDown, Music, Code, Globe, ArrowRight, Play, Video, Pause, X } from '@tamagui/lucide-icons'
 import { useRouter } from 'solito/navigation'
@@ -274,6 +275,7 @@ export function HomeScreen() {
     const [overlayVideo, setOverlayVideo] = useState<{ ytId: string; title: string } | null>(null)
 
     return (
+        <>
         <ScrollView flex={1} bg="$backgroundBody">
             <style dangerouslySetInnerHTML={{ __html: HERO_CSS }} />
 
@@ -896,23 +898,25 @@ export function HomeScreen() {
                     </SizableText>
                 </YStack>
             </YStack>
-            {/* ===== VIDEO OVERLAY MODAL ===== */}
-            {overlayVideo && (
-                <div className="video-overlay" onClick={() => setOverlayVideo(null)}>
-                    <div className="video-overlay-content" onClick={(e) => e.stopPropagation()}>
-                        <div className="video-overlay-close" onClick={() => setOverlayVideo(null)}>
-                            <X size={18} color="white" />
-                        </div>
-                        {/* @ts-ignore */}
-                        <iframe
-                            src={`https://www.youtube.com/embed/${overlayVideo.ytId}?autoplay=1&rel=0`}
-                            allow="autoplay; encrypted-media; fullscreen"
-                            allowFullScreen
-                        />
-                        <div className="video-overlay-title">{overlayVideo.title}</div>
-                    </div>
-                </div>
-            )}
         </ScrollView>
+        {overlayVideo && typeof document !== 'undefined' && createPortal(
+            <div className="video-overlay" onClick={() => setOverlayVideo(null)}>
+                <style dangerouslySetInnerHTML={{ __html: HERO_CSS }} />
+                <div className="video-overlay-content" onClick={(e) => e.stopPropagation()}>
+                    <div className="video-overlay-close" onClick={() => setOverlayVideo(null)}>
+                        <X size={18} color="white" />
+                    </div>
+                    {/* @ts-ignore */}
+                    <iframe
+                        src={`https://www.youtube.com/embed/${overlayVideo.ytId}?autoplay=1&rel=0`}
+                        allow="autoplay; encrypted-media; fullscreen"
+                        allowFullScreen
+                    />
+                    <div className="video-overlay-title">{overlayVideo.title}</div>
+                </div>
+            </div>,
+            document.body
+        )}
+        </>
     )
 }
