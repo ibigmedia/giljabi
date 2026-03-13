@@ -231,6 +231,37 @@ const HERO_CSS = `
     .portfolio-featured-grid { flex-direction: column !important; }
     .portfolio-featured-info { min-width: auto !important; }
   }
+  .video-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9999;
+    background: rgba(0,0,0,0.92);
+    display: flex; align-items: center; justify-content: center;
+    animation: fadeInOverlay 0.25s ease;
+    cursor: pointer;
+  }
+  .video-overlay-content {
+    width: 90vw; max-width: 1100px; cursor: default;
+    position: relative;
+  }
+  .video-overlay-content iframe {
+    width: 100%; aspect-ratio: 16/9; border: none; border-radius: 12px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+  }
+  .video-overlay-close {
+    position: absolute; top: -48px; right: 0;
+    width: 40px; height: 40px; border-radius: 50%;
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .video-overlay-close:hover { background: rgba(255,255,255,0.2); }
+  .video-overlay-title {
+    color: rgba(255,255,255,0.8); font-size: 15px; font-weight: 600;
+    margin-top: 16px; text-align: center;
+  }
+  @keyframes fadeInOverlay {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
 `
 
 export function HomeScreen() {
@@ -240,6 +271,7 @@ export function HomeScreen() {
     const featuredRelease = releases[0]
     const totalTracks = releases.reduce((s, r) => s + (r.tracks?.length || 0), 0)
     const media = useMediaPlayer()
+    const [overlayVideo, setOverlayVideo] = useState<{ ytId: string; title: string } | null>(null)
 
     return (
         <ScrollView flex={1} bg="$backgroundBody">
@@ -494,51 +526,37 @@ export function HomeScreen() {
                                     {videos.map((mv) => {
                                         const ytId = mv.youtubeUrl ? extractYouTubeId(mv.youtubeUrl) : null
                                         const thumb = mv.thumbnailUrl || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : '')
-                                        const isPlayingThis = media.playing?.type === 'youtube' && (media.playing as any).videoId === ytId
                                         return (
                                         <YStack key={mv.id} width="48%" minWidth={260} gap="$2">
                                             <div className="portfolio-video-card">
                                                 <YStack width="100%" aspectRatio={16 / 9} borderRadius="$4" overflow="hidden" position="relative"
                                                     onPress={() => {
-                                                        if (isPlayingThis) { media.stop() }
-                                                        else if (ytId) { media.playYouTube(ytId, mv.title) }
+                                                        if (ytId) {
+                                                            media.stop()
+                                                            setOverlayVideo({ ytId, title: mv.title })
+                                                        }
                                                     }}
                                                     cursor="pointer"
                                                 >
-                                                    {isPlayingThis && ytId ? (
-                                                        <>
-                                                            {/* @ts-ignore */}
-                                                            <iframe
-                                                                src={`https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0`}
-                                                                style={{ width: '100%', height: '100%', border: 'none' }}
-                                                                allow="autoplay; encrypted-media" allowFullScreen
-                                                            />
-                                                            <YStack position="absolute" top="$2" right="$2" bg="rgba(0,0,0,0.7)" borderRadius="$full" p="$1.5" cursor="pointer" zIndex={10}
-                                                                onPress={(e: any) => { e.stopPropagation(); media.stop() }}>
-                                                                <X size={14} color="white" />
-                                                            </YStack>
-                                                        </>
+                                                    {thumb ? (
+                                                        // @ts-ignore
+                                                        <img src={thumb} alt={mv.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                                     ) : (
-                                                        <>
-                                                            {thumb ? (
-                                                                // @ts-ignore
-                                                                <img src={thumb} alt={mv.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                            ) : (
-                                                                <YStack flex={1} bg="rgba(79,124,255,0.1)" alignItems="center" justifyContent="center">
-                                                                    <Video size={32} color="rgba(255,255,255,0.2)" />
-                                                                </YStack>
-                                                            )}
-                                                            <div className="portfolio-play-overlay">
-                                                                <YStack width={48} height={48} borderRadius={24} bg="rgba(255,0,0,0.85)" alignItems="center" justifyContent="center">
-                                                                    <Play size={22} color="white" />
-                                                                </YStack>
-                                                            </div>
-                                                            {mv.duration && mv.duration !== '0:00' && (
-                                                                <YStack position="absolute" bottom="$2" right="$2" bg="rgba(0,0,0,0.8)" borderRadius="$2" px="$2" py="$0.5">
-                                                                    <SizableText color="white" size="$1" fontWeight="600">{mv.duration}</SizableText>
-                                                                </YStack>
-                                                            )}
-                                                        </>
+                                                        <YStack flex={1} bg="rgba(79,124,255,0.1)" alignItems="center" justifyContent="center">
+                                                            <Video size={32} color="rgba(255,255,255,0.2)" />
+                                                        </YStack>
+                                                    )}
+                                                    <div className="portfolio-play-overlay">
+                                                        <YStack width={48} height={48} borderRadius={24} bg="rgba(255,255,255,0.95)" alignItems="center" justifyContent="center"
+                                                            // @ts-ignore
+                                                            style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
+                                                            <Play size={22} color="#1a1a2e" />
+                                                        </YStack>
+                                                    </div>
+                                                    {mv.duration && mv.duration !== '0:00' && (
+                                                        <YStack position="absolute" bottom="$2" right="$2" bg="rgba(0,0,0,0.8)" borderRadius="$2" px="$2" py="$0.5">
+                                                            <SizableText color="white" size="$1" fontWeight="600">{mv.duration}</SizableText>
+                                                        </YStack>
                                                     )}
                                                 </YStack>
                                             </div>
@@ -878,6 +896,23 @@ export function HomeScreen() {
                     </SizableText>
                 </YStack>
             </YStack>
+            {/* ===== VIDEO OVERLAY MODAL ===== */}
+            {overlayVideo && (
+                <div className="video-overlay" onClick={() => setOverlayVideo(null)}>
+                    <div className="video-overlay-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="video-overlay-close" onClick={() => setOverlayVideo(null)}>
+                            <X size={18} color="white" />
+                        </div>
+                        {/* @ts-ignore */}
+                        <iframe
+                            src={`https://www.youtube.com/embed/${overlayVideo.ytId}?autoplay=1&rel=0`}
+                            allow="autoplay; encrypted-media; fullscreen"
+                            allowFullScreen
+                        />
+                        <div className="video-overlay-title">{overlayVideo.title}</div>
+                    </div>
+                </div>
+            )}
         </ScrollView>
     )
 }

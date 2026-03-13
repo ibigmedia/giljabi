@@ -128,6 +128,33 @@ const PAGE_CSS = `
   .fade-in { animation: fadeIn 0.5s ease forwards; }
   .fade-in-delay-1 { animation-delay: 0.1s; opacity: 0; }
   .fade-in-delay-2 { animation-delay: 0.2s; opacity: 0; }
+  .video-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9999;
+    background: rgba(0,0,0,0.92);
+    display: flex; align-items: center; justify-content: center;
+    animation: fadeIn 0.25s ease;
+    cursor: pointer;
+  }
+  .video-overlay-content {
+    width: 90vw; max-width: 1100px; cursor: default;
+    position: relative;
+  }
+  .video-overlay-content iframe {
+    width: 100%; aspect-ratio: 16/9; border: none; border-radius: 12px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+  }
+  .video-overlay-close {
+    position: absolute; top: -48px; right: 0;
+    width: 40px; height: 40px; border-radius: 50%;
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .video-overlay-close:hover { background: rgba(255,255,255,0.2); }
+  .video-overlay-title {
+    color: rgba(255,255,255,0.8); font-size: 15px; font-weight: 600;
+    margin-top: 16px; text-align: center;
+  }
 `
 
 export function PortfolioScreen() {
@@ -135,7 +162,7 @@ export function PortfolioScreen() {
     const [videos, setVideos] = useState<MusicVideo[]>([])
     const [loading, setLoading] = useState(true)
     const [expandedRelease, setExpandedRelease] = useState<string | null>(null)
-    const [playingVideoId, setPlayingVideoId] = useState<string | null>(null)
+    const [overlayVideo, setOverlayVideo] = useState<{ ytId: string; title: string } | null>(null)
     const player = usePlayer()
 
     useEffect(() => {
@@ -174,9 +201,9 @@ export function PortfolioScreen() {
         setPlayingVideoId(null)
     }
 
-    const playVideo = (videoId: string) => {
+    const openVideoOverlay = (ytId: string, title: string) => {
         player.stop()
-        setPlayingVideoId(videoId)
+        setOverlayVideo({ ytId, title })
     }
 
     return (
@@ -395,62 +422,40 @@ export function PortfolioScreen() {
                             <div className="video-grid">
                                 {videos.map(mv => {
                                     const ytId = extractYouTubeId(mv.youtubeUrl)
-                                    const isPlaying = playingVideoId === mv.id
                                     const thumb = mv.thumbnailUrl || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : '')
                                     return (
                                         <YStack key={mv.id} gap="$2.5">
                                             <div className="video-card">
-                                                <YStack width="100%" aspectRatio={16 / 9} position="relative" bg="#0a0a1a">
-                                                    {isPlaying && ytId ? (
-                                                        <>
-                                                            {/* @ts-ignore */}
-                                                            <iframe
-                                                                src={`https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0`}
-                                                                style={{ width: '100%', height: '100%', border: 'none' }}
-                                                                allow="autoplay; encrypted-media" allowFullScreen
-                                                            />
-                                                            <YStack
-                                                                position="absolute" top="$2" right="$2"
-                                                                bg="rgba(0,0,0,0.7)" borderRadius="$full" p="$1.5"
-                                                                cursor="pointer" zIndex={10}
-                                                                onPress={() => setPlayingVideoId(null)}
-                                                            >
-                                                                <X size={14} color="white" />
-                                                            </YStack>
-                                                        </>
+                                                <YStack
+                                                    width="100%" aspectRatio={16 / 9} position="relative" bg="#0a0a1a"
+                                                    cursor={ytId ? 'pointer' : 'default'}
+                                                    onPress={() => { if (ytId) openVideoOverlay(ytId, mv.title) }}
+                                                >
+                                                    {thumb ? (
+                                                        // @ts-ignore
+                                                        <img src={thumb} alt={mv.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                                     ) : (
-                                                        <YStack
-                                                            flex={1}
-                                                            cursor={ytId ? 'pointer' : 'default'}
-                                                            onPress={() => { if (ytId) playVideo(mv.id) }}
-                                                        >
-                                                            {thumb ? (
-                                                                // @ts-ignore
-                                                                <img src={thumb} alt={mv.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                            ) : (
-                                                                <YStack flex={1} bg="rgba(123,97,255,0.08)" alignItems="center" justifyContent="center">
-                                                                    <Video size={40} color="rgba(255,255,255,0.15)" />
-                                                                </YStack>
-                                                            )}
-                                                            <YStack
-                                                                className="video-play-btn"
-                                                                position="absolute" top={0} left={0} right={0} bottom={0}
-                                                                alignItems="center" justifyContent="center"
-                                                                // @ts-ignore
-                                                                style={{ background: 'linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.6))' }}
-                                                                opacity={0}
-                                                            >
-                                                                <YStack width={56} height={56} borderRadius={28} bg="rgba(255,255,255,0.95)" alignItems="center" justifyContent="center"
-                                                                    // @ts-ignore
-                                                                    style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
-                                                                    <Play size={26} color="#1a1a2e" />
-                                                                </YStack>
-                                                            </YStack>
-                                                            {mv.duration && mv.duration !== '0:00' && (
-                                                                <YStack position="absolute" bottom="$2" right="$2" bg="rgba(0,0,0,0.85)" borderRadius="$2" px="$2" py="$0.5">
-                                                                    <SizableText color="white" size="$1" fontWeight="600">{mv.duration}</SizableText>
-                                                                </YStack>
-                                                            )}
+                                                        <YStack flex={1} bg="rgba(123,97,255,0.08)" alignItems="center" justifyContent="center">
+                                                            <Video size={40} color="rgba(255,255,255,0.15)" />
+                                                        </YStack>
+                                                    )}
+                                                    <YStack
+                                                        className="video-play-btn"
+                                                        position="absolute" top={0} left={0} right={0} bottom={0}
+                                                        alignItems="center" justifyContent="center"
+                                                        // @ts-ignore
+                                                        style={{ background: 'linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.6))' }}
+                                                        opacity={0}
+                                                    >
+                                                        <YStack width={56} height={56} borderRadius={28} bg="rgba(255,255,255,0.95)" alignItems="center" justifyContent="center"
+                                                            // @ts-ignore
+                                                            style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
+                                                            <Play size={26} color="#1a1a2e" />
+                                                        </YStack>
+                                                    </YStack>
+                                                    {mv.duration && mv.duration !== '0:00' && (
+                                                        <YStack position="absolute" bottom="$2" right="$2" bg="rgba(0,0,0,0.85)" borderRadius="$2" px="$2" py="$0.5">
+                                                            <SizableText color="white" size="$1" fontWeight="600">{mv.duration}</SizableText>
                                                         </YStack>
                                                     )}
                                                 </YStack>
@@ -561,6 +566,24 @@ export function PortfolioScreen() {
                     )}
 
                 </div>
+
+                {/* ===== VIDEO OVERLAY MODAL ===== */}
+                {overlayVideo && (
+                    <div className="video-overlay" onClick={() => setOverlayVideo(null)}>
+                        <div className="video-overlay-content" onClick={(e) => e.stopPropagation()}>
+                            <div className="video-overlay-close" onClick={() => setOverlayVideo(null)}>
+                                <X size={18} color="white" />
+                            </div>
+                            {/* @ts-ignore */}
+                            <iframe
+                                src={`https://www.youtube.com/embed/${overlayVideo.ytId}?autoplay=1&rel=0`}
+                                allow="autoplay; encrypted-media; fullscreen"
+                                allowFullScreen
+                            />
+                            <div className="video-overlay-title">{overlayVideo.title}</div>
+                        </div>
+                    </div>
+                )}
             </div>
         </ScrollView>
     )
