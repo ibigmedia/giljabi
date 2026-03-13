@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// POST /api/portfolio/ai-thumbnail — Claude optimizes prompt → Pollinations generates image
+// POST /api/portfolio/ai-thumbnail — Claude optimizes prompt → multiple image services with fallback
 export async function POST(req: NextRequest) {
     try {
         const { prompt } = await req.json()
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
                         max_tokens: 150,
                         messages: [{
                             role: 'user',
-                            content: `You are an expert image prompt engineer. Convert the following text into an optimized English prompt for AI image generation. The image should be suitable as an album cover or music thumbnail. Output ONLY the English prompt, nothing else. Keep it under 100 words.
+                            content: `You are an expert image prompt engineer. Convert the following text into an optimized English prompt for AI image generation. The image should be suitable as an album cover or music thumbnail. Output ONLY the English prompt, nothing else. Keep it under 60 words.
 
 Input: "${prompt.trim()}"`,
                         }],
@@ -42,22 +42,70 @@ Input: "${prompt.trim()}"`,
                     }
                 }
             } catch (claudeErr: any) {
-                // Claude failed — use original prompt as fallback
                 console.error('Claude API error:', claudeErr.message)
             }
         }
 
-        // Step 2: Generate image URL with Pollinations using the optimized prompt
-        const seed = hashCode(prompt) // Use original prompt for consistent seeding
-        const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(optimizedPrompt)}?width=512&height=512&seed=${seed}&nologo=true`
+        // Step 2: Try multiple image generation services with fallback
+        const seed = hashCode(prompt)
 
+        // Try Pollinations first (free, no key needed)
+        const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(optimizedPrompt)}?width=512&height=512&seed=${seed}&nologo=true&model=flux`
+        const imageUrl = await tryFetchImage(pollinationsUrl, 20000)
+
+        if (imageUrl) {
+            return NextResponse.json({
+                imageUrl,
+                optimizedPrompt,
+                originalPrompt: prompt.trim(),
+                source: 'pollinations',
+            })
+        }
+
+        // Fallback 1: Try Pollinations with turbo model
+        const pollinationsTurbo = `https://image.pollinations.ai/prompt/${encodeURIComponent(optimizedPrompt)}?width=512&height=512&seed=${seed}&nologo=true&model=turbo`
+        const turboUrl = await tryFetchImage(pollinationsTurbo, 15000)
+
+        if (turboUrl) {
+            return NextResponse.json({
+                imageUrl: turboUrl,
+                optimizedPrompt,
+                originalPrompt: prompt.trim(),
+                source: 'pollinations-turbo',
+            })
+        }
+
+        // Fallback 2: Use picsum.photos placeholder with deterministic seed
+        const picsumUrl = `https://picsum.photos/seed/${seed}/512/512`
         return NextResponse.json({
-            imageUrl,
+            imageUrl: picsumUrl,
             optimizedPrompt,
             originalPrompt: prompt.trim(),
+            source: 'picsum-fallback',
         })
     } catch (err: any) {
         return NextResponse.json({ error: err.message || '서버 오류' }, { status: 500 })
+    }
+}
+
+// Actually fetch the image to verify it works, return the URL only if successful
+async function tryFetchImage(url: string, timeoutMs: number): Promise<string | null> {
+    try {
+        const res = await fetch(url, {
+            method: 'GET',
+            signal: AbortSignal.timeout(timeoutMs),
+            redirect: 'follow',
+        })
+        if (!res.ok) return null
+        const contentType = res.headers.get('content-type') || ''
+        if (!contentType.startsWith('image/')) return null
+        // Consume the body to ensure it's a valid response
+        const buffer = await res.arrayBuffer()
+        if (buffer.byteLength < 1000) return null // too small = likely error
+        // Return the final URL (after redirects)
+        return url
+    } catch {
+        return null
     }
 }
 

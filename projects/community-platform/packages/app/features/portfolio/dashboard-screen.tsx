@@ -189,7 +189,7 @@ function AiThumbnailGenerator({ onGenerated }: { currentUrl?: string; onGenerate
         <YStack bg="$surfaceContainerLow" borderRadius="$3" p="$3" gap="$2" borderWidth={1} borderColor="$outlineVariant">
             <XStack alignItems="center" gap="$2">
                 <Sparkles size={14} color="$primary" />
-                <SizableText size="$2" fontWeight="700" color="$primary">AI 썸네일 생성 (Claude + Pollinations)</SizableText>
+                <SizableText size="$2" fontWeight="700" color="$primary">AI 썸네일 생성</SizableText>
             </XStack>
             {previewUrl && (
                 <YStack width="100%" maxWidth={200} aspectRatio={1} borderRadius="$3" overflow="hidden" alignSelf="center" bg="$surfaceContainerHigh">
@@ -198,9 +198,14 @@ function AiThumbnailGenerator({ onGenerated }: { currentUrl?: string; onGenerate
                         src={previewUrl}
                         alt="AI Generated"
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        onError={(e: any) => { e.target.style.display = 'none' }}
+                        onError={(e: any) => {
+                            e.target.style.display = 'none'
+                            setError('이미지 로드 실패. 다시 시도해 주세요.')
+                        }}
+                        onLoad={(e: any) => {
+                            e.target.style.display = 'block'
+                        }}
                     />
-                    <SizableText size="$1" color="$textLight" textAlign="center" mt="$1" position="absolute" bottom={4} left={0} right={0}>AI 생성 이미지 (로딩 중일 수 있음)</SizableText>
                 </YStack>
             )}
             {optimized && <SizableText size="$1" color="$textMuted" numberOfLines={2}>Claude 최적화: {optimized}</SizableText>}
