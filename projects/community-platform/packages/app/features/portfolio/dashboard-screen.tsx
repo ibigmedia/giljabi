@@ -67,11 +67,11 @@ async function uploadFile(file: File, folder: string): Promise<{ url: string; na
     formData.append('file', file)
     formData.append('folder', folder)
     const res = await fetch('/api/portfolio/upload', { method: 'POST', body: formData })
+    const data = await res.json().catch(() => ({ error: `HTTP ${res.status}` }))
     if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: 'Upload failed' }))
-        throw new Error(err.error || `Upload error: ${res.status}`)
+        throw new Error(data.error || `업로드 실패 (${res.status})`)
     }
-    return res.json()
+    return data
 }
 
 // ─── Shared UI ───────────────────────────────────────────────────────

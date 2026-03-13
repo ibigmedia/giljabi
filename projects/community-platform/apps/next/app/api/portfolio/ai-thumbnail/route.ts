@@ -9,28 +9,13 @@ export async function POST(req: NextRequest) {
         }
 
         const seed = hashCode(prompt)
-
-        // Build an English-friendly prompt for Pollinations (transliterate Korean → description style)
-        // Pollinations works best with English prompts
         const cleanPrompt = prompt.trim().slice(0, 200)
-        const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=512&height=512&seed=${seed}&nologo=true&model=flux`
 
-        // Verify Pollinations can serve the image with a HEAD request (fast, no download)
-        try {
-            const res = await fetch(pollinationsUrl, {
-                method: 'HEAD',
-                signal: AbortSignal.timeout(10000),
-            })
-            if (res.ok) {
-                return NextResponse.json({ imageUrl: pollinationsUrl })
-            }
-        } catch {
-            // HEAD failed — try GET with stream abort (some CDNs don't support HEAD)
-        }
+        // Return Pollinations URL directly — no server-side verification needed
+        // The browser <img> tag will handle loading the AI-generated image
+        const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=512&height=512&seed=${seed}&nologo=true`
 
-        // Second attempt: just return the URL directly — browser <img> will handle loading
-        // Pollinations URLs are valid even without pre-verification
-        return NextResponse.json({ imageUrl: pollinationsUrl, direct: true })
+        return NextResponse.json({ imageUrl })
     } catch (err: any) {
         return NextResponse.json({ error: err.message || '서버 오류' }, { status: 500 })
     }
