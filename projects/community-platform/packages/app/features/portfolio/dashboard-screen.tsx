@@ -63,15 +63,27 @@ async function apiDelete(path: string): Promise<void> {
 }
 
 async function uploadFile(file: File, folder: string): Promise<{ url: string; name: string }> {
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('folder', folder)
-    const res = await fetch('/api/portfolio/upload', { method: 'POST', body: formData })
+    // Step 1: Get signed upload URL from our API (small JSON request, no file data)
+    const res = await fetch('/api/portfolio/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileName: file.name, folder, contentType: file.type }),
+    })
     const data = await res.json().catch(() => ({ error: `HTTP ${res.status}` }))
-    if (!res.ok) {
-        throw new Error(data.error || `업로드 실패 (${res.status})`)
+    if (!res.ok) throw new Error(data.error || `서명 URL 생성 실패 (${res.status})`)
+
+    // Step 2: Upload file directly to Supabase Storage (bypasses Vercel 4.5MB limit)
+    const uploadRes = await fetch(data.signedUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type || 'application/octet-stream' },
+        body: file,
+    })
+    if (!uploadRes.ok) {
+        const errText = await uploadRes.text().catch(() => '')
+        throw new Error(`업로드 실패 (${uploadRes.status}): ${errText.slice(0, 100)}`)
     }
-    return data
+
+    return { url: data.publicUrl, name: file.name }
 }
 
 // ─── Shared UI ───────────────────────────────────────────────────────
@@ -167,7 +179,7 @@ function AiThumbnailGenerator({ onGenerated }: { currentUrl?: string; onGenerate
                 setOptimized(data.optimizedPrompt)
             }
         } catch (err: any) {
-            setError('AI 이미지 생성 실패. 다시 시도해주세요.')
+            setError(`AI 이미지 생성 실패: ${err.message}`)
         } finally {
             setGenerating(false)
         }

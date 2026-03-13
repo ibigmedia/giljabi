@@ -1,20 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '../../../../utils/supabase-server'
 
-// POST /api/portfolio/upload — upload a file to Supabase Storage
+// POST /api/portfolio/upload — generate a signed upload URL for client-side upload
+// This avoids Vercel's 4.5MB body size limit by letting the client upload directly
 export async function POST(req: NextRequest) {
     try {
-        const formData: any = await req.formData()
-        const file = formData.get('file') as File | null
-        const folder = (formData.get('folder') as string) || 'media'
+        const { fileName, folder, contentType } = await req.json()
 
-        if (!file) {
-            return NextResponse.json({ error: '파일이 없습니다.' }, { status: 400 })
-        }
-
-        // File size check (50MB max)
-        if (file.size > 52428800) {
-            return NextResponse.json({ error: '파일 크기가 50MB를 초과합니다.' }, { status: 400 })
+        if (!fileName || typeof fileName !== 'string') {
+            return NextResponse.json({ error: '파일 이름이 필요합니다.' }, { status: 400 })
         }
 
         const sb = getSupabaseAdmin()
@@ -23,60 +17,39 @@ export async function POST(req: NextRequest) {
         try {
             const { data: buckets } = await sb.storage.listBuckets()
             if (!buckets?.find((b: any) => b.name === 'portfolio')) {
-                const { error: createErr } = await sb.storage.createBucket('portfolio', {
-                    public: true,
-                    fileSizeLimit: 52428800,
-                })
-                if (createErr) {
-                    console.error('Bucket creation error:', createErr)
-                }
+                await sb.storage.createBucket('portfolio', { public: true, fileSizeLimit: 52428800 })
             }
-        } catch (bucketErr: any) {
-            console.error('Bucket check error:', bucketErr.message)
-            // Continue anyway — bucket might already exist
+        } catch {
+            // Bucket may already exist
         }
 
-        // Generate unique filename
+        // Generate unique file path
         const timestamp = Date.now()
-        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 50)
-        const filePath = `${folder}/${timestamp}-${safeName}`
+        const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 50)
+        const dir = folder || 'media'
+        const filePath = `${dir}/${timestamp}-${safeName}`
 
-        // Read file as Buffer
-        const bytes = await file.arrayBuffer()
-        const buffer = Buffer.from(bytes)
-
-        // Upload to Supabase Storage
+        // Create signed upload URL (valid for 10 minutes)
         const { data, error } = await sb.storage
             .from('portfolio')
-            .upload(filePath, buffer, {
-                contentType: file.type || 'application/octet-stream',
-                upsert: false,
-            })
+            .createSignedUploadUrl(filePath)
 
         if (error) {
-            return NextResponse.json({
-                error: `업로드 실패: ${error.message}`,
-                details: error,
-            }, { status: 500 })
+            return NextResponse.json({ error: `서명 URL 생성 실패: ${error.message}` }, { status: 500 })
         }
 
-        // Get public URL
+        // Also get the public URL for after upload
         const { data: { publicUrl } } = sb.storage
             .from('portfolio')
-            .getPublicUrl(data.path)
+            .getPublicUrl(filePath)
 
         return NextResponse.json({
-            url: publicUrl,
-            path: data.path,
-            name: file.name,
-            size: file.size,
-            type: file.type,
+            signedUrl: data.signedUrl,
+            token: data.token,
+            path: filePath,
+            publicUrl,
         })
     } catch (err: any) {
-        console.error('Upload error:', err)
-        return NextResponse.json({
-            error: err.message || '업로드 실패',
-            stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
-        }, { status: 500 })
+        return NextResponse.json({ error: err.message || '서버 오류' }, { status: 500 })
     }
 }

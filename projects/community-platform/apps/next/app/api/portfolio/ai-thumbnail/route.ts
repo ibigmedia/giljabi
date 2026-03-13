@@ -41,8 +41,9 @@ Input: "${prompt.trim()}"`,
                         optimizedPrompt = text
                     }
                 }
-            } catch {
+            } catch (claudeErr: any) {
                 // Claude failed — use original prompt as fallback
+                console.error('Claude API error:', claudeErr.message)
             }
         }
 

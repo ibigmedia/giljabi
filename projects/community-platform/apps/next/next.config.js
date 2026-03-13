@@ -19,6 +19,9 @@ module.exports = {
   ],
   experimental: {
     scrollRestoration: true,
+    serverActions: {
+      bodySizeLimit: '50mb',
+    },
   },
   turbopack: {
     resolveAlias: {
