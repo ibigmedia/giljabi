@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(source /workspaces/hyunggonback/projects/community-platform/.env)",
+      "Bash(echo $DATABASE_URL)",
+      "Bash(git push:*)"
+    ]
+  }
+}

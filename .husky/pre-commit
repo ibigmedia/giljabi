@@ -1,0 +1,3 @@
+#!/bin/sh
+# 커밋 전 TypeScript 타입 검사 실행
+npx tsc --noEmit --project packages/app/tsconfig.json
