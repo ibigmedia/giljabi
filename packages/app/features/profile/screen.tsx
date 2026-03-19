@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { YStack, XStack, ScrollView, Avatar, H3, Paragraph, Button, Separator, Tabs, Text, SizableText, Spinner } from '@my/ui'
 import { MapPin, Calendar, MessageSquare, Heart, Edit3, UserPlus, UserMinus } from '@tamagui/lucide-icons'
 import { useCurrentUserProfile, useProfile } from '../../hooks/useProfiles'
@@ -28,6 +28,8 @@ export function ProfileScreen({ id }: { id?: string }) {
     const { mutateAsync: createOrGetChannel, isPending: isCreatingChannel } = useCreateOrGetChannel()
 
     const isLoading = (!id && isCurrentUserLoading) || (id && isTargetProfileLoading)
+
+    const [activeTab, setActiveTab] = useState('posts')
 
     const handleMessageClick = async () => {
         if (!targetProfileId) return;
@@ -70,142 +72,257 @@ export function ProfileScreen({ id }: { id?: string }) {
     return (
         <ScrollView flex={1} bg="$backgroundBody">
             <YStack maxWidth={800} alignSelf="center" width="100%">
-                {/* Profile Header Card */}
-                <YStack bg="$surface" mt="$4" borderRadius="$xl" overflow="hidden" elevation="$1">
-                    {/* Cover Image */}
-                    <YStack height={180} width="100%" bg="$surfaceContainerHigh">
-                        <img
-                            src={profile.coverUrl || 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=1000&auto=format&fit=crop'}
-                            alt="Cover"
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        />
-                    </YStack>
-
-                    {/* Profile Info */}
-                    <YStack px="$6" pb="$6" mt={-48}>
-                        <XStack justifyContent="space-between" alignItems="flex-end">
-                            <Avatar circular size="$12" borderWidth={4} borderColor="$surface" elevation="$2" bg="$primaryContainer">
-                                <Avatar.Image width="100%" height="100%" src={profile.avatarUrl || "https://i.pravatar.cc/150"} />
-                                <Avatar.Fallback bg="$primaryContainer" />
-                            </Avatar>
-
-                            <XStack gap="$2" mb="$2">
-                                {isMe ? (
-                                    <Button
-                                        size="$3"
-                                        bg="$surfaceContainerLow"
-                                        borderRadius="$full"
-                                        hoverStyle={{ bg: '$surfaceContainerHigh' }}
-                                        icon={<Edit3 size={16} color="$onSurfaceVariant" />}
-                                        onPress={() => router.push('/edit-profile')}
-                                    >
-                                        <SizableText color="$onSurfaceVariant" fontWeight="600">프로필 편집</SizableText>
-                                    </Button>
-                                ) : (
-                                    <XStack gap="$2">
-                                        <Button
-                                            size="$3"
-                                            bg="$surfaceContainerLow"
-                                            borderRadius="$full"
-                                            hoverStyle={{ bg: '$surfaceContainerHigh' }}
-                                            onPress={handleMessageClick}
-                                            disabled={isCreatingChannel}
-                                            opacity={isCreatingChannel ? 0.7 : 1}
-                                            icon={isCreatingChannel ? <Spinner size="small" /> : <MessageSquare size={16} color="$onSurfaceVariant" />}
-                                        >
-                                            <SizableText color="$onSurfaceVariant" fontWeight="600">메시지</SizableText>
-                                        </Button>
-                                        <Button
-                                            size="$3"
-                                            bg={followStatus?.isFollowing ? '$surfaceContainerLow' : '$primary'}
-                                            borderRadius="$full"
-                                            hoverStyle={{ opacity: 0.9 }}
-                                            onPress={handleFollowToggle}
-                                            disabled={isTogglingFollow}
-                                            opacity={isTogglingFollow ? 0.7 : 1}
-                                            icon={followStatus?.isFollowing
-                                                ? <UserMinus size={16} color="$onSurfaceVariant" />
-                                                : <UserPlus size={16} color="white" />
-                                            }
-                                        >
-                                            <SizableText color={followStatus?.isFollowing ? '$onSurfaceVariant' : 'white'} fontWeight="600">
-                                                {followStatus?.isFollowing ? '언팔로우' : '팔로우'}
-                                            </SizableText>
-                                        </Button>
-                                    </XStack>
-                                )}
-                            </XStack>
-                        </XStack>
-
-                        <YStack mt="$4" gap="$1">
-                            <H3 m={0} color="$onSurface" fontWeight="800">{profile.username}</H3>
-                            <SizableText color="$onSurfaceVariant" size="$3">@{profile.username}</SizableText>
-                        </YStack>
-
-                        {profile.bio && (
-                            <Paragraph mt="$3" size="$4" lineHeight={24} color="$onSurface">
-                                {profile.bio}
-                            </Paragraph>
-                        )}
-
-                        {/* Meta */}
-                        <XStack flexWrap="wrap" gap="$4" mt="$3">
-                            <XStack gap="$1.5" alignItems="center">
-                                <MapPin size={14} color="$onSurfaceVariant" />
-                                <SizableText color="$onSurfaceVariant" size="$3">Global</SizableText>
-                            </XStack>
-                            <XStack gap="$1.5" alignItems="center">
-                                <Calendar size={14} color="$onSurfaceVariant" />
-                                <SizableText color="$onSurfaceVariant" size="$3">
-                                    {new Date(profile.createdAt).toLocaleDateString('ko-KR')} 가입
-                                </SizableText>
-                            </XStack>
-                        </XStack>
-
-                        {/* Stats - M3 Chip style */}
-                        <XStack gap="$4" mt="$5" pt="$4" borderTopWidth={1} borderColor="$outlineVariant">
-                            <XStack gap="$1.5" alignItems="baseline">
-                                {isFollowLoading ? <Spinner size="small" /> : (
-                                    <SizableText size="$5" fontWeight="800" color="$onSurface">{followStatus?.followingCount || 0}</SizableText>
-                                )}
-                                <SizableText color="$onSurfaceVariant" size="$3">팔로잉</SizableText>
-                            </XStack>
-                            <XStack gap="$1.5" alignItems="baseline">
-                                {isFollowLoading ? <Spinner size="small" /> : (
-                                    <SizableText size="$5" fontWeight="800" color="$onSurface">{followStatus?.followersCount || 0}</SizableText>
-                                )}
-                                <SizableText color="$onSurfaceVariant" size="$3">팔로워</SizableText>
-                            </XStack>
-                        </XStack>
-                    </YStack>
+                {/* Cover Image */}
+                <YStack
+                    height={220}
+                    $sm={{ height: 160 }}
+                    width="100%"
+                    bg="$surfaceContainerHigh"
+                >
+                    <img
+                        src={profile.coverUrl || 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=1000&auto=format&fit=crop'}
+                        alt="Cover"
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
                 </YStack>
 
-                {/* Tabs - M3 Segmented */}
-                <YStack mt="$4" bg="$surface" borderRadius="$xl" overflow="hidden" elevation="$0.5" flex={1} mb="$4">
-                    <Tabs defaultValue="posts" flexDirection="column" flex={1}>
-                        <Tabs.List bg="$surfaceContainerLow" px="$2" pt="$1">
-                            <Tabs.Tab value="posts" flex={1} bg="transparent" borderRadius="$sm">
-                                <SizableText color="$onSurface" fontWeight="700" size="$3">타임라인</SizableText>
-                            </Tabs.Tab>
-                            <Tabs.Tab value="about" flex={1} bg="transparent" borderRadius="$sm">
-                                <SizableText color="$onSurface" fontWeight="700" size="$3">소개</SizableText>
-                            </Tabs.Tab>
-                        </Tabs.List>
+                {/* Profile Info Section */}
+                <YStack
+                    bg="$surface"
+                    borderWidth={1}
+                    borderColor="$outlineVariant"
+                    borderTopWidth={0}
+                    px="$5"
+                    pb="$5"
+                >
+                    {/* Avatar + Action Buttons Row */}
+                    <XStack justifyContent="space-between" alignItems="flex-end">
+                        <Avatar
+                            circular
+                            size="$12"
+                            borderWidth={4}
+                            borderColor="$surface"
+                            bg="$primaryContainer"
+                            mt={-48}
+                        >
+                            <Avatar.Image width="100%" height="100%" src={profile.avatarUrl || "https://i.pravatar.cc/150"} />
+                            <Avatar.Fallback bg="$primaryContainer" />
+                        </Avatar>
 
-                        <Tabs.Content value="posts" p="$0" bg="$backgroundBody">
+                        <XStack gap="$2" mb="$2">
+                            {isMe ? (
+                                <Button
+                                    size="$3"
+                                    bg="transparent"
+                                    borderWidth={1}
+                                    borderColor="$outline"
+                                    borderRadius="$full"
+                                    hoverStyle={{ bg: '$surfaceContainerLow' }}
+                                    icon={<Edit3 size={16} color="$onSurfaceVariant" />}
+                                    onPress={() => router.push('/edit-profile')}
+                                >
+                                    <SizableText color="$onSurfaceVariant" fontWeight="600">프로필 편집</SizableText>
+                                </Button>
+                            ) : (
+                                <XStack gap="$2">
+                                    <Button
+                                        size="$3"
+                                        bg="transparent"
+                                        borderWidth={1}
+                                        borderColor="$outline"
+                                        borderRadius="$full"
+                                        hoverStyle={{ bg: '$surfaceContainerLow' }}
+                                        onPress={handleMessageClick}
+                                        disabled={isCreatingChannel}
+                                        opacity={isCreatingChannel ? 0.7 : 1}
+                                        icon={isCreatingChannel ? <Spinner size="small" /> : <MessageSquare size={16} color="$onSurfaceVariant" />}
+                                    >
+                                        <SizableText color="$onSurfaceVariant" fontWeight="600">메시지</SizableText>
+                                    </Button>
+                                    <Button
+                                        size="$3"
+                                        bg={followStatus?.isFollowing ? 'transparent' : '$secondaryContainer'}
+                                        borderWidth={followStatus?.isFollowing ? 1 : 0}
+                                        borderColor="$outline"
+                                        borderRadius="$full"
+                                        hoverStyle={{ opacity: 0.9 }}
+                                        onPress={handleFollowToggle}
+                                        disabled={isTogglingFollow}
+                                        opacity={isTogglingFollow ? 0.7 : 1}
+                                        icon={followStatus?.isFollowing
+                                            ? <UserMinus size={16} color="$onSurfaceVariant" />
+                                            : <UserPlus size={16} color="$onSecondaryContainer" />
+                                        }
+                                    >
+                                        <SizableText
+                                            color={followStatus?.isFollowing ? '$onSurfaceVariant' : '$onSecondaryContainer'}
+                                            fontWeight="600"
+                                        >
+                                            {followStatus?.isFollowing ? '언팔로우' : '팔로우'}
+                                        </SizableText>
+                                    </Button>
+                                </XStack>
+                            )}
+                        </XStack>
+                    </XStack>
+
+                    {/* Name and handle */}
+                    <YStack mt="$3" gap="$0.5">
+                        <H3 m={0} color="$onSurface" fontWeight="800">{profile.username}</H3>
+                        <SizableText color="$onSurfaceVariant" size="$3">@{profile.username}</SizableText>
+                    </YStack>
+
+                    {/* Bio */}
+                    {profile.bio && (
+                        <Paragraph mt="$3" size="$4" lineHeight={24} color="$onSurface">
+                            {profile.bio}
+                        </Paragraph>
+                    )}
+
+                    {/* Meta info */}
+                    <XStack flexWrap="wrap" gap="$4" mt="$3">
+                        <XStack gap="$1.5" alignItems="center">
+                            <MapPin size={14} color="$onSurfaceVariant" />
+                            <SizableText color="$onSurfaceVariant" size="$3">Global</SizableText>
+                        </XStack>
+                        <XStack gap="$1.5" alignItems="center">
+                            <Calendar size={14} color="$onSurfaceVariant" />
+                            <SizableText color="$onSurfaceVariant" size="$3">
+                                {new Date(profile.createdAt).toLocaleDateString('ko-KR')} 가입
+                            </SizableText>
+                        </XStack>
+                    </XStack>
+
+                    {/* Stat Chips */}
+                    <XStack gap="$3" mt="$4" flexWrap="wrap">
+                        <XStack
+                            bg="$surfaceContainerLow"
+                            borderRadius="$full"
+                            px="$3.5"
+                            py="$1.5"
+                            gap="$1.5"
+                            alignItems="center"
+                        >
+                            <SizableText size="$3" fontWeight="800" color="$onSurface">
+                                {posts?.length || 0}
+                            </SizableText>
+                            <SizableText color="$onSurfaceVariant" size="$2">게시글</SizableText>
+                        </XStack>
+                        <XStack
+                            bg="$surfaceContainerLow"
+                            borderRadius="$full"
+                            px="$3.5"
+                            py="$1.5"
+                            gap="$1.5"
+                            alignItems="center"
+                        >
+                            {isFollowLoading ? <Spinner size="small" /> : (
+                                <SizableText size="$3" fontWeight="800" color="$onSurface">
+                                    {followStatus?.followingCount || 0}
+                                </SizableText>
+                            )}
+                            <SizableText color="$onSurfaceVariant" size="$2">팔로잉</SizableText>
+                        </XStack>
+                        <XStack
+                            bg="$surfaceContainerLow"
+                            borderRadius="$full"
+                            px="$3.5"
+                            py="$1.5"
+                            gap="$1.5"
+                            alignItems="center"
+                        >
+                            {isFollowLoading ? <Spinner size="small" /> : (
+                                <SizableText size="$3" fontWeight="800" color="$onSurface">
+                                    {followStatus?.followersCount || 0}
+                                </SizableText>
+                            )}
+                            <SizableText color="$onSurfaceVariant" size="$2">팔로워</SizableText>
+                        </XStack>
+                    </XStack>
+                </YStack>
+
+                {/* M3 Tabs with underline indicator */}
+                <YStack mt="$4" mb="$4" flex={1}>
+                    <Tabs
+                        defaultValue="posts"
+                        flexDirection="column"
+                        flex={1}
+                        onValueChange={(val) => setActiveTab(val)}
+                    >
+                        <YStack
+                            bg="$surface"
+                            borderWidth={1}
+                            borderColor="$outlineVariant"
+                            borderRadius="$card"
+                            overflow="hidden"
+                        >
+                            <Tabs.List bg="transparent" borderBottomWidth={1} borderColor="$outlineVariant">
+                                <Tabs.Tab
+                                    value="posts"
+                                    flex={1}
+                                    bg="transparent"
+                                    borderRadius={0}
+                                    borderBottomWidth={2}
+                                    borderBottomColor={activeTab === 'posts' ? '$primary' : 'transparent'}
+                                    py="$3"
+                                >
+                                    <SizableText
+                                        color={activeTab === 'posts' ? '$primary' : '$onSurfaceVariant'}
+                                        fontWeight="700"
+                                        size="$3"
+                                    >
+                                        타임라인
+                                    </SizableText>
+                                </Tabs.Tab>
+                                <Tabs.Tab
+                                    value="about"
+                                    flex={1}
+                                    bg="transparent"
+                                    borderRadius={0}
+                                    borderBottomWidth={2}
+                                    borderBottomColor={activeTab === 'about' ? '$primary' : 'transparent'}
+                                    py="$3"
+                                >
+                                    <SizableText
+                                        color={activeTab === 'about' ? '$primary' : '$onSurfaceVariant'}
+                                        fontWeight="700"
+                                        size="$3"
+                                    >
+                                        소개
+                                    </SizableText>
+                                </Tabs.Tab>
+                            </Tabs.List>
+                        </YStack>
+
+                        <Tabs.Content value="posts" p="$0" mt="$3">
                             {isPostsLoading ? (
                                 <YStack padding="$6" alignItems="center">
                                     <Spinner size="large" color="$primary" />
                                 </YStack>
                             ) : (
-                                <YStack gap="$3" p="$4">
+                                <YStack gap="$3">
                                     {posts?.length === 0 ? (
-                                        <YStack padding="$8" alignItems="center" bg="$surface" borderRadius="$card" elevation="$0.5">
+                                        <YStack
+                                            padding="$8"
+                                            alignItems="center"
+                                            bg="$surface"
+                                            borderWidth={1}
+                                            borderColor="$outlineVariant"
+                                            borderRadius="$card"
+                                        >
                                             <SizableText color="$onSurfaceVariant">아직 게시글이 없습니다.</SizableText>
                                         </YStack>
                                     ) : (
                                         posts?.map((post) => (
-                                            <YStack key={post.id} bg="$surface" p="$5" borderRadius="$card" elevation="$0.5" gap="$3">
+                                            <YStack
+                                                key={post.id}
+                                                bg="$surface"
+                                                p="$5"
+                                                borderWidth={1}
+                                                borderColor="$outlineVariant"
+                                                borderRadius="$card"
+                                                gap="$3"
+                                            >
                                                 <XStack gap="$3" alignItems="center">
                                                     <Avatar circular size="$4" bg="$primaryContainer">
                                                         <Avatar.Image width="100%" height="100%" src={profile.avatarUrl || "https://i.pravatar.cc/150"} />
@@ -242,8 +359,15 @@ export function ProfileScreen({ id }: { id?: string }) {
                             )}
                         </Tabs.Content>
 
-                        <Tabs.Content value="about" p="$6" bg="$surface">
-                            <YStack gap="$4">
+                        <Tabs.Content value="about" mt="$3">
+                            <YStack
+                                bg="$surface"
+                                borderWidth={1}
+                                borderColor="$outlineVariant"
+                                borderRadius="$card"
+                                p="$6"
+                                gap="$4"
+                            >
                                 <SizableText color="$onSurface" size="$5" fontWeight="700">{profile.username} 소개</SizableText>
                                 <Paragraph color="$onSurfaceVariant" lineHeight={24}>
                                     {profile.bio || '아직 소개글이 작성되지 않았습니다.'}

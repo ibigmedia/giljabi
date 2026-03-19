@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { YStack, XStack, ScrollView, SizableText, Paragraph, Avatar, Spinner } from '@my/ui'
+import { YStack, XStack, ScrollView, SizableText, Avatar, Spinner } from '@my/ui'
 import { MessageCircle } from '@tamagui/lucide-icons'
 import { useChatChannels } from '../../hooks/useChat'
 import { useRouter } from 'solito/navigation'
@@ -36,8 +36,11 @@ export function ChatListScreen() {
 
     return (
         <ScrollView flex={1} bg="$backgroundBody">
-            <YStack maxWidth={600} alignSelf="center" width="100%" py="$4" gap="$2">
-                <SizableText size="$7" fontWeight="800" color="$onSurface" px="$4" mb="$2">메시지</SizableText>
+            <YStack maxWidth={640} alignSelf="center" width="100%" py="$4" gap="$3" px="$4">
+                <SizableText size="$8" fontWeight="800" color="$onSurface" mb="$2">
+                    메시지
+                </SizableText>
+
                 {channels.map((channel) => {
                     const otherParticipant = channel.participants?.find(
                         (p) => p.profileId !== currentUser.id
@@ -51,36 +54,49 @@ export function ChatListScreen() {
                         <XStack
                             key={channel.id}
                             px="$4"
-                            py="$3"
+                            py="$3.5"
                             gap="$3"
                             alignItems="center"
                             cursor="pointer"
+                            bg="$surface"
+                            borderWidth={1}
+                            borderColor="$outlineVariant"
+                            borderRadius="$card"
                             hoverStyle={{ bg: '$surfaceContainerLow' }}
                             pressStyle={{ bg: '$surfaceContainerHigh' }}
                             onPress={() => router.push(`/messages/${channel.id}`)}
-                            borderRadius="$lg"
-                            mx="$2"
                         >
                             <Avatar circular size="$5" bg="$primaryContainer">
-                                <Avatar.Image width="100%" height="100%" src={otherParticipant?.avatarUrl || "https://i.pravatar.cc/150"} />
+                                <Avatar.Image
+                                    width="100%"
+                                    height="100%"
+                                    src={otherParticipant?.avatarUrl || 'https://i.pravatar.cc/150'}
+                                />
                                 <Avatar.Fallback bg="$primaryContainer" />
                             </Avatar>
 
-                            <YStack flex={1} gap="$0.5">
-                                <XStack justifyContent="space-between" alignItems="center">
-                                    <SizableText fontWeight="700" size="$4" color="$onSurface">
-                                        {otherParticipant?.username || '알 수 없는 사용자'}
-                                    </SizableText>
-                                    {latestMessage && (
-                                        <SizableText color="$onSurfaceVariant" size="$2">
-                                            {new Date(latestMessage.createdAt).toLocaleDateString('ko-KR')}
-                                        </SizableText>
-                                    )}
-                                </XStack>
-                                <SizableText color="$onSurfaceVariant" size="$3" numberOfLines={1}>
+                            <YStack flex={1} gap="$1">
+                                <SizableText fontWeight="700" size="$4" color="$onSurface">
+                                    {otherParticipant?.username || '알 수 없는 사용자'}
+                                </SizableText>
+                                <SizableText
+                                    color="$onSurfaceVariant"
+                                    size="$3"
+                                    numberOfLines={1}
+                                >
                                     {latestMessage?.content || '(메시지 없음)'}
                                 </SizableText>
                             </YStack>
+
+                            {latestMessage && (
+                                <SizableText
+                                    color="$onSurfaceVariant"
+                                    size="$2"
+                                    flexShrink={0}
+                                >
+                                    {new Date(latestMessage.createdAt).toLocaleDateString('ko-KR')}
+                                </SizableText>
+                            )}
                         </XStack>
                     )
                 })}

@@ -65,10 +65,9 @@ export function PostCard({ post, currentUserProfile }: { post: Post; currentUser
         <YStack
             bg="$surface"
             borderRadius="$card"
-            elevation="$0.5"
+            borderWidth={post.isPinned ? 2 : 1}
+            borderColor={post.isPinned ? '$orange8' : '$outlineVariant'}
             overflow="hidden"
-            borderWidth={post.isPinned ? 2 : 0}
-            borderColor={post.isPinned ? '$orange8' : undefined}
         >
             {/* Pinned notice banner */}
             {post.isPinned && (
@@ -79,7 +78,7 @@ export function PostCard({ post, currentUserProfile }: { post: Post; currentUser
             )}
 
             {/* Header */}
-            <XStack justifyContent="space-between" alignItems="center" p="$4" pb="$2">
+            <XStack justifyContent="space-between" alignItems="center" px="$4" pt="$4" pb="$2">
                 <XStack gap="$3" alignItems="center" flex={1} cursor="pointer" onPress={() => router.push(`/post/${post.id}`)}>
                     <Avatar circular size="$4" bg="$primaryContainer">
                         <Avatar.Image width="100%" height="100%" src={post.author?.avatarUrl || "https://i.pravatar.cc/150"} />
@@ -140,7 +139,7 @@ export function PostCard({ post, currentUserProfile }: { post: Post; currentUser
 
             {/* Like/Comment Count Bar */}
             {(likesCount > 0 || commentsCount > 0) && (
-                <XStack px="$4" py="$2" justifyContent="space-between">
+                <XStack px="$4" py="$2.5" justifyContent="space-between">
                     {likesCount > 0 && (
                         <SizableText size="$2" color="$onSurfaceVariant">
                             좋아요 {likesCount}개
@@ -156,14 +155,16 @@ export function PostCard({ post, currentUserProfile }: { post: Post; currentUser
 
             <Separator borderColor="$outlineVariant" opacity={0.3} mx="$4" />
 
-            {/* Action Buttons - M3 Tonal Style */}
+            {/* Action Buttons - increased touch targets */}
             <XStack px="$2" py="$1" justifyContent="space-around">
                 <Button
                     flex={1}
                     bg="transparent"
                     hoverStyle={{ bg: hasLiked ? '$primaryContainer' : '$surfaceContainerHigh' }}
-                    borderRadius="$sm"
+                    pressStyle={{ bg: hasLiked ? '$primaryContainer' : '$surfaceContainerHigh', opacity: 0.8 }}
+                    borderRadius="$4"
                     gap="$2"
+                    minHeight={44}
                     onPress={(e) => { e.stopPropagation(); handleLike(); }}
                     icon={<Heart size={20} color={hasLiked ? "$primary" : "$onSurfaceVariant"} fill={hasLiked ? "var(--color-primary)" : "transparent"} />}
                 >
@@ -175,8 +176,10 @@ export function PostCard({ post, currentUserProfile }: { post: Post; currentUser
                     flex={1}
                     bg="transparent"
                     hoverStyle={{ bg: '$surfaceContainerHigh' }}
-                    borderRadius="$sm"
+                    pressStyle={{ bg: '$surfaceContainerHigh', opacity: 0.8 }}
+                    borderRadius="$4"
                     gap="$2"
+                    minHeight={44}
                     onPress={(e) => { e.stopPropagation(); setShowComments(!showComments); }}
                     icon={<MessageCircle size={20} color="$onSurfaceVariant" />}
                 >
@@ -186,8 +189,10 @@ export function PostCard({ post, currentUserProfile }: { post: Post; currentUser
                     flex={1}
                     bg="transparent"
                     hoverStyle={{ bg: '$surfaceContainerHigh' }}
-                    borderRadius="$sm"
+                    pressStyle={{ bg: '$surfaceContainerHigh', opacity: 0.8 }}
+                    borderRadius="$4"
                     gap="$2"
+                    minHeight={44}
                     icon={<Share2 size={20} color="$onSurfaceVariant" />}
                 >
                     <SizableText color="$onSurfaceVariant" size="$3" fontWeight="500">공유</SizableText>
@@ -196,24 +201,44 @@ export function PostCard({ post, currentUserProfile }: { post: Post; currentUser
 
             {/* Inline Comments */}
             {showComments && (
-                <YStack px="$4" pb="$4" pt="$2" borderTopWidth={1} borderColor="$outlineVariant" borderTopColor="$outlineVariant" gap="$3" bg="$surfaceContainerLowest">
+                <YStack
+                    px="$4"
+                    pb="$4"
+                    pt="$3"
+                    borderTopWidth={1}
+                    borderColor="$outlineVariant"
+                    gap="$4"
+                    bg="$surfaceContainerLowest"
+                >
                     {/* Comment List */}
                     <YStack gap="$3">
                         {isCommentsLoading ? (
-                            <Spinner size="small" color="$primary" />
+                            <YStack py="$3" alignItems="center">
+                                <Spinner size="small" color="$primary" />
+                            </YStack>
+                        ) : comments?.length === 0 ? (
+                            <SizableText size="$2" color="$onSurfaceVariant" textAlign="center" py="$2">
+                                아직 댓글이 없습니다. 첫 댓글을 남겨보세요!
+                            </SizableText>
                         ) : (
                             comments?.map(comment => (
-                                <XStack key={comment.id} gap="$2.5" alignItems="flex-start">
-                                    <Avatar circular size="$2.5" bg="$primaryContainer">
+                                <XStack key={comment.id} gap="$3" alignItems="flex-start">
+                                    <Avatar circular size="$3" bg="$primaryContainer" mt="$0.5">
                                         <Avatar.Image width="100%" height="100%" src={comment.author?.avatarUrl || "https://i.pravatar.cc/150"} />
                                         <Avatar.Fallback bg="$primaryContainer" />
                                     </Avatar>
-                                    <YStack flex={1} bg="$surfaceContainerLow" p="$3" borderRadius="$lg">
-                                        <XStack gap="$2" alignItems="baseline">
-                                            <SizableText fontWeight="700" size="$3" color="$onSurface">{comment.author?.username || '알 수 없음'}</SizableText>
-                                            <SizableText size="$1" color="$onSurfaceVariant">{timeAgo(comment.createdAt)}</SizableText>
+                                    <YStack flex={1} bg="$surfaceContainerLow" p="$3" borderRadius="$4" gap="$1">
+                                        <XStack gap="$2" alignItems="center">
+                                            <SizableText fontWeight="700" size="$3" color="$onSurface">
+                                                {comment.author?.username || '알 수 없음'}
+                                            </SizableText>
+                                            <SizableText size="$1" color="$onSurfaceVariant">
+                                                {timeAgo(comment.createdAt)}
+                                            </SizableText>
                                         </XStack>
-                                        <Paragraph size="$3" color="$onSurface" mt="$1" lineHeight={20}>{renderTextWithLinks(comment.content)}</Paragraph>
+                                        <Paragraph size="$3" color="$onSurface" lineHeight={20}>
+                                            {renderTextWithLinks(comment.content)}
+                                        </Paragraph>
                                     </YStack>
                                 </XStack>
                             ))
@@ -221,8 +246,8 @@ export function PostCard({ post, currentUserProfile }: { post: Post; currentUser
                     </YStack>
 
                     {/* Comment Input */}
-                    <XStack gap="$2" alignItems="center">
-                        <Avatar circular size="$2.5" bg="$primaryContainer">
+                    <XStack gap="$3" alignItems="center">
+                        <Avatar circular size="$3" bg="$primaryContainer">
                             <Avatar.Image width="100%" height="100%" src={currentUserProfile?.avatarUrl || "https://i.pravatar.cc/150"} />
                             <Avatar.Fallback bg="$primaryContainer" />
                         </Avatar>
@@ -232,20 +257,27 @@ export function PostCard({ post, currentUserProfile }: { post: Post; currentUser
                             value={commentText}
                             onChangeText={setCommentText}
                             bg="$surfaceContainerLow"
-                            borderWidth={0}
+                            borderWidth={1}
+                            borderColor="$outlineVariant"
                             borderRadius="$button"
                             size="$3"
                             color="$onSurface"
                             placeholderTextColor="$onSurfaceVariant"
+                            focusStyle={{ borderColor: '$primary' }}
+                            onSubmitEditing={handleCreateComment}
                         />
                         <Button
                             bg="$primary"
                             size="$3"
                             circular
+                            minHeight={44}
+                            minWidth={44}
                             disabled={!commentText.trim() || isCreatingComment || !currentUserProfile}
                             opacity={(!commentText.trim() || isCreatingComment || !currentUserProfile) ? 0.4 : 1}
-                            icon={<Send size={16} color="white" />}
+                            icon={isCreatingComment ? <Spinner size="small" color="white" /> : <Send size={16} color="white" />}
                             onPress={handleCreateComment}
+                            hoverStyle={{ opacity: 0.9 }}
+                            pressStyle={{ scale: 0.95 }}
                         />
                     </XStack>
                 </YStack>

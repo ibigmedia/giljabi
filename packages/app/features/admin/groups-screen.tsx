@@ -54,8 +54,8 @@ export function AdminGroupsScreen() {
             {/* Header */}
             <XStack justifyContent="space-between" alignItems="center">
                 <YStack>
-                    <SizableText size="$7" fontWeight="800" color="$textMain">그룹 관리</SizableText>
-                    <SizableText size="$3" color="$textMuted">
+                    <SizableText size="$7" fontWeight="800" color="$onSurface">그룹 관리</SizableText>
+                    <SizableText size="$3" color="$onSurfaceVariant">
                         {groups?.length || 0}개 그룹 · 총 {totalMembers}명 멤버
                     </SizableText>
                 </YStack>
@@ -72,14 +72,14 @@ export function AdminGroupsScreen() {
             {/* Create Form */}
             {showCreate && (
                 <YStack bg="$surface" p="$5" borderRadius="$card" borderWidth={1} borderColor="$primary" gap="$3">
-                    <SizableText size="$4" fontWeight="700" color="$textMain">새 그룹 만들기</SizableText>
+                    <SizableText size="$4" fontWeight="700" color="$onSurface">새 그룹 만들기</SizableText>
                     <Input
                         placeholder="그룹 이름"
                         value={newGroup.name}
                         onChangeText={(t) => setNewGroup(p => ({ ...p, name: t }))}
                         bg="$surfaceContainerLow"
                         borderWidth={1}
-                        borderColor="$borderLight"
+                        borderColor="$outlineVariant"
                     />
                     <Input
                         placeholder="그룹 설명"
@@ -87,25 +87,25 @@ export function AdminGroupsScreen() {
                         onChangeText={(t) => setNewGroup(p => ({ ...p, description: t }))}
                         bg="$surfaceContainerLow"
                         borderWidth={1}
-                        borderColor="$borderLight"
+                        borderColor="$outlineVariant"
                     />
                     <XStack gap="$3" alignItems="center">
                         <Button
                             size="$3"
                             bg={newGroup.isPrivate ? '$primary' : '$surfaceContainerLow'}
                             borderWidth={1}
-                            borderColor={newGroup.isPrivate ? '$primary' : '$borderLight'}
+                            borderColor={newGroup.isPrivate ? '$primary' : '$outlineVariant'}
                             onPress={() => setNewGroup(p => ({ ...p, isPrivate: !p.isPrivate }))}
-                            icon={newGroup.isPrivate ? <Lock size={14} color="white" /> : <Globe size={14} color="$textMuted" />}
+                            icon={newGroup.isPrivate ? <Lock size={14} color="white" /> : <Globe size={14} color="$onSurfaceVariant" />}
                         >
-                            <SizableText color={newGroup.isPrivate ? 'white' : '$textMuted'} size="$3">
+                            <SizableText color={newGroup.isPrivate ? 'white' : '$onSurfaceVariant'} size="$3">
                                 {newGroup.isPrivate ? '비공개' : '공개'}
                             </SizableText>
                         </Button>
                     </XStack>
                     <XStack gap="$3" justifyContent="flex-end">
                         <Button size="$3" bg="$surfaceContainerLow" onPress={() => setShowCreate(false)}>
-                            <SizableText color="$textMuted">취소</SizableText>
+                            <SizableText color="$onSurfaceVariant">취소</SizableText>
                         </Button>
                         <Button size="$3" bg="$primary" onPress={handleCreate} disabled={isCreating || !newGroup.name.trim()}>
                             {isCreating ? <Spinner size="small" color="white" /> : <SizableText color="white" fontWeight="600">만들기</SizableText>}
@@ -119,8 +119,8 @@ export function AdminGroupsScreen() {
                 <YStack p="$8" alignItems="center"><Spinner size="large" color="$primary" /></YStack>
             ) : !groups?.length ? (
                 <YStack bg="$surface" p="$8" borderRadius="$card" alignItems="center" gap="$3">
-                    <Users size={40} color="$textMuted" />
-                    <SizableText color="$textMuted" size="$4">생성된 그룹이 없습니다</SizableText>
+                    <Users size={40} color="$onSurfaceVariant" />
+                    <SizableText color="$onSurfaceVariant" size="$4">생성된 그룹이 없습니다</SizableText>
                 </YStack>
             ) : (
                 <YStack gap="$3">
@@ -131,7 +131,7 @@ export function AdminGroupsScreen() {
                         const admins = group.members?.filter(m => m.role === 'ADMIN') || []
 
                         return (
-                            <YStack key={group.id} bg="$surface" borderRadius="$card" borderWidth={1} borderColor="$borderLight" overflow="hidden">
+                            <YStack key={group.id} bg="$surface" borderRadius="$card" borderWidth={1} borderColor="$outlineVariant" overflow="hidden">
                                 {/* Group Header Row */}
                                 <XStack
                                     p="$4"
@@ -147,10 +147,10 @@ export function AdminGroupsScreen() {
                                     </Avatar>
                                     <YStack flex={1}>
                                         <XStack gap="$2" alignItems="center">
-                                            <SizableText size="$5" fontWeight="700" color="$textMain">{group.name}</SizableText>
-                                            {group.isPrivate ? <Lock size={14} color="$textMuted" /> : <Globe size={14} color="$textMuted" />}
+                                            <SizableText size="$5" fontWeight="700" color="$onSurface">{group.name}</SizableText>
+                                            {group.isPrivate ? <Lock size={14} color="$onSurfaceVariant" /> : <Globe size={14} color="$onSurfaceVariant" />}
                                         </XStack>
-                                        <SizableText size="$2" color="$textMuted" numberOfLines={1}>
+                                        <SizableText size="$2" color="$onSurfaceVariant" numberOfLines={1}>
                                             {group.description || '설명 없음'} · {memberCount}명
                                         </SizableText>
                                     </YStack>
@@ -170,12 +170,12 @@ export function AdminGroupsScreen() {
                                         )}
                                     </XStack>
 
-                                    {isExpanded ? <ChevronUp size={20} color="$textMuted" /> : <ChevronDown size={20} color="$textMuted" />}
+                                    {isExpanded ? <ChevronUp size={20} color="$onSurfaceVariant" /> : <ChevronDown size={20} color="$onSurfaceVariant" />}
                                 </XStack>
 
                                 {/* Expanded Detail */}
                                 {isExpanded && (
-                                    <YStack borderTopWidth={1} borderColor="$borderLight">
+                                    <YStack borderTopWidth={1} borderColor="$outlineVariant">
                                         {/* Edit / Actions */}
                                         <YStack p="$4" gap="$3">
                                             {isEditing ? (
@@ -185,7 +185,7 @@ export function AdminGroupsScreen() {
                                                         onChangeText={(t) => setEditing(p => p ? { ...p, name: t } : p)}
                                                         bg="$surfaceContainerLow"
                                                         borderWidth={1}
-                                                        borderColor="$borderLight"
+                                                        borderColor="$outlineVariant"
                                                         placeholder="그룹 이름"
                                                     />
                                                     <Input
@@ -193,7 +193,7 @@ export function AdminGroupsScreen() {
                                                         onChangeText={(t) => setEditing(p => p ? { ...p, description: t } : p)}
                                                         bg="$surfaceContainerLow"
                                                         borderWidth={1}
-                                                        borderColor="$borderLight"
+                                                        borderColor="$outlineVariant"
                                                         placeholder="설명"
                                                     />
                                                     <XStack gap="$3">
@@ -201,17 +201,17 @@ export function AdminGroupsScreen() {
                                                             size="$3"
                                                             bg={editing.isPrivate ? '$primary' : '$surfaceContainerLow'}
                                                             borderWidth={1}
-                                                            borderColor={editing.isPrivate ? '$primary' : '$borderLight'}
+                                                            borderColor={editing.isPrivate ? '$primary' : '$outlineVariant'}
                                                             onPress={() => setEditing(p => p ? { ...p, isPrivate: !p.isPrivate } : p)}
-                                                            icon={editing.isPrivate ? <Lock size={14} color="white" /> : <Globe size={14} color="$textMuted" />}
+                                                            icon={editing.isPrivate ? <Lock size={14} color="white" /> : <Globe size={14} color="$onSurfaceVariant" />}
                                                         >
-                                                            <SizableText color={editing.isPrivate ? 'white' : '$textMuted'} size="$3">
+                                                            <SizableText color={editing.isPrivate ? 'white' : '$onSurfaceVariant'} size="$3">
                                                                 {editing.isPrivate ? '비공개' : '공개'}
                                                             </SizableText>
                                                         </Button>
                                                         <XStack flex={1} />
                                                         <Button size="$3" bg="$surfaceContainerLow" onPress={() => setEditing(null)}>
-                                                            <SizableText color="$textMuted">취소</SizableText>
+                                                            <SizableText color="$onSurfaceVariant">취소</SizableText>
                                                         </Button>
                                                         <Button size="$3" bg="$primary" onPress={handleUpdate}>
                                                             <SizableText color="white" fontWeight="600">저장</SizableText>
@@ -243,16 +243,16 @@ export function AdminGroupsScreen() {
                                         </YStack>
 
                                         {/* Members */}
-                                        <Separator borderColor="$borderLight" />
+                                        <Separator borderColor="$outlineVariant" />
                                         <YStack p="$4" gap="$3">
-                                            <SizableText size="$4" fontWeight="700" color="$textMain">멤버 ({memberCount})</SizableText>
+                                            <SizableText size="$4" fontWeight="700" color="$onSurface">멤버 ({memberCount})</SizableText>
                                             {group.members?.length === 0 ? (
-                                                <SizableText color="$textMuted" size="$3">멤버가 없습니다</SizableText>
+                                                <SizableText color="$onSurfaceVariant" size="$3">멤버가 없습니다</SizableText>
                                             ) : (
                                                 <YStack gap="$2">
                                                     {group.members?.map(member => {
                                                         const RoleIcon = member.role === 'ADMIN' ? Crown : member.role === 'MODERATOR' ? Shield : User
-                                                        const roleColor = member.role === 'ADMIN' ? '$orange10' : member.role === 'MODERATOR' ? '$blue10' : '$textMuted'
+                                                        const roleColor = member.role === 'ADMIN' ? '$orange10' : member.role === 'MODERATOR' ? '$blue10' : '$onSurfaceVariant'
                                                         const roleLabel = member.role === 'ADMIN' ? '관리자' : member.role === 'MODERATOR' ? '모더레이터' : '멤버'
 
                                                         return (
@@ -262,7 +262,7 @@ export function AdminGroupsScreen() {
                                                                     <Avatar.Fallback bg="$primaryContainer" />
                                                                 </Avatar>
                                                                 <YStack flex={1}>
-                                                                    <SizableText size="$3" fontWeight="600" color="$textMain">
+                                                                    <SizableText size="$3" fontWeight="600" color="$onSurface">
                                                                         {member.profile?.username || '알 수 없음'}
                                                                     </SizableText>
                                                                     <XStack gap="$1.5" alignItems="center">
@@ -282,7 +282,7 @@ export function AdminGroupsScreen() {
                                                                             onPress={() => updateRole({ memberId: member.id, role })}
                                                                             paddingHorizontal="$2"
                                                                         >
-                                                                            <SizableText size="$1" color={member.role === role ? 'white' : '$textMuted'}>
+                                                                            <SizableText size="$1" color={member.role === role ? 'white' : '$onSurfaceVariant'}>
                                                                                 {role === 'ADMIN' ? 'A' : role === 'MODERATOR' ? 'M' : 'U'}
                                                                             </SizableText>
                                                                         </Button>

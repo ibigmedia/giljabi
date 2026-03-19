@@ -5,7 +5,7 @@ import { Button, XStack, YStack, Input, Spinner, Separator, SizableText } from '
 import { Platform } from 'react-native'
 import * as WebBrowser from 'expo-web-browser'
 import { makeRedirectUri } from 'expo-auth-session'
-import { Chrome } from '@tamagui/lucide-icons'
+import { Chrome, Eye, EyeOff } from '@tamagui/lucide-icons'
 import { supabase } from '../../utils/supabase'
 
 if (Platform.OS !== 'web') {
@@ -22,6 +22,8 @@ export function AuthScreen() {
     const [isSignUp, setIsSignUp] = useState(false)
     const [errorMsg, setErrorMsg] = useState('')
     const [successMsg, setSuccessMsg] = useState('')
+    const [showPassword, setShowPassword] = useState(false)
+    const [focusedField, setFocusedField] = useState<string | null>(null)
 
     const handleAuth = async () => {
         setLoading(true)
@@ -113,87 +115,86 @@ export function AuthScreen() {
         }
     }
 
+    const inputStyle = (fieldName: string) => ({
+        bg: '$background' as const,
+        borderWidth: 1,
+        borderColor: (focusedField === fieldName ? '$primary' : '$outlineVariant') as any,
+        borderRadius: '$md' as const,
+        color: '$onSurface' as const,
+        size: '$4' as const,
+        placeholderTextColor: '$onSurfaceVariant' as any,
+    })
+
     return (
-        <YStack flex={1} justify="center" items="center" p="$4" bg="$backgroundBody">
-            <YStack width="100%" maxWidth={420} gap="$4" bg="$surface" p="$7" borderRadius="$xl" elevation="$2">
-                {/* Logo */}
-                <YStack alignItems="center" gap="$2" mb="$2">
-                    <SizableText size="$8" fontWeight="800" color="$primary" letterSpacing={-0.5}>
-                        Giljabi
-                    </SizableText>
-                    <SizableText color="$onSurfaceVariant" size="$3" textAlign="center">
-                        {isSignUp ? '새 계정을 만들어 커뮤니티에 참여하세요' : '커뮤니티에 로그인하세요'}
-                    </SizableText>
-                </YStack>
+        <YStack flex={1} justify="center" items="center" px="$4" bg="$backgroundBody">
+            {/* Branding above card */}
+            <YStack alignItems="center" gap="$1" mb="$5">
+                <SizableText
+                    size="$10"
+                    fontWeight="900"
+                    color="$primary"
+                    letterSpacing={-1}
+                >
+                    Giljabi
+                </SizableText>
+                <SizableText color="$onSurfaceVariant" size="$3" textAlign="center">
+                    디지털 시대의 믿음의 길잡이
+                </SizableText>
+            </YStack>
 
-                <YStack gap="$3">
-                    {isSignUp && (
-                        <Input
-                            placeholder="이름 (Username)"
-                            value={username}
-                            onChangeText={setUsername}
-                            bg="$surfaceContainerLow"
-                            borderWidth={1}
-                            borderColor="$outlineVariant"
-                            borderRadius="$md"
-                            color="$onSurface"
-                        />
-                    )}
-                    <Input
-                        autoCapitalize="none"
-                        placeholder="이메일 주소"
-                        value={email}
-                        onChangeText={setEmail}
-                        bg="$surfaceContainerLow"
-                        borderWidth={1}
-                        borderColor="$outlineVariant"
-                        borderRadius="$md"
-                        color="$onSurface"
-                    />
-                    <Input
-                        secureTextEntry
-                        placeholder="비밀번호"
-                        value={password}
-                        onChangeText={setPassword}
-                        bg="$surfaceContainerLow"
-                        borderWidth={1}
-                        borderColor="$outlineVariant"
-                        borderRadius="$md"
-                        color="$onSurface"
-                    />
-                    {isSignUp && (
-                        <>
-                            <Input
-                                placeholder="출석교회 (교단포함)"
-                                value={church}
-                                onChangeText={setChurch}
-                                bg="$surfaceContainerLow"
-                                borderWidth={1}
-                                borderColor="$outlineVariant"
-                                borderRadius="$md"
-                                color="$onSurface"
-                            />
-                            <Input
-                                placeholder="직분 (목사/전도사/장로/권사/집사/성도)"
-                                value={churchRole}
-                                onChangeText={setChurchRole}
-                                bg="$surfaceContainerLow"
-                                borderWidth={1}
-                                borderColor="$outlineVariant"
-                                borderRadius="$md"
-                                color="$onSurface"
-                            />
-                        </>
-                    )}
-                </YStack>
-
-                {errorMsg !== '' && (
-                    <YStack bg="$errorContainer" p="$3" borderRadius="$md">
-                        <SizableText color="$error" textAlign="center" size="$3">
-                            {errorMsg}
+            {/* Auth Card */}
+            <YStack
+                width="100%"
+                maxWidth={440}
+                bg="$surface"
+                p="$5"
+                borderRadius="$xl"
+                elevation="$3"
+                gap="$4"
+                $sm={{ px: '$4' }}
+            >
+                {/* Tab-style toggle */}
+                <XStack
+                    borderRadius="$md"
+                    bg="$surfaceContainerLow"
+                    p="$1"
+                    gap="$1"
+                >
+                    <Button
+                        flex={1}
+                        size="$3"
+                        bg={!isSignUp ? '$primary' : 'transparent'}
+                        borderRadius="$sm"
+                        onPress={() => { setIsSignUp(false); setErrorMsg('') }}
+                        pressStyle={{ opacity: 0.8 }}
+                    >
+                        <SizableText
+                            color={!isSignUp ? 'white' : '$onSurfaceVariant'}
+                            fontWeight="700"
+                            size="$3"
+                        >
+                            로그인
                         </SizableText>
-                    </YStack>
-                )}
+                    </Button>
+                    <Button
+                        flex={1}
+                        size="$3"
+                        bg={isSignUp ? '$primary' : 'transparent'}
+                        borderRadius="$sm"
+                        onPress={() => { setIsSignUp(true); setErrorMsg('') }}
+                        pressStyle={{ opacity: 0.8 }}
+                    >
+                        <SizableText
+                            color={isSignUp ? 'white' : '$onSurfaceVariant'}
+                            fontWeight="700"
+                            size="$3"
+                        >
+                            회원가입
+                        </SizableText>
+                    </Button>
+                </XStack>
+
+                {/* Success message */}
                 {successMsg !== '' && (
                     <YStack bg="$successContainer" p="$3" borderRadius="$md">
                         <SizableText color="$success" textAlign="center" size="$3">
@@ -202,55 +203,158 @@ export function AuthScreen() {
                     </YStack>
                 )}
 
+                {/* Form fields */}
+                <YStack gap="$3">
+                    {isSignUp && (
+                        <YStack gap="$1.5">
+                            <SizableText size="$2" color="$onSurfaceVariant" fontWeight="600" pl="$1">
+                                이름
+                            </SizableText>
+                            <Input
+                                placeholder="이름을 입력하세요"
+                                value={username}
+                                onChangeText={setUsername}
+                                onFocus={() => setFocusedField('username')}
+                                onBlur={() => setFocusedField(null)}
+                                {...inputStyle('username')}
+                            />
+                        </YStack>
+                    )}
+
+                    <YStack gap="$1.5">
+                        <SizableText size="$2" color="$onSurfaceVariant" fontWeight="600" pl="$1">
+                            이메일
+                        </SizableText>
+                        <Input
+                            autoCapitalize="none"
+                            placeholder="example@email.com"
+                            value={email}
+                            onChangeText={setEmail}
+                            keyboardType="email-address"
+                            onFocus={() => setFocusedField('email')}
+                            onBlur={() => setFocusedField(null)}
+                            {...inputStyle('email')}
+                        />
+                    </YStack>
+
+                    <YStack gap="$1.5">
+                        <SizableText size="$2" color="$onSurfaceVariant" fontWeight="600" pl="$1">
+                            비밀번호
+                        </SizableText>
+                        <XStack alignItems="center" position="relative">
+                            <Input
+                                flex={1}
+                                secureTextEntry={!showPassword}
+                                placeholder="비밀번호를 입력하세요"
+                                value={password}
+                                onChangeText={setPassword}
+                                onFocus={() => setFocusedField('password')}
+                                onBlur={() => setFocusedField(null)}
+                                pr="$6"
+                                {...inputStyle('password')}
+                            />
+                            <Button
+                                position="absolute"
+                                right={0}
+                                size="$3"
+                                bg="transparent"
+                                chromeless
+                                onPress={() => setShowPassword(!showPassword)}
+                                pressStyle={{ opacity: 0.6 }}
+                            >
+                                {showPassword ? (
+                                    <EyeOff size={18} color="$onSurfaceVariant" />
+                                ) : (
+                                    <Eye size={18} color="$onSurfaceVariant" />
+                                )}
+                            </Button>
+                        </XStack>
+                    </YStack>
+
+                    {isSignUp && (
+                        <>
+                            <YStack gap="$1.5">
+                                <SizableText size="$2" color="$onSurfaceVariant" fontWeight="600" pl="$1">
+                                    출석교회
+                                </SizableText>
+                                <Input
+                                    placeholder="출석교회 (교단포함)"
+                                    value={church}
+                                    onChangeText={setChurch}
+                                    onFocus={() => setFocusedField('church')}
+                                    onBlur={() => setFocusedField(null)}
+                                    {...inputStyle('church')}
+                                />
+                            </YStack>
+
+                            <YStack gap="$1.5">
+                                <SizableText size="$2" color="$onSurfaceVariant" fontWeight="600" pl="$1">
+                                    직분
+                                </SizableText>
+                                <Input
+                                    placeholder="목사/전도사/장로/권사/집사/성도"
+                                    value={churchRole}
+                                    onChangeText={setChurchRole}
+                                    onFocus={() => setFocusedField('churchRole')}
+                                    onBlur={() => setFocusedField(null)}
+                                    {...inputStyle('churchRole')}
+                                />
+                            </YStack>
+                        </>
+                    )}
+                </YStack>
+
+                {/* Error message */}
+                {errorMsg !== '' && (
+                    <YStack bg="$errorContainer" p="$3" borderRadius="$md">
+                        <SizableText color="$error" textAlign="center" size="$3">
+                            {errorMsg}
+                        </SizableText>
+                    </YStack>
+                )}
+
+                {/* Submit button */}
                 <Button
-                    mt="$2"
                     bg="$primary"
                     borderRadius="$button"
                     onPress={handleAuth}
                     disabled={loading}
                     icon={loading ? <Spinner color="white" /> : undefined}
                     hoverStyle={{ opacity: 0.9 }}
-                    size="$5"
+                    pressStyle={{ opacity: 0.85 }}
+                    size="$4"
+                    width="100%"
                 >
-                    <SizableText color="white" fontWeight="700">
+                    <SizableText color="white" fontWeight="700" size="$4">
                         {isSignUp ? '계정 만들기' : '로그인'}
                     </SizableText>
                 </Button>
 
-                <XStack justify="center" items="center" gap="$3" my="$3" width="100%">
+                {/* Divider */}
+                <XStack justify="center" items="center" gap="$3" width="100%">
                     <Separator borderColor="$outlineVariant" flex={1} />
                     <SizableText color="$onSurfaceVariant" size="$2">또는</SizableText>
                     <Separator borderColor="$outlineVariant" flex={1} />
                 </XStack>
 
+                {/* Google OAuth */}
                 <Button
                     icon={<Chrome size={18} color="$onSurface" />}
                     onPress={() => handleOAuth('google')}
                     disabled={loading}
-                    bg="$surfaceContainerLow"
+                    bg="transparent"
                     borderWidth={1}
                     borderColor="$outlineVariant"
                     borderRadius="$button"
                     hoverStyle={{ bg: '$surfaceContainerHigh' }}
+                    pressStyle={{ bg: '$surfaceContainerHigh' }}
                     width="100%"
+                    size="$4"
                 >
-                    <SizableText color="$onSurface" fontWeight="600">Google로 계속하기</SizableText>
+                    <SizableText color="$onSurface" fontWeight="600">
+                        Google로 계속하기
+                    </SizableText>
                 </Button>
-
-                <XStack justify="center" gap="$2" mt="$3">
-                    <SizableText color="$onSurfaceVariant" size="$3">
-                        {isSignUp ? '이미 계정이 있으신가요?' : '계정이 없으신가요?'}
-                    </SizableText>
-                    <SizableText
-                        color="$primary"
-                        cursor="pointer"
-                        fontWeight="700"
-                        size="$3"
-                        onPress={() => setIsSignUp(!isSignUp)}
-                    >
-                        {isSignUp ? '로그인' : '회원가입'}
-                    </SizableText>
-                </XStack>
             </YStack>
         </YStack>
     )

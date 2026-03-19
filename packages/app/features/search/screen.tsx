@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { YStack, XStack, Input, Paragraph, Avatar, ScrollView, Spinner, Tabs, SizableText } from '@my/ui'
-import { Search as SearchIcon, Heart } from '@tamagui/lucide-icons'
+import { Search as SearchIcon, Heart, Users, FileText } from '@tamagui/lucide-icons'
 import { useRouter } from 'solito/navigation'
 import { useSearchProfiles, useSearchPosts } from '../../hooks/useSearch'
 import { useCurrentUserProfile } from '../../hooks/useProfiles'
@@ -11,6 +11,7 @@ import { useToggleLike } from '../../hooks/usePosts'
 export function SearchScreen() {
     const [searchQuery, setSearchQuery] = useState('')
     const [debouncedQuery, setDebouncedQuery] = useState('')
+    const [activeTab, setActiveTab] = useState('users')
     const router = useRouter()
 
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -36,10 +37,18 @@ export function SearchScreen() {
 
     return (
         <YStack flex={1} bg="$backgroundBody">
-            <YStack padding="$4" gap="$4" maxWidth={680} alignSelf="center" width="100%" flex={1} py="$6">
+            <YStack padding="$4" gap="$5" maxWidth={800} alignSelf="center" width="100%" flex={1} py="$6">
 
-                {/* Search Bar - M3 Style */}
-                <XStack bg="$surfaceContainerHigh" p="$3" borderRadius="$full" alignItems="center" gap="$3">
+                {/* Search Bar */}
+                <XStack
+                    bg="$surfaceContainerLow"
+                    borderRadius="$full"
+                    borderWidth={1}
+                    borderColor="$outlineVariant"
+                    alignItems="center"
+                    px="$4"
+                    gap="$2.5"
+                >
                     <SearchIcon color="$onSurfaceVariant" size={20} />
                     <Input
                         flex={1}
@@ -54,45 +63,93 @@ export function SearchScreen() {
                     />
                 </XStack>
 
-                {/* Tabs - M3 */}
-                <Tabs defaultValue="users" orientation="horizontal" flexDirection="column" flex={1}>
-                    <Tabs.List bg="$surfaceContainerLow" borderRadius="$card" mb="$4">
-                        <Tabs.Tab value="users" flex={1} borderRadius="$card">
-                            <SizableText fontWeight="600" color="$onSurface">사용자</SizableText>
-                        </Tabs.Tab>
-                        <Tabs.Tab value="posts" flex={1} borderRadius="$card">
-                            <SizableText fontWeight="600" color="$onSurface">게시글</SizableText>
-                        </Tabs.Tab>
-                    </Tabs.List>
+                {/* Tab Navigation - M3 underline style */}
+                <XStack borderBottomWidth={1} borderColor="$outlineVariant">
+                    <XStack
+                        flex={1}
+                        py="$3"
+                        alignItems="center"
+                        justifyContent="center"
+                        gap="$2"
+                        cursor="pointer"
+                        borderBottomWidth={2}
+                        borderBottomColor={activeTab === 'users' ? '$primary' : 'transparent'}
+                        onPress={() => setActiveTab('users')}
+                        hoverStyle={{ bg: '$surfaceContainerLow' }}
+                    >
+                        <Users size={16} color={activeTab === 'users' ? '$primary' : '$onSurfaceVariant'} />
+                        <SizableText
+                            fontWeight="600"
+                            color={activeTab === 'users' ? '$primary' : '$onSurfaceVariant'}
+                        >
+                            사용자
+                        </SizableText>
+                    </XStack>
+                    <XStack
+                        flex={1}
+                        py="$3"
+                        alignItems="center"
+                        justifyContent="center"
+                        gap="$2"
+                        cursor="pointer"
+                        borderBottomWidth={2}
+                        borderBottomColor={activeTab === 'posts' ? '$primary' : 'transparent'}
+                        onPress={() => setActiveTab('posts')}
+                        hoverStyle={{ bg: '$surfaceContainerLow' }}
+                    >
+                        <FileText size={16} color={activeTab === 'posts' ? '$primary' : '$onSurfaceVariant'} />
+                        <SizableText
+                            fontWeight="600"
+                            color={activeTab === 'posts' ? '$primary' : '$onSurfaceVariant'}
+                        >
+                            게시글
+                        </SizableText>
+                    </XStack>
+                </XStack>
 
-                    <Tabs.Content value="users" flex={1}>
-                        <ScrollView>
+                {/* Content */}
+                <ScrollView flex={1}>
+                    {activeTab === 'users' ? (
+                        <>
                             {usersLoading ? (
-                                <YStack padding="$6" alignItems="center"><Spinner size="large" color="$primary" /></YStack>
-                            ) : debouncedQuery && users?.length === 0 ? (
                                 <YStack padding="$8" alignItems="center">
-                                    <SizableText color="$onSurfaceVariant">검색 결과가 없습니다.</SizableText>
+                                    <Spinner size="large" color="$primary" />
+                                </YStack>
+                            ) : !debouncedQuery ? (
+                                <YStack padding="$8" alignItems="center" gap="$3">
+                                    <SearchIcon size={40} color="$outlineVariant" />
+                                    <SizableText color="$onSurfaceVariant" size="$4">
+                                        검색어를 입력하세요
+                                    </SizableText>
+                                </YStack>
+                            ) : users?.length === 0 ? (
+                                <YStack padding="$8" alignItems="center" gap="$3">
+                                    <SearchIcon size={40} color="$outlineVariant" />
+                                    <SizableText color="$onSurfaceVariant" size="$4">
+                                        검색 결과가 없습니다.
+                                    </SizableText>
                                 </YStack>
                             ) : (
-                                <YStack gap="$2">
+                                <YStack gap="$2.5">
                                     {users?.map(user => (
                                         <XStack
                                             key={user.id}
                                             bg="$surface"
                                             p="$4"
                                             borderRadius="$card"
-                                            elevation="$0.5"
+                                            borderWidth={1}
+                                            borderColor="$outlineVariant"
                                             gap="$3"
                                             alignItems="center"
                                             cursor="pointer"
-                                            hoverStyle={{ bg: '$surfaceContainerLow' }}
+                                            hoverStyle={{ bg: '$surfaceContainerLow', borderColor: '$outline' }}
                                             onPress={() => router.push(`/user/${user.id}`)}
                                         >
                                             <Avatar circular size="$5" bg="$primaryContainer">
                                                 <Avatar.Image width="100%" height="100%" src={user.avatarUrl || "https://i.pravatar.cc/150"} />
                                                 <Avatar.Fallback bg="$primaryContainer" />
                                             </Avatar>
-                                            <YStack flex={1}>
+                                            <YStack flex={1} gap="$1">
                                                 <SizableText fontWeight="700" color="$onSurface" size="$4">
                                                     {user.username}
                                                 </SizableText>
@@ -104,19 +161,29 @@ export function SearchScreen() {
                                     ))}
                                 </YStack>
                             )}
-                        </ScrollView>
-                    </Tabs.Content>
-
-                    <Tabs.Content value="posts" flex={1}>
-                        <ScrollView>
+                        </>
+                    ) : (
+                        <>
                             {postsLoading ? (
-                                <YStack padding="$6" alignItems="center"><Spinner size="large" color="$primary" /></YStack>
-                            ) : debouncedQuery && posts?.length === 0 ? (
                                 <YStack padding="$8" alignItems="center">
-                                    <SizableText color="$onSurfaceVariant">검색 결과가 없습니다.</SizableText>
+                                    <Spinner size="large" color="$primary" />
+                                </YStack>
+                            ) : !debouncedQuery ? (
+                                <YStack padding="$8" alignItems="center" gap="$3">
+                                    <SearchIcon size={40} color="$outlineVariant" />
+                                    <SizableText color="$onSurfaceVariant" size="$4">
+                                        검색어를 입력하세요
+                                    </SizableText>
+                                </YStack>
+                            ) : posts?.length === 0 ? (
+                                <YStack padding="$8" alignItems="center" gap="$3">
+                                    <SearchIcon size={40} color="$outlineVariant" />
+                                    <SizableText color="$onSurfaceVariant" size="$4">
+                                        검색 결과가 없습니다.
+                                    </SizableText>
                                 </YStack>
                             ) : (
-                                <YStack gap="$3">
+                                <YStack gap="$2.5">
                                     {posts?.map(post => {
                                         const likesCount = post.likes.length
                                         const hasLiked = currentUserProfile ? post.likes.some(like => like.profileId === currentUserProfile.id) : false
@@ -127,10 +194,11 @@ export function SearchScreen() {
                                                 bg="$surface"
                                                 p="$4"
                                                 borderRadius="$card"
-                                                elevation="$0.5"
+                                                borderWidth={1}
+                                                borderColor="$outlineVariant"
                                                 gap="$3"
                                                 cursor="pointer"
-                                                hoverStyle={{ bg: '$surfaceContainerLow' }}
+                                                hoverStyle={{ bg: '$surfaceContainerLow', borderColor: '$outline' }}
                                                 onPress={() => router.push(`/post/${post.id}`)}
                                             >
                                                 <XStack gap="$3" alignItems="center">
@@ -138,7 +206,7 @@ export function SearchScreen() {
                                                         <Avatar.Image width="100%" height="100%" src={post.author?.avatarUrl || "https://i.pravatar.cc/150"} />
                                                         <Avatar.Fallback bg="$primaryContainer" />
                                                     </Avatar>
-                                                    <YStack>
+                                                    <YStack flex={1}>
                                                         <SizableText fontWeight="700" color="$onSurface" size="$3">
                                                             {post.author?.username || '알 수 없는 사용자'}
                                                         </SizableText>
@@ -148,14 +216,28 @@ export function SearchScreen() {
                                                     </YStack>
                                                 </XStack>
 
-                                                <Paragraph color="$onSurface" lineHeight={22}>
+                                                <Paragraph color="$onSurface" lineHeight={22} numberOfLines={3}>
                                                     {post.content}
                                                 </Paragraph>
 
                                                 <XStack gap="$4" mt="$1">
-                                                    <XStack gap="$1.5" alignItems="center" cursor="pointer" onPress={() => handleLike(post.id, post.likes)}>
-                                                        <Heart size={16} color={hasLiked ? "$primary" : "$onSurfaceVariant"} fill={hasLiked ? "var(--color-primary)" : "transparent"} />
-                                                        <SizableText color="$onSurfaceVariant" size="$2">{likesCount}</SizableText>
+                                                    <XStack
+                                                        gap="$1.5"
+                                                        alignItems="center"
+                                                        cursor="pointer"
+                                                        onPress={(e: any) => {
+                                                            e.stopPropagation()
+                                                            handleLike(post.id, post.likes)
+                                                        }}
+                                                    >
+                                                        <Heart
+                                                            size={16}
+                                                            color={hasLiked ? "$primary" : "$onSurfaceVariant"}
+                                                            fill={hasLiked ? "var(--color-primary)" : "transparent"}
+                                                        />
+                                                        <SizableText color="$onSurfaceVariant" size="$2">
+                                                            {likesCount}
+                                                        </SizableText>
                                                     </XStack>
                                                 </XStack>
                                             </YStack>
@@ -163,9 +245,9 @@ export function SearchScreen() {
                                     })}
                                 </YStack>
                             )}
-                        </ScrollView>
-                    </Tabs.Content>
-                </Tabs>
+                        </>
+                    )}
+                </ScrollView>
             </YStack>
         </YStack>
     )

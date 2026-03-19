@@ -10,7 +10,7 @@ export function LandingScreen() {
             <YStack maxWidth={960} alignSelf="center" width="100%" px="$4" py="$8" gap="$10">
 
                 {/* Hero Letter - M3 Elevated Card */}
-                <YStack bg="$surface" borderRadius="$xl" elevation="$2" overflow="hidden">
+                <YStack bg="$surface" borderRadius="$xl" borderWidth={1} borderColor="$outlineVariant" overflow="hidden">
                     {/* Accent top bar */}
                     <YStack height={4} bg="$primary" />
                     <YStack p="$7" gap="$6">
@@ -101,7 +101,7 @@ export function LandingScreen() {
                         ].map((item, idx) => {
                             const Icon = item.icon
                             return (
-                                <YStack key={idx} flex={1} minWidth={280} bg="$surface" borderRadius="$card" elevation="$0.5" overflow="hidden">
+                                <YStack key={idx} flex={1} minWidth={280} bg="$surface" borderRadius="$card" borderWidth={1} borderColor="$outlineVariant" overflow="hidden">
                                     {/* Problem */}
                                     <YStack p="$5" gap="$2" bg="$surfaceContainerLow">
                                         <XStack alignItems="center" gap="$2">
@@ -113,7 +113,7 @@ export function LandingScreen() {
 
                                     {/* Arrow */}
                                     <XStack justifyContent="center" my={-12} zIndex={1}>
-                                        <XStack bg="$primary" width={28} height={28} borderRadius="$full" alignItems="center" justifyContent="center" elevation="$1">
+                                        <XStack bg="$primary" width={28} height={28} borderRadius="$full" alignItems="center" justifyContent="center" borderWidth={1} borderColor="$outlineVariant">
                                             <ChevronDown size={16} color="white" />
                                         </XStack>
                                     </XStack>
@@ -156,10 +156,10 @@ export function LandingScreen() {
                     ].map((item, idx) => {
                         const Icon = item.icon
                         return (
-                            <YStack key={idx} flex={1} minWidth={280} bg="$surface" borderRadius="$card" elevation="$0.5" overflow="hidden">
+                            <YStack key={idx} flex={1} minWidth={280} bg="$surface" borderRadius="$card" borderWidth={1} borderColor="$outlineVariant" overflow="hidden">
                                 {/* Icon Header */}
                                 <YStack height={100} bg="$surfaceContainerHigh" alignItems="center" justifyContent="center">
-                                    <XStack bg="$surfaceContainerLowest" width={56} height={56} borderRadius="$full" alignItems="center" justifyContent="center" elevation="$1">
+                                    <XStack bg="$surfaceContainerLowest" width={56} height={56} borderRadius="$full" alignItems="center" justifyContent="center" borderWidth={1} borderColor="$outlineVariant">
                                         {/* @ts-ignore 커스텀 토큰 색상 */}
                                         <Icon size={28} color={item.color} />
                                     </XStack>
@@ -198,7 +198,7 @@ export function LandingScreen() {
                         <SizableText color="$onPrimaryContainer" fontWeight="700" size="$2" letterSpacing={2}>사역팀 소개</SizableText>
                     </XStack>
 
-                    <YStack width="100%" maxWidth={600} bg="$surface" borderRadius="$card" elevation="$0.5" overflow="hidden">
+                    <YStack width="100%" maxWidth={600} bg="$surface" borderRadius="$card" borderWidth={1} borderColor="$outlineVariant" overflow="hidden">
                         <YStack height={4} bg="$primary" />
                         <YStack p="$6" gap="$4">
                             <H4 color="$onSurface" fontWeight="700">Book Concert Team</H4>

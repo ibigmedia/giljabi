@@ -78,8 +78,8 @@ export function AdminPostsScreen() {
             {/* Header */}
             <XStack justifyContent="space-between" alignItems="center" flexWrap="wrap" gap="$3">
                 <YStack>
-                    <SizableText size="$7" fontWeight="800" color="$textMain">포스트 관리</SizableText>
-                    <SizableText size="$3" color="$textMuted">
+                    <SizableText size="$7" fontWeight="800" color="$onSurface">포스트 관리</SizableText>
+                    <SizableText size="$3" color="$onSurfaceVariant">
                         총 {posts?.length || 0}개 · 공지 {pinnedCount}개
                     </SizableText>
                 </YStack>
@@ -101,8 +101,8 @@ export function AdminPostsScreen() {
                     { label: '총 좋아요', value: totalLikes, color: '$red10' as const },
                     { label: '총 댓글', value: totalComments, color: '$blue10' as const },
                 ]).map(stat => (
-                    <YStack key={stat.label} flex={1} minWidth={140} bg="$surface" p="$4" borderRadius="$card" borderWidth={1} borderColor="$borderLight" gap="$1">
-                        <SizableText size="$2" color="$textMuted" fontWeight="600">{stat.label}</SizableText>
+                    <YStack key={stat.label} flex={1} minWidth={140} bg="$surface" p="$4" borderRadius="$card" borderWidth={1} borderColor="$outlineVariant" gap="$1">
+                        <SizableText size="$2" color="$onSurfaceVariant" fontWeight="600">{stat.label}</SizableText>
                         <SizableText size="$7" fontWeight="800" color={stat.color}>{stat.value}</SizableText>
                     </YStack>
                 ))}
@@ -113,7 +113,7 @@ export function AdminPostsScreen() {
                 <YStack bg="$surface" p="$5" borderRadius="$card" borderWidth={2} borderColor="$orange10" gap="$3">
                     <XStack gap="$2" alignItems="center">
                         <Pin size={16} color="$orange10" />
-                        <SizableText size="$4" fontWeight="700" color="$textMain">새 공지글 작성</SizableText>
+                        <SizableText size="$4" fontWeight="700" color="$onSurface">새 공지글 작성</SizableText>
                     </XStack>
                     <Input
                         placeholder="공지 내용을 입력하세요..."
@@ -121,13 +121,13 @@ export function AdminPostsScreen() {
                         onChangeText={setNoticeText}
                         bg="$surfaceContainerLow"
                         borderWidth={1}
-                        borderColor="$borderLight"
+                        borderColor="$outlineVariant"
                         multiline
                         numberOfLines={3}
                     />
                     <XStack gap="$3" justifyContent="flex-end">
                         <Button size="$3" bg="$surfaceContainerLow" onPress={() => setShowNoticeForm(false)}>
-                            <SizableText color="$textMuted">취소</SizableText>
+                            <SizableText color="$onSurfaceVariant">취소</SizableText>
                         </Button>
                         <Button size="$3" bg="$orange10" onPress={handleCreateNotice} disabled={isCreatingNotice || !noticeText.trim()}>
                             {isCreatingNotice ? <Spinner size="small" color="white" /> : <SizableText color="white" fontWeight="600">공지 게시</SizableText>}
@@ -138,8 +138,8 @@ export function AdminPostsScreen() {
 
             {/* Search & Filter */}
             <XStack gap="$3" alignItems="center" flexWrap="wrap">
-                <XStack flex={1} minWidth={200} bg="$surface" borderRadius="$button" borderWidth={1} borderColor="$borderLight" alignItems="center" px="$3">
-                    <Search size={16} color="$textMuted" />
+                <XStack flex={1} minWidth={200} bg="$surface" borderRadius="$button" borderWidth={1} borderColor="$outlineVariant" alignItems="center" px="$3">
+                    <Search size={16} color="$onSurfaceVariant" />
                     <Input
                         flex={1}
                         placeholder="포스트 또는 작성자 검색..."
@@ -150,7 +150,7 @@ export function AdminPostsScreen() {
                         size="$3"
                     />
                     {search && (
-                        <Button size="$2" circular bg="transparent" icon={<X size={14} color="$textMuted" />} onPress={() => setSearch('')} />
+                        <Button size="$2" circular bg="transparent" icon={<X size={14} color="$onSurfaceVariant" />} onPress={() => setSearch('')} />
                     )}
                 </XStack>
                 {(['all', 'pinned', 'normal'] as const).map(f => (
@@ -159,11 +159,11 @@ export function AdminPostsScreen() {
                         size="$3"
                         bg={filter === f ? '$primary' : '$surface'}
                         borderWidth={1}
-                        borderColor={filter === f ? '$primary' : '$borderLight'}
+                        borderColor={filter === f ? '$primary' : '$outlineVariant'}
                         borderRadius="$button"
                         onPress={() => setFilter(f)}
                     >
-                        <SizableText color={filter === f ? 'white' : '$textMain'} size="$3" fontWeight="600">
+                        <SizableText color={filter === f ? 'white' : '$onSurface'} size="$3" fontWeight="600">
                             {f === 'all' ? '전체' : f === 'pinned' ? '공지만' : '일반만'}
                         </SizableText>
                     </Button>
@@ -175,7 +175,7 @@ export function AdminPostsScreen() {
                 <YStack p="$8" alignItems="center"><Spinner size="large" color="$primary" /></YStack>
             ) : filteredPosts.length === 0 ? (
                 <YStack bg="$surface" p="$8" borderRadius="$card" alignItems="center">
-                    <SizableText color="$textMuted" size="$4">포스트가 없습니다</SizableText>
+                    <SizableText color="$onSurfaceVariant" size="$4">포스트가 없습니다</SizableText>
                 </YStack>
             ) : (
                 <YStack gap="$2">
@@ -192,7 +192,7 @@ export function AdminPostsScreen() {
                                 bg="$surface"
                                 borderRadius="$card"
                                 borderWidth={post.isPinned ? 2 : 1}
-                                borderColor={post.isPinned ? '$orange10' : '$borderLight'}
+                                borderColor={post.isPinned ? '$orange10' : '$outlineVariant'}
                                 overflow="hidden"
                             >
                                 {/* Post Row */}
@@ -222,12 +222,12 @@ export function AdminPostsScreen() {
 
                                     {/* Content preview */}
                                     <YStack flex={1} gap="$1">
-                                        <SizableText size="$3" fontWeight="600" color="$textMain" numberOfLines={1}>
+                                        <SizableText size="$3" fontWeight="600" color="$onSurface" numberOfLines={1}>
                                             {post.content}
                                         </SizableText>
                                         <XStack gap="$3" alignItems="center">
-                                            <SizableText size="$2" color="$textMuted">{post.author?.username || '알 수 없음'}</SizableText>
-                                            <SizableText size="$2" color="$textMuted">{timeAgo(post.createdAt)}</SizableText>
+                                            <SizableText size="$2" color="$onSurfaceVariant">{post.author?.username || '알 수 없음'}</SizableText>
+                                            <SizableText size="$2" color="$onSurfaceVariant">{timeAgo(post.createdAt)}</SizableText>
                                             {hasLinks && <Link2 size={12} color="$blue10" />}
                                         </XStack>
                                     </YStack>
@@ -235,24 +235,24 @@ export function AdminPostsScreen() {
                                     {/* Quick stats */}
                                     <XStack gap="$3" alignItems="center">
                                         <XStack gap="$1" alignItems="center">
-                                            <Heart size={14} color={likesCount > 0 ? '$red10' : '$textMuted'} fill={likesCount > 0 ? 'var(--color-red10)' : 'transparent'} />
-                                            <SizableText size="$2" color="$textMuted">{likesCount}</SizableText>
+                                            <Heart size={14} color={likesCount > 0 ? '$red10' : '$onSurfaceVariant'} fill={likesCount > 0 ? 'var(--color-red10)' : 'transparent'} />
+                                            <SizableText size="$2" color="$onSurfaceVariant">{likesCount}</SizableText>
                                         </XStack>
                                         <XStack gap="$1" alignItems="center">
-                                            <MessageCircle size={14} color={commentsCount > 0 ? '$blue10' : '$textMuted'} />
-                                            <SizableText size="$2" color="$textMuted">{commentsCount}</SizableText>
+                                            <MessageCircle size={14} color={commentsCount > 0 ? '$blue10' : '$onSurfaceVariant'} />
+                                            <SizableText size="$2" color="$onSurfaceVariant">{commentsCount}</SizableText>
                                         </XStack>
                                     </XStack>
 
-                                    {isExpanded ? <ChevronUp size={16} color="$textMuted" /> : <ChevronDown size={16} color="$textMuted" />}
+                                    {isExpanded ? <ChevronUp size={16} color="$onSurfaceVariant" /> : <ChevronDown size={16} color="$onSurfaceVariant" />}
                                 </XStack>
 
                                 {/* Expanded Detail */}
                                 {isExpanded && (
-                                    <YStack borderTopWidth={1} borderColor="$borderLight">
+                                    <YStack borderTopWidth={1} borderColor="$outlineVariant">
                                         {/* Full content */}
                                         <YStack p="$4" bg="$surfaceContainerLowest">
-                                            <Paragraph color="$textMain" fontSize={14} lineHeight={22}>
+                                            <Paragraph color="$onSurface" fontSize={14} lineHeight={22}>
                                                 {post.content}
                                             </Paragraph>
 
@@ -271,17 +271,17 @@ export function AdminPostsScreen() {
                                         </YStack>
 
                                         {/* Actions bar */}
-                                        <XStack p="$3" gap="$2" borderTopWidth={1} borderColor="$borderLight" flexWrap="wrap">
+                                        <XStack p="$3" gap="$2" borderTopWidth={1} borderColor="$outlineVariant" flexWrap="wrap">
                                             {/* Pin/Unpin */}
                                             <Button
                                                 size="$3"
                                                 bg={post.isPinned ? '$orange3' : '$surfaceContainerLow'}
                                                 borderWidth={1}
-                                                borderColor={post.isPinned ? '$orange10' : '$borderLight'}
-                                                icon={<Pin size={14} color={post.isPinned ? '$orange10' : '$textMuted'} />}
+                                                borderColor={post.isPinned ? '$orange10' : '$outlineVariant'}
+                                                icon={<Pin size={14} color={post.isPinned ? '$orange10' : '$onSurfaceVariant'} />}
                                                 onPress={() => togglePin({ postId: post.id, isPinned: !post.isPinned })}
                                             >
-                                                <SizableText size="$3" color={post.isPinned ? '$orange10' : '$textMuted'} fontWeight="600">
+                                                <SizableText size="$3" color={post.isPinned ? '$orange10' : '$onSurfaceVariant'} fontWeight="600">
                                                     {post.isPinned ? '고정 해제' : '상단 고정'}
                                                 </SizableText>
                                             </Button>
@@ -303,7 +303,7 @@ export function AdminPostsScreen() {
                                                 icon={<Avatar circular size="$1.5" bg="$primaryContainer"><Avatar.Image width="100%" height="100%" src={post.author?.avatarUrl || ''} /><Avatar.Fallback bg="$primaryContainer" /></Avatar>}
                                                 onPress={() => router.push(`/admin/users?highlight=${post.author?.id || ''}`)}
                                             >
-                                                <SizableText size="$3" color="$textMain">{post.author?.username || '작성자'} 관리</SizableText>
+                                                <SizableText size="$3" color="$onSurface">{post.author?.username || '작성자'} 관리</SizableText>
                                             </Button>
 
                                             <XStack flex={1} />

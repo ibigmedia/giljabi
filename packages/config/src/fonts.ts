@@ -1,5 +1,7 @@
 import { createInterFont } from '@tamagui/font-inter'
 
+const FONT_FAMILY = 'Inter, Pretendard, "Noto Sans KR", -apple-system, BlinkMacSystemFont, system-ui, sans-serif'
+
 export const headingFont = createInterFont({
   size: {
     6: 15,
@@ -20,16 +22,17 @@ export const headingFont = createInterFont({
     5: 2,
     6: 1,
     7: 0,
-    8: -1,
-    9: -2,
-    10: -3,
-    12: -4,
-    14: -5,
-    15: -6,
+    8: -0.5,
+    9: -1,
+    10: -2,
+    12: -3,
+    14: -4,
+    15: -5,
   },
   face: {
     700: { normal: 'InterBold' },
   },
+  family: FONT_FAMILY,
 })
 
 export const bodyFont = createInterFont(
@@ -37,9 +40,10 @@ export const bodyFont = createInterFont(
     face: {
       700: { normal: 'InterBold' },
     },
+    family: FONT_FAMILY,
   },
   {
     sizeSize: (size) => Math.round(size * 1.1),
-    sizeLineHeight: (size) => Math.round(size * 1.1 + (size > 20 ? 10 : 10)),
+    sizeLineHeight: (size) => Math.round(size * 1.1 + (size > 20 ? 12 : 12)),
   }
 )

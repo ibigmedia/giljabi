@@ -107,14 +107,14 @@ export function AdminUsersScreen() {
             {/* Header */}
             <XStack justifyContent="space-between" alignItems="center" flexWrap="wrap" gap="$3">
                 <YStack>
-                    <H3 color="$textMain" fontWeight="bold">사용자 관리</H3>
-                    <SizableText size="$2" color="$textMuted">전체 {totalUsers}명 | 승인 {approvedCount}명 | 관리자 {adminCount}명 | 편집자 {editorCount}명</SizableText>
+                    <H3 color="$onSurface" fontWeight="bold">사용자 관리</H3>
+                    <SizableText size="$2" color="$onSurfaceVariant">전체 {totalUsers}명 | 승인 {approvedCount}명 | 관리자 {adminCount}명 | 편집자 {editorCount}명</SizableText>
                 </YStack>
             </XStack>
 
             {/* Search */}
-            <XStack bg="$surface" borderRadius="$4" borderWidth={1} borderColor="$borderLight" alignItems="center" px="$3">
-                <Search size={18} color="$textMuted" />
+            <XStack bg="$surface" borderRadius="$4" borderWidth={1} borderColor="$outlineVariant" alignItems="center" px="$3">
+                <Search size={18} color="$onSurfaceVariant" />
                 <Input
                     flex={1}
                     value={searchQuery}
@@ -136,7 +136,7 @@ export function AdminUsersScreen() {
                 </YStack>
             ) : filteredUsers?.length === 0 ? (
                 <YStack p="$8" alignItems="center" bg="$surface" borderRadius="$4">
-                    <SizableText color="$textMuted">검색 결과가 없습니다.</SizableText>
+                    <SizableText color="$onSurfaceVariant">검색 결과가 없습니다.</SizableText>
                 </YStack>
             ) : (
                 <YStack gap="$3">
@@ -152,7 +152,7 @@ export function AdminUsersScreen() {
                                 bg="$surface"
                                 borderRadius="$5"
                                 borderWidth={1}
-                                borderColor={isExpanded ? '$primary' : '$borderLight'}
+                                borderColor={isExpanded ? '$primary' : '$outlineVariant'}
                                 overflow="hidden"
                             >
                                 {/* User Row - Collapsed */}
@@ -179,7 +179,7 @@ export function AdminUsersScreen() {
                                     {/* Info */}
                                     <YStack flex={1} gap="$0.5">
                                         <XStack alignItems="center" gap="$2">
-                                            <SizableText size="$4" fontWeight="700" color="$textMain">
+                                            <SizableText size="$4" fontWeight="700" color="$onSurface">
                                                 {user.username || '이름 없음'}
                                             </SizableText>
                                             <YStack bg={roleBg} px="$2" py="$0.5" borderRadius="$full">
@@ -193,7 +193,7 @@ export function AdminUsersScreen() {
                                                 </YStack>
                                             )}
                                         </XStack>
-                                        <SizableText size="$2" color="$textMuted">
+                                        <SizableText size="$2" color="$onSurfaceVariant">
                                             {user.email || '이메일 없음'}
                                             {user.church ? ` · ${user.church}` : ''}
                                             {user.churchRole ? ` (${user.churchRole})` : ''}
@@ -212,21 +212,21 @@ export function AdminUsersScreen() {
                                                 {user.isApproved ? '승인됨' : '승인'}
                                             </SizableText>
                                         </Button>
-                                        {isExpanded ? <ChevronUp size={18} color="$textMuted" /> : <ChevronDown size={18} color="$textMuted" />}
+                                        {isExpanded ? <ChevronUp size={18} color="$onSurfaceVariant" /> : <ChevronDown size={18} color="$onSurfaceVariant" />}
                                     </XStack>
                                 </XStack>
 
                                 {/* Expanded Detail */}
                                 {isExpanded && (
-                                    <YStack borderTopWidth={1} borderColor="$borderLight">
+                                    <YStack borderTopWidth={1} borderColor="$outlineVariant">
                                         {isEditing ? (
                                             /* Edit Mode */
                                             <YStack p="$4" gap="$4">
-                                                <SizableText size="$4" fontWeight="700" color="$textMain">프로필 편집</SizableText>
+                                                <SizableText size="$4" fontWeight="700" color="$onSurface">프로필 편집</SizableText>
 
                                                 <XStack gap="$4" flexWrap="wrap">
                                                     <YStack flex={1} minWidth={200} gap="$1.5">
-                                                        <SizableText size="$2" color="$textMuted" fontWeight="600">이름</SizableText>
+                                                        <SizableText size="$2" color="$onSurfaceVariant" fontWeight="600">이름</SizableText>
                                                         <Input
                                                             size="$3"
                                                             value={editForm.username}
@@ -235,7 +235,7 @@ export function AdminUsersScreen() {
                                                         />
                                                     </YStack>
                                                     <YStack flex={1} minWidth={200} gap="$1.5">
-                                                        <SizableText size="$2" color="$textMuted" fontWeight="600">이메일</SizableText>
+                                                        <SizableText size="$2" color="$onSurfaceVariant" fontWeight="600">이메일</SizableText>
                                                         <Input
                                                             size="$3"
                                                             value={editForm.email}
@@ -248,7 +248,7 @@ export function AdminUsersScreen() {
 
                                                 <XStack gap="$4" flexWrap="wrap">
                                                     <YStack flex={1} minWidth={200} gap="$1.5">
-                                                        <SizableText size="$2" color="$textMuted" fontWeight="600">출석교회</SizableText>
+                                                        <SizableText size="$2" color="$onSurfaceVariant" fontWeight="600">출석교회</SizableText>
                                                         <Input
                                                             size="$3"
                                                             value={editForm.church}
@@ -260,7 +260,7 @@ export function AdminUsersScreen() {
 
                                                 <XStack gap="$4" flexWrap="wrap">
                                                     <YStack flex={1} minWidth={200} gap="$1.5">
-                                                        <SizableText size="$2" color="$textMuted" fontWeight="600">직분 / 교단</SizableText>
+                                                        <SizableText size="$2" color="$onSurfaceVariant" fontWeight="600">직분 / 교단</SizableText>
                                                         <Input
                                                             size="$3"
                                                             value={editForm.churchRole}
@@ -269,7 +269,7 @@ export function AdminUsersScreen() {
                                                         />
                                                     </YStack>
                                                     <YStack flex={1} minWidth={200} gap="$1.5">
-                                                        <SizableText size="$2" color="$textMuted" fontWeight="600">역할 변경</SizableText>
+                                                        <SizableText size="$2" color="$onSurfaceVariant" fontWeight="600">역할 변경</SizableText>
                                                         <XStack gap="$2">
                                                             {(['MEMBER', 'EDITOR', 'ADMIN'] as UserRoleType[]).map(role => {
                                                                 const isActive = user.role === role
@@ -281,12 +281,12 @@ export function AdminUsersScreen() {
                                                                         size="$3"
                                                                         bg={isActive ? rcBg : '$surfaceHover'}
                                                                         borderWidth={isActive ? 2 : 1}
-                                                                        borderColor={isActive ? rcText : '$borderLight'}
+                                                                        borderColor={isActive ? rcText : '$outlineVariant'}
                                                                         borderRadius="$3"
                                                                         onPress={() => handleRoleChange(user.id, role)}
                                                                         flex={1}
                                                                     >
-                                                                        <SizableText size="$2" fontWeight="600" color={isActive ? rcText : '$textMuted'}>
+                                                                        <SizableText size="$2" fontWeight="600" color={isActive ? rcText : '$onSurfaceVariant'}>
                                                                             {ROLE_LABELS[role]}
                                                                         </SizableText>
                                                                     </Button>
@@ -297,7 +297,7 @@ export function AdminUsersScreen() {
                                                 </XStack>
 
                                                 <YStack gap="$1.5">
-                                                    <SizableText size="$2" color="$textMuted" fontWeight="600">자기소개</SizableText>
+                                                    <SizableText size="$2" color="$onSurfaceVariant" fontWeight="600">자기소개</SizableText>
                                                     <TextArea
                                                         size="$3"
                                                         value={editForm.bio}
@@ -315,7 +315,7 @@ export function AdminUsersScreen() {
                                                         icon={<X size={16} />}
                                                         onPress={() => setEditingUserId(null)}
                                                     >
-                                                        <SizableText color="$textMuted">취소</SizableText>
+                                                        <SizableText color="$onSurfaceVariant">취소</SizableText>
                                                     </Button>
                                                     <Button
                                                         size="$3"
@@ -335,33 +335,33 @@ export function AdminUsersScreen() {
                                                 <XStack gap="$6" flexWrap="wrap">
                                                     <YStack flex={1} minWidth={200} gap="$3">
                                                         <YStack gap="$1">
-                                                            <SizableText size="$2" color="$textMuted">이메일</SizableText>
-                                                            <SizableText size="$3" color="$textMain">{user.email || '미설정'}</SizableText>
+                                                            <SizableText size="$2" color="$onSurfaceVariant">이메일</SizableText>
+                                                            <SizableText size="$3" color="$onSurface">{user.email || '미설정'}</SizableText>
                                                         </YStack>
                                                         <YStack gap="$1">
-                                                            <SizableText size="$2" color="$textMuted">출석교회</SizableText>
-                                                            <SizableText size="$3" color="$textMain">{user.church || '미설정'}</SizableText>
+                                                            <SizableText size="$2" color="$onSurfaceVariant">출석교회</SizableText>
+                                                            <SizableText size="$3" color="$onSurface">{user.church || '미설정'}</SizableText>
                                                         </YStack>
                                                         <YStack gap="$1">
-                                                            <SizableText size="$2" color="$textMuted">직분</SizableText>
-                                                            <SizableText size="$3" color="$textMain">{user.churchRole || '미설정'}</SizableText>
+                                                            <SizableText size="$2" color="$onSurfaceVariant">직분</SizableText>
+                                                            <SizableText size="$3" color="$onSurface">{user.churchRole || '미설정'}</SizableText>
                                                         </YStack>
                                                     </YStack>
                                                     <YStack flex={1} minWidth={200} gap="$3">
                                                         <YStack gap="$1">
-                                                            <SizableText size="$2" color="$textMuted">자기소개</SizableText>
-                                                            <SizableText size="$3" color="$textMain">{user.bio || '미설정'}</SizableText>
+                                                            <SizableText size="$2" color="$onSurfaceVariant">자기소개</SizableText>
+                                                            <SizableText size="$3" color="$onSurface">{user.bio || '미설정'}</SizableText>
                                                         </YStack>
                                                         <YStack gap="$1">
-                                                            <SizableText size="$2" color="$textMuted">가입일</SizableText>
-                                                            <SizableText size="$3" color="$textMain">
+                                                            <SizableText size="$2" color="$onSurfaceVariant">가입일</SizableText>
+                                                            <SizableText size="$3" color="$onSurface">
                                                                 {new Date(user.createdAt).toLocaleDateString('ko-KR', {
                                                                     year: 'numeric', month: 'long', day: 'numeric'
                                                                 })}
                                                             </SizableText>
                                                         </YStack>
                                                         <YStack gap="$1">
-                                                            <SizableText size="$2" color="$textMuted">승인 상태</SizableText>
+                                                            <SizableText size="$2" color="$onSurfaceVariant">승인 상태</SizableText>
                                                             <SizableText size="$3" color={user.isApproved ? '$green11' : '$orange11'}>
                                                                 {user.isApproved ? '승인됨' : '승인 대기중'}
                                                             </SizableText>
@@ -369,7 +369,7 @@ export function AdminUsersScreen() {
                                                     </YStack>
                                                 </XStack>
 
-                                                <Separator borderColor="$borderLight" />
+                                                <Separator borderColor="$outlineVariant" />
 
                                                 {/* Action Buttons */}
                                                 <XStack gap="$2" flexWrap="wrap">
@@ -377,10 +377,11 @@ export function AdminUsersScreen() {
                                                         size="$3"
                                                         bg="$surfaceHover"
                                                         borderRadius="$full"
-                                                        icon={<Edit3 size={16} color="$textMain" />}
+                                                        icon={<Edit3 size={16} color="$onSurface" />}
                                                         onPress={() => startEdit(user)}
+                                                        minHeight={44}
                                                     >
-                                                        <SizableText color="$textMain" fontWeight="600">편집</SizableText>
+                                                        <SizableText color="$onSurface" fontWeight="600">편집</SizableText>
                                                     </Button>
                                                     <Button
                                                         size="$3"
@@ -388,6 +389,7 @@ export function AdminUsersScreen() {
                                                         borderRadius="$full"
                                                         icon={<MessageCircle size={16} color="$blue11" />}
                                                         onPress={() => handleSendMessage(user.id)}
+                                                        minHeight={44}
                                                     >
                                                         <SizableText color="$blue11" fontWeight="600">메시지</SizableText>
                                                     </Button>
@@ -398,6 +400,7 @@ export function AdminUsersScreen() {
                                                         borderRadius="$full"
                                                         icon={<Trash2 size={16} color={confirmDeleteId === user.id ? 'white' : '$red11'} />}
                                                         onPress={() => handleDelete(user.id)}
+                                                        minHeight={44}
                                                     >
                                                         <SizableText
                                                             color={confirmDeleteId === user.id ? 'white' : '$red11'}

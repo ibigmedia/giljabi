@@ -9,51 +9,66 @@ export const customTokens = createTokens({
     color: {
         ...defaultColors,
 
-        // M3 Primary Tonal Palette
-        primary: '#1a6b8a',
-        primaryHover: '#15586f',
-        primaryPress: '#104858',
-        primaryContainer: '#d0e8f2',
-        onPrimaryContainer: '#0a3347',
+        // ── M3 Primary Tonal Palette ──
+        primary: '#0077b6',
+        primaryHover: '#006298',
+        primaryPress: '#004e7a',
+        primaryContainer: '#c8e6f5',
+        onPrimaryContainer: '#00344d',
+        primaryFixed: '#c8e6f5',
+        primaryFixedDim: '#8ecae6',
+        onPrimaryFixed: '#00344d',
+        inversePrimary: '#8ecae6',
 
-        // M3 Secondary
-        secondary: '#4f6169',
-        secondaryContainer: '#d2e5ed',
-        onSecondaryContainer: '#0b1d24',
+        // ── M3 Secondary ──
+        secondary: '#4a6572',
+        secondaryContainer: '#cde5ee',
+        onSecondaryContainer: '#061f28',
 
-        // M3 Tertiary (accent)
-        tertiary: '#5d5b7d',
-        tertiaryContainer: '#e3dfff',
+        // ── M3 Tertiary (accent) ──
+        tertiary: '#5c5b7e',
+        tertiaryContainer: '#e2dfff',
+        onTertiaryContainer: '#191837',
 
-        // M3 Surface Tonal
-        backgroundBody: '#f6f9fb',
+        // ── M3 Surface Tonal (Light) ──
+        backgroundBody: '#f4f7fa',
         surface: '#ffffff',
-        surfaceHover: '#f0f4f7',
-        surfaceDim: '#d6dde1',
+        surfaceHover: '#eef2f6',
+        surfaceDim: '#d4dbe0',
         surfaceContainerLowest: '#ffffff',
-        surfaceContainerLow: '#f0f4f7',
-        surfaceContainer: '#eaf0f3',
-        surfaceContainerHigh: '#e4ebef',
-        surfaceContainerHighest: '#dfe6ea',
+        surfaceContainerLow: '#eef2f6',
+        surfaceContainer: '#e8edf1',
+        surfaceContainerHigh: '#e2e8ec',
+        surfaceContainerHighest: '#dce3e8',
+        inverseSurface: '#2e3134',
+        inverseOnSurface: '#eff1f4',
 
-        // M3 Text/On-colors
+        // ── M3 Text/On-colors ──
         textMain: '#191c1e',
-        textMuted: '#72787e',
+        textMuted: '#6b7278',
         onSurface: '#191c1e',
-        onSurfaceVariant: '#40484d',
-        outline: '#70787e',
-        outlineVariant: '#c0c8cd',
+        onSurfaceVariant: '#3f484e',
+        outline: '#6f787e',
+        outlineVariant: '#bfc8cd',
 
-        // M3 Borders
-        borderLight: '#e1e8ec',
+        // ── M3 Borders ──
+        borderLight: '#dee5ea',
 
-        // M3 Error
+        // ── M3 Error ──
         error: '#ba1a1a',
         errorContainer: '#ffdad6',
+        onError: '#ffffff',
+        onErrorContainer: '#410002',
 
-        // M3 Success
+        // ── M3 Success ──
         success: '#1b6d3c',
         successContainer: '#a3f5b8',
+        onSuccessContainer: '#002110',
+
+        // ── M3 Warning ──
+        warning: '#7c5800',
+        warningContainer: '#ffdea3',
+        onWarningContainer: '#271900',
     },
     radius: {
         ...defaultConfig.tokens.radius,
@@ -65,6 +80,15 @@ export const customTokens = createTokens({
         xl: 28,
         full: 9999,
         card: 16,
-        button: 20,
+        button: 12,
+        container: 24,
     }
 })
+
+// ── 표준 콘텐츠 너비 ──
+export const CONTENT_WIDTH = {
+    narrow: 640,
+    medium: 800,
+    wide: 960,
+    full: 1100,
+} as const
