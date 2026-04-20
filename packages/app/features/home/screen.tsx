@@ -229,20 +229,22 @@ export function HomeScreen() {
             길잡이 뮤직 커뮤니티에서 함께 찬양하고, 나누고, 성장하세요
           </SizableText>
           <XStack gap="$3" marginTop="$4" flexWrap="wrap" justifyContent="center">
+            {/* Hero CTA primary "시작하기" */}
             <Button
-              size="$4" backgroundColor="#fff" color="#0a1628" fontWeight="700"
+              size="$4" backgroundColor="#fff"
               borderRadius={24} pressStyle={{ opacity: 0.85 }}
               onPress={() => router.push('/feed')}
             >
-              시작하기
+              <SizableText color="#0a1628" fontWeight="700">시작하기</SizableText>
             </Button>
+            {/* Hero CTA secondary "둘러보기" */}
             <Button
-              size="$4" backgroundColor="transparent" color="#fff" fontWeight="600"
+              size="$4" backgroundColor="transparent"
               borderRadius={24} borderWidth={1.5} borderColor="rgba(255,255,255,0.5)"
               pressStyle={{ opacity: 0.85 }}
               onPress={() => router.push('/portfolio')}
             >
-              둘러보기
+              <SizableText color="#fff" fontWeight="600">둘러보기</SizableText>
             </Button>
           </XStack>
         </YStack>
@@ -258,8 +260,9 @@ export function HomeScreen() {
               <H2 size="$7" color="$onSurface" fontWeight="700">
                 <Music size={22} color="$primary" /> 음악
               </H2>
-              <Button size="$2" chromeless color="$primary" iconAfter={ArrowRight} onPress={() => router.push('/portfolio')}>
-                전체보기
+              {/* Section link "전체보기" (chromeless) */}
+              <Button size="$2" chromeless iconAfter={ArrowRight} onPress={() => router.push('/portfolio')}>
+                <SizableText color="$primary">전체보기</SizableText>
               </Button>
             </XStack>
             <div className="card-scroll">
@@ -298,8 +301,9 @@ export function HomeScreen() {
               <H2 size="$7" color="$onSurface" fontWeight="700">
                 <Video size={22} color="$primary" /> 영상
               </H2>
-              <Button size="$2" chromeless color="$primary" iconAfter={ArrowRight} onPress={() => router.push('/portfolio')}>
-                전체보기
+              {/* Section link "전체보기" (chromeless) */}
+              <Button size="$2" chromeless iconAfter={ArrowRight} onPress={() => router.push('/portfolio')}>
+                <SizableText color="$primary">전체보기</SizableText>
               </Button>
             </XStack>
             <div className="card-scroll">
