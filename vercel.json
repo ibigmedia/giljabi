@@ -2,5 +2,8 @@
   "installCommand": "corepack enable && yarn install",
   "buildCommand": "yarn build && cd apps/next && next build",
   "outputDirectory": "apps/next/.next",
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "crons": [
+    { "path": "/api/keepalive", "schedule": "0 9 * * *" }
+  ]
 }
