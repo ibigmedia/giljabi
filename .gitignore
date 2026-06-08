@@ -63,5 +63,4 @@ disable-rls.ts
 
 # MCP config (local)
 .mcp.json
-.github/workflows/
 .cron-secret-tmp

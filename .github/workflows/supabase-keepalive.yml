@@ -1,0 +1,22 @@
+name: Supabase Keepalive
+
+on:
+  schedule:
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping keepalive endpoint
+        run: |
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://giljabi.com/api/keepalive)
+          echo "Response: $RESPONSE"
+          if [ "$RESPONSE" != "200" ]; then
+            echo "❌ Keepalive failed with status $RESPONSE"
+            exit 1
+          fi
+          echo "✅ Keepalive success"
