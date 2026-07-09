@@ -14752,6 +14752,7 @@ __metadata:
     next: "npm:16.1.1"
     next-compose-plugins: "npm:^2.2.1"
     next-transpile-modules: "npm:^10.0.1"
+    pretendard: "npm:^1.3.9"
     raf: "npm:^3.4.1"
     react: "npm:19.0.0"
     react-dom: "npm:19.0.0"
@@ -15934,6 +15935,13 @@ __metadata:
   version: 3.4.7
   resolution: "postgres@npm:3.4.7"
   checksum: 10/ef5b43b137412c13d907da0d37e7d4141653365fd371ffa000e124076119fe14ef95a27b1469f2ed6fb006f855746fc65087f326a124fe320a2b1f3bbec397f4
+  languageName: node
+  linkType: hard
+
+"pretendard@npm:^1.3.9":
+  version: 1.3.9
+  resolution: "pretendard@npm:1.3.9"
+  checksum: 10/e8cd1d70548b3b9c9a4abfeb9ee6190d19943e8f91978db77671779b09abd77e09172a431eebdb3a2be50ed811e278c5e6bb49e14d233eefd7ca5913a99afdd7
   languageName: node
   linkType: hard
 

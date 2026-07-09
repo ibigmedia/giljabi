@@ -219,90 +219,98 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <div className="desktop-only" style={{ flexDirection: 'row' }}>
                 <XStack
                     bg="$surface"
-                    px="$6"
                     height={72}
                     alignItems="center"
-                    justifyContent="space-between"
                     zIndex={100}
                     borderBottomWidth={1}
                     borderColor="$outlineVariant"
                     width="100%"
                 >
-                    {/* Left: Logo & Nav */}
-                    <XStack alignItems="center" gap="$4" height="100%">
-                        <SizableText
-                            size="$7"
-                            fontWeight="800"
-                            color="$primary"
-                            cursor="pointer"
-                            onPress={() => router.push('/')}
-                            letterSpacing={-0.5}
-                        >
-                            Giljabi
-                        </SizableText>
+                    <XStack
+                        maxWidth={960}
+                        width="100%"
+                        alignSelf="center"
+                        px="$6"
+                        height="100%"
+                        alignItems="center"
+                        justifyContent="space-between"
+                    >
+                        {/* Left: Logo & Nav */}
+                        <XStack alignItems="center" gap="$4" height="100%">
+                            <SizableText
+                                size="$7"
+                                fontWeight="800"
+                                color="$primary"
+                                cursor="pointer"
+                                onPress={() => router.push('/')}
+                                letterSpacing={-0.5}
+                            >
+                                Giljabi
+                            </SizableText>
 
-                        <XStack gap="$1" ml="$3" height="100%" alignItems="center">
-                            {DESKTOP_NAV_ITEMS.map((item) => {
-                                const active = isNavActive(item.path)
-                                const Icon = item.icon
-                                return (
-                                    <XStack
-                                        key={item.path}
-                                        alignItems="center"
-                                        gap="$2"
-                                        cursor="pointer"
-                                        onPress={() => router.push(item.path)}
-                                        bg={active ? '$primaryContainer' : 'transparent'}
-                                        hoverStyle={{ bg: active ? '$primaryContainer' : '$surfaceContainerLow' }}
-                                        borderRadius="$full"
-                                        px="$3.5"
-                                        py="$2"
-                                    >
-                                        <Icon size={18} color={active ? '$onPrimaryContainer' : '$onSurfaceVariant'} />
-                                        <SizableText
-                                            size="$3"
-                                            fontWeight={active ? '700' : '500'}
-                                            color={active ? '$onPrimaryContainer' : '$onSurfaceVariant'}
+                            <XStack gap="$1" ml="$3" height="100%" alignItems="center">
+                                {DESKTOP_NAV_ITEMS.map((item) => {
+                                    const active = isNavActive(item.path)
+                                    const Icon = item.icon
+                                    return (
+                                        <XStack
+                                            key={item.path}
+                                            alignItems="center"
+                                            gap="$2"
+                                            cursor="pointer"
+                                            onPress={() => router.push(item.path)}
+                                            bg={active ? '$primaryContainer' : 'transparent'}
+                                            hoverStyle={{ bg: active ? '$primaryContainer' : '$surfaceContainerLow' }}
+                                            borderRadius="$full"
+                                            px="$3.5"
+                                            py="$2"
                                         >
-                                            {item.label}
-                                        </SizableText>
-                                    </XStack>
-                                )
-                            })}
-                        </XStack>
-                    </XStack>
-
-                    {/* Right: Actions & User */}
-                    <XStack alignItems="center" gap="$1.5">
-                        <Button size="$3" circular bg="transparent" hoverStyle={{ bg: '$surfaceContainerLow' }} icon={<Search size={20} color="$onSurfaceVariant" />} onPress={() => router.push('/search')} />
-                        {userProfile ? (
-                            <>
-                                <Button size="$3" circular bg="transparent" hoverStyle={{ bg: '$surfaceContainerLow' }} icon={<MessageSquare size={20} color="$onSurfaceVariant" />} onPress={() => router.push('/messages')} />
-                                <Button size="$3" circular bg="transparent" hoverStyle={{ bg: '$surfaceContainerLow' }} icon={<Bell size={20} color="$onSurfaceVariant" />} onPress={() => router.push('/notifications')} />
-                                <UserDropdown userProfile={userProfile} onLogout={handleLogout} router={router} />
-                            </>
-                        ) : (
-                            <XStack gap="$2" alignItems="center" ml="$2">
-                                <XStack
-                                    alignItems="center" justifyContent="center"
-                                    bg="#508CFF" borderRadius={20}
-                                    hoverStyle={{ opacity: 0.9 }}
-                                    px="$4" py="$2" cursor="pointer"
-                                    onPress={() => router.push('/login')}
-                                >
-                                    <SizableText color="white" fontWeight="600" size="$3">로그인</SizableText>
-                                </XStack>
-                                <XStack
-                                    alignItems="center" justifyContent="center"
-                                    bg="$primary" borderRadius="$full"
-                                    hoverStyle={{ opacity: 0.9 }}
-                                    px="$4" py="$2" cursor="pointer"
-                                    onPress={() => router.push('/login')}
-                                >
-                                    <SizableText color="white" fontWeight="600" size="$3">회원가입</SizableText>
-                                </XStack>
+                                            <Icon size={18} color={active ? '$onPrimaryContainer' : '$onSurfaceVariant'} />
+                                            <SizableText
+                                                size="$3"
+                                                fontWeight={active ? '700' : '500'}
+                                                color={active ? '$onPrimaryContainer' : '$onSurfaceVariant'}
+                                            >
+                                                {item.label}
+                                            </SizableText>
+                                        </XStack>
+                                    )
+                                })}
                             </XStack>
-                        )}
+                        </XStack>
+
+                        {/* Right: Actions & User */}
+                        <XStack alignItems="center" gap="$1.5">
+                            <Button size="$3" circular bg="transparent" hoverStyle={{ bg: '$surfaceContainerLow' }} icon={<Search size={20} color="$onSurfaceVariant" />} onPress={() => router.push('/search')} />
+                            {userProfile ? (
+                                <>
+                                    <Button size="$3" circular bg="transparent" hoverStyle={{ bg: '$surfaceContainerLow' }} icon={<MessageSquare size={20} color="$onSurfaceVariant" />} onPress={() => router.push('/messages')} />
+                                    <Button size="$3" circular bg="transparent" hoverStyle={{ bg: '$surfaceContainerLow' }} icon={<Bell size={20} color="$onSurfaceVariant" />} onPress={() => router.push('/notifications')} />
+                                    <UserDropdown userProfile={userProfile} onLogout={handleLogout} router={router} />
+                                </>
+                            ) : (
+                                <XStack gap="$2" alignItems="center" ml="$2">
+                                    <XStack
+                                        alignItems="center" justifyContent="center"
+                                        bg="$primary" borderRadius={20}
+                                        hoverStyle={{ opacity: 0.9 }}
+                                        px="$4" py="$2" cursor="pointer"
+                                        onPress={() => router.push('/login')}
+                                    >
+                                        <SizableText color="white" fontWeight="600" size="$3">로그인</SizableText>
+                                    </XStack>
+                                    <XStack
+                                        alignItems="center" justifyContent="center"
+                                        bg="$primary" borderRadius="$full"
+                                        hoverStyle={{ opacity: 0.9 }}
+                                        px="$4" py="$2" cursor="pointer"
+                                        onPress={() => router.push('/login')}
+                                    >
+                                        <SizableText color="white" fontWeight="600" size="$3">회원가입</SizableText>
+                                    </XStack>
+                                </XStack>
+                            )}
+                        </XStack>
                     </XStack>
                 </XStack>
             </div>
@@ -545,7 +553,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     {!userProfile && (
                         <YStack px="$5" py="$3" gap="$2">
                             <Button
-                                bg="#508CFF"
+                                bg="$primary"
                                 borderRadius={20}
                                 size="$4"
                                 onPress={() => navigateMore('/login')}

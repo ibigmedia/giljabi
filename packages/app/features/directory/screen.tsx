@@ -20,7 +20,7 @@ export function DirectoryScreen() {
 
     return (
         <ScrollView flex={1} bg="$backgroundBody">
-            <YStack p="$4" pb="$6" maxWidth={800} alignSelf="center" width="100%" py="$6" gap="$5">
+            <YStack p="$4" pb="$6" maxWidth={960} alignSelf="center" width="100%" py="$6" gap="$5">
 
                 {/* Header */}
                 <YStack gap="$1">
@@ -34,8 +34,8 @@ export function DirectoryScreen() {
 
                 {/* Search Bar */}
                 <XStack
-                    bg="$surfaceContainerLow"
-                    borderRadius="$full"
+                    bg="$surface"
+                    borderRadius={6}
                     borderWidth={1}
                     borderColor="$outlineVariant"
                     alignItems="center"
@@ -88,7 +88,8 @@ export function DirectoryScreen() {
                                 gap="$3"
                                 width="100%"
                                 $md={{ width: '48%' }}
-                                hoverStyle={{ bg: '$surfaceContainerLow', borderColor: '$outline' }}
+                                elevation="$1"
+                                hoverStyle={{ bg: '$surfaceContainerLow', borderColor: '$outline', elevation: '$3', y: -2 }}
                                 cursor="pointer"
                             >
                                 <XStack gap="$3" alignItems="center">

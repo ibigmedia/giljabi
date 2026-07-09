@@ -50,7 +50,8 @@ export function BlogScreen() {
                                 borderColor="$outlineVariant"
                                 overflow="hidden"
                                 cursor="pointer"
-                                hoverStyle={{ borderColor: '$primary' }}
+                                elevation="$1"
+                                hoverStyle={{ borderColor: '$primary', elevation: '$3', y: -2 }}
                                 onPress={() => router.push(`/blog/${featuredPost.id}`)}
                             >
                                 {featuredPost.mediaUrl && (
@@ -122,7 +123,8 @@ export function BlogScreen() {
                                         borderColor="$outlineVariant"
                                         overflow="hidden"
                                         cursor="pointer"
-                                        hoverStyle={{ borderColor: '$primary' }}
+                                        elevation="$1"
+                                        hoverStyle={{ borderColor: '$primary', elevation: '$3', y: -2 }}
                                         onPress={() => router.push(`/blog/${post.id}`)}
                                         width="100%"
                                         $md={{ width: '48%' }}
