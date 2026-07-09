@@ -11,8 +11,14 @@ export const headingFont = createInterFont({
     7: 'none',
   },
   weight: {
-    6: '400',
+    3: '600',
+    4: '600',
+    5: '600',
+    6: '650',
     7: '700',
+    8: '700',
+    9: '700',
+    10: '700',
   },
   color: {
     6: '$colorFocus',
@@ -34,6 +40,18 @@ export const headingFont = createInterFont({
 
 export const bodyFont = createInterFont(
   {
+    weight: {
+      1: '400',
+      2: '400',
+      3: '400',
+      4: '400',
+      true: '400',
+      5: '500',
+      6: '500',
+      7: '600',
+      8: '600',
+      9: '700',
+    },
     family: FONT_FAMILY,
   },
   {
