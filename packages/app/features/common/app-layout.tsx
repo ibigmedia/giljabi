@@ -285,12 +285,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                             <XStack gap="$2" alignItems="center" ml="$2">
                                 <XStack
                                     alignItems="center" justifyContent="center"
-                                    borderRadius="$full" borderWidth={1} borderColor="$primary"
-                                    hoverStyle={{ bg: '$primaryContainer' }}
+                                    bg="#508CFF" borderRadius={20}
+                                    hoverStyle={{ opacity: 0.9 }}
                                     px="$4" py="$2" cursor="pointer"
                                     onPress={() => router.push('/login')}
                                 >
-                                    <SizableText color="$primary" fontWeight="600" size="$3">로그인</SizableText>
+                                    <SizableText color="white" fontWeight="600" size="$3">로그인</SizableText>
                                 </XStack>
                                 <XStack
                                     alignItems="center" justifyContent="center"
@@ -545,8 +545,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     {!userProfile && (
                         <YStack px="$5" py="$3" gap="$2">
                             <Button
-                                bg="$primary"
-                                borderRadius="$button"
+                                bg="#508CFF"
+                                borderRadius={20}
                                 size="$4"
                                 onPress={() => navigateMore('/login')}
                             >

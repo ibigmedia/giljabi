@@ -10,15 +10,15 @@ export const customTokens = createTokens({
         ...defaultColors,
 
         // ── M3 Primary Tonal Palette ──
-        primary: '#0077b6',
-        primaryHover: '#006298',
-        primaryPress: '#004e7a',
-        primaryContainer: '#c8e6f5',
-        onPrimaryContainer: '#00344d',
-        primaryFixed: '#c8e6f5',
-        primaryFixedDim: '#8ecae6',
-        onPrimaryFixed: '#00344d',
-        inversePrimary: '#8ecae6',
+        primary: '#508CFF',
+        primaryHover: '#3D78F0',
+        primaryPress: '#2E62D9',
+        primaryContainer: '#E1EAFF',
+        onPrimaryContainer: '#0F2E6B',
+        primaryFixed: '#E1EAFF',
+        primaryFixedDim: '#AEC7FF',
+        onPrimaryFixed: '#0F2E6B',
+        inversePrimary: '#AEC7FF',
 
         // ── M3 Secondary ──
         secondary: '#4a6572',

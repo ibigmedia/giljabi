@@ -111,9 +111,9 @@ function AudioBar({ playing, audioPaused, togglePause, stop }: {
   return createPortal(
     <div style={{
       position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999,
-      background: 'linear-gradient(135deg, #1a237e, #283593)', padding: '10px 16px',
+      background: 'linear-gradient(135deg, #0077b6, #005f92)', padding: '10px 16px',
       display: 'flex', alignItems: 'center', gap: 12, color: '#fff',
-      boxShadow: '0 -2px 12px rgba(0,0,0,0.3)',
+      boxShadow: '0 -2px 12px rgba(0,0,0,0.2)',
     }}>
       {playing.coverUrl && (
         <img src={playing.coverUrl} alt="" style={{ width: 40, height: 40, borderRadius: 6, objectFit: 'cover' }} />
@@ -162,23 +162,28 @@ function YouTubeModal({ playing, stop }: { playing: PlayingMedia; stop: () => vo
 // --- CSS ---
 const PAGE_CSS = `
   .home-hero {
-    background: linear-gradient(160deg, #0a1628 0%, #1a3a5c 100%);
-    padding: 80px 24px 60px;
+    background: var(--color-surface, #ffffff);
+    border-bottom: 1px solid var(--color-borderLight, #dee5ea);
+    padding: 64px 24px 48px;
     text-align: center;
   }
-  .card-scroll { display: flex; gap: 16px; overflow-x: auto; padding: 4px 0 12px; scroll-snap-type: x mandatory; }
+  .card-scroll { display: flex; gap: 16px; overflow-x: auto; padding: 4px 2px 12px; scroll-snap-type: x mandatory; }
   .card-scroll::-webkit-scrollbar { height: 4px; }
   .card-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 2px; }
   .release-card, .video-card, .community-card {
-    flex-shrink: 0; scroll-snap-align: start; border-radius: 14px;
-    overflow: hidden; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
+    flex-shrink: 0; scroll-snap-align: start; border-radius: 12px;
+    overflow: hidden; cursor: pointer;
+    background: var(--color-surface, #ffffff);
+    border: 1px solid var(--color-borderLight, #dee5ea);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
   .release-card:hover, .video-card:hover, .community-card:hover {
-    transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    transform: scale(1.02); box-shadow: 0 8px 20px rgba(0,0,0,0.12);
   }
-  .release-card { width: 180px; background: var(--color-surfaceContainerLow, #f5f5f5); }
-  .video-card { width: 280px; background: var(--color-surfaceContainerLow, #f5f5f5); }
-  .community-card { width: 240px; background: var(--color-surfaceContainerLow, #f5f5f5); padding: 24px 20px; }
+  .release-card { width: 180px; }
+  .video-card { width: 280px; }
+  .community-card { width: 240px; padding: 24px 20px; }
   .play-overlay {
     position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
     background: rgba(0,0,0,0.35); opacity: 0; transition: opacity 0.2s;
@@ -213,38 +218,38 @@ export function HomeScreen() {
   ]
 
   return (
-    <YStack flex={1}>
+    <YStack flex={1} backgroundColor="$backgroundBody">
       <style dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
 
       {/* Hero */}
       <div className="home-hero">
         <YStack maxWidth={960} alignSelf="center" gap="$4" alignItems="center" width="100%">
-          <SizableText size="$3" color="rgba(255,255,255,0.6)" fontWeight="500" letterSpacing={2}>
+          <SizableText size="$3" color="$primary" fontWeight="600" letterSpacing={2}>
             GILJABI MUSIC MINISTRY
           </SizableText>
-          <SizableText size="$9" color="#fff" fontWeight="800" textAlign="center" lineHeight={48}>
+          <SizableText size="$9" color="$onSurface" fontWeight="800" textAlign="center" lineHeight={48}>
             음악으로 하나님의{'\n'}사랑을 전합니다
           </SizableText>
-          <SizableText size="$4" color="rgba(255,255,255,0.75)" textAlign="center" maxWidth={480}>
+          <SizableText size="$4" color="$onSurfaceVariant" textAlign="center" maxWidth={480}>
             길잡이 뮤직 커뮤니티에서 함께 찬양하고, 나누고, 성장하세요
           </SizableText>
           <XStack gap="$3" marginTop="$4" flexWrap="wrap" justifyContent="center">
             {/* Hero CTA primary "시작하기" */}
             <Button
-              size="$4" backgroundColor="#fff"
-              borderRadius={24} pressStyle={{ opacity: 0.85 }}
+              size="$4" backgroundColor="$primary"
+              borderRadius="$button" pressStyle={{ opacity: 0.85, backgroundColor: '$primaryPress' }}
               onPress={() => router.push('/feed')}
             >
-              <SizableText color="#0a1628" fontWeight="700">시작하기</SizableText>
+              <SizableText color="#fff" fontWeight="700">시작하기</SizableText>
             </Button>
             {/* Hero CTA secondary "둘러보기" */}
             <Button
-              size="$4" backgroundColor="transparent"
-              borderRadius={24} borderWidth={1.5} borderColor="rgba(255,255,255,0.5)"
-              pressStyle={{ opacity: 0.85 }}
+              size="$4" backgroundColor="$surface"
+              borderRadius="$button" borderWidth={1} borderColor="$outlineVariant"
+              pressStyle={{ opacity: 0.85, backgroundColor: '$surfaceHover' }}
               onPress={() => router.push('/portfolio')}
             >
-              <SizableText color="#fff" fontWeight="600">둘러보기</SizableText>
+              <SizableText color="$onSurface" fontWeight="600">둘러보기</SizableText>
             </Button>
           </XStack>
         </YStack>
@@ -256,8 +261,11 @@ export function HomeScreen() {
         {/* Portfolio Section */}
         {loaded && releases.length > 0 && (
           <YStack gap="$3">
-            <XStack justifyContent="space-between" alignItems="center">
-              <H2 size="$7" color="$onSurface" fontWeight="700">
+            <XStack
+              justifyContent="space-between" alignItems="center"
+              paddingBottom="$3" borderBottomWidth={1} borderBottomColor="$borderLight"
+            >
+              <H2 fontSize={20} lineHeight={24} color="#1B1D1F" fontWeight="600">
                 <Music size={22} color="$primary" /> 음악
               </H2>
               {/* Section link "전체보기" (chromeless) */}
@@ -276,7 +284,7 @@ export function HomeScreen() {
                     />
                     <div className="play-overlay">
                       <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Play size={22} color="#0a1628" fill="#0a1628" />
+                        <Play size={22} color="#191c1e" fill="#191c1e" />
                       </div>
                     </div>
                   </div>
@@ -297,8 +305,11 @@ export function HomeScreen() {
         {/* Video Section */}
         {loaded && videos.length > 0 && (
           <YStack gap="$3">
-            <XStack justifyContent="space-between" alignItems="center">
-              <H2 size="$7" color="$onSurface" fontWeight="700">
+            <XStack
+              justifyContent="space-between" alignItems="center"
+              paddingBottom="$3" borderBottomWidth={1} borderBottomColor="$borderLight"
+            >
+              <H2 fontSize={20} lineHeight={24} color="#1B1D1F" fontWeight="600">
                 <Video size={22} color="$primary" /> 영상
               </H2>
               {/* Section link "전체보기" (chromeless) */}
@@ -337,14 +348,16 @@ export function HomeScreen() {
 
         {/* Community Section */}
         <YStack gap="$3">
-          <H2 size="$7" color="$onSurface" fontWeight="700">커뮤니티</H2>
+          <XStack paddingBottom="$3" borderBottomWidth={1} borderBottomColor="$borderLight">
+            <H2 fontSize={20} lineHeight={24} color="#1B1D1F" fontWeight="600">커뮤니티</H2>
+          </XStack>
           <div className="card-scroll">
             {communityItems.map(item => {
               const Icon = item.icon
               return (
                 <div key={item.title} className="community-card">
-                  <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--color-primaryContainer, #e8def8)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
-                    <Icon size={22} color="var(--color-primary, #6750A4)" />
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--color-primaryContainer, #c8e6f5)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
+                    <Icon size={22} color="var(--color-primary, #0077b6)" />
                   </div>
                   <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 6 }}>{item.title}</div>
                   <div style={{ fontSize: 13, opacity: 0.65, lineHeight: '1.5' }}>{item.desc}</div>
