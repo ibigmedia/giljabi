@@ -144,7 +144,7 @@ const PAGE_CSS = `
   .player-bar-progress:hover { height: 6px !important; }
   .section-divider {
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(14,165,233,0.3), transparent);
+    background: linear-gradient(90deg, transparent, rgba(59,130,246,0.3), transparent);
     margin: 20px 0;
   }
   .video-grid {
@@ -278,7 +278,7 @@ export function PortfolioScreen() {
 
                     {/* ===== HEADER ===== */}
                     <YStack gap="$3" className="fade-in">
-                        <SizableText color="rgba(14,165,233,0.8)" size="$2" fontWeight="700" letterSpacing={3}>GILJABI</SizableText>
+                        <SizableText color="rgba(59,130,246,0.8)" size="$2" fontWeight="700" letterSpacing={3}>GILJABI</SizableText>
                         <SizableText size="$10" fontWeight="900" color="white" letterSpacing={-1}>
                             Portfolio
                         </SizableText>
@@ -337,10 +337,10 @@ export function PortfolioScreen() {
                                             // @ts-ignore
                                             style={{
                                                 background: isCurrentRelease
-                                                    ? 'linear-gradient(135deg, rgba(14,165,233,0.08), rgba(123,97,255,0.05))'
+                                                    ? 'linear-gradient(135deg, rgba(59,130,246,0.08), rgba(123,97,255,0.05))'
                                                     : 'rgba(255,255,255,0.025)',
                                                 border: isCurrentRelease
-                                                    ? '1px solid rgba(14,165,233,0.25)'
+                                                    ? '1px solid rgba(59,130,246,0.25)'
                                                     : '1px solid rgba(255,255,255,0.05)',
                                             }}
                                         >
@@ -360,7 +360,7 @@ export function PortfolioScreen() {
                                                     ) : (
                                                         <YStack flex={1} alignItems="center" justifyContent="center"
                                                             // @ts-ignore
-                                                            style={{ background: 'linear-gradient(135deg, rgba(14,165,233,0.3), rgba(123,97,255,0.2))' }}>
+                                                            style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.3), rgba(123,97,255,0.2))' }}>
                                                             <Music size={24} color="rgba(255,255,255,0.4)" />
                                                         </YStack>
                                                     )}
@@ -445,7 +445,7 @@ export function PortfolioScreen() {
                                                             <div key={track.id} className="track-row">
                                                                 <XStack
                                                                     px="$4" py="$3" gap="$3" alignItems="center"
-                                                                    bg={isCurrent ? 'rgba(14,165,233,0.06)' : 'transparent'}
+                                                                    bg={isCurrent ? 'rgba(59,130,246,0.06)' : 'transparent'}
                                                                     cursor={track.audioUrl ? 'pointer' : 'default'}
                                                                     onPress={() => playTrack(track, release)}
                                                                 >
@@ -574,7 +574,7 @@ export function PortfolioScreen() {
                             // @ts-ignore
                             style={{
                                 background: 'rgba(255,255,255,0.03)',
-                                border: '1px solid rgba(14,165,233,0.15)',
+                                border: '1px solid rgba(59,130,246,0.15)',
                             }}
                         >
                             {/* Progress bar */}
@@ -604,7 +604,7 @@ export function PortfolioScreen() {
                                     ) : (
                                         <YStack flex={1} alignItems="center" justifyContent="center"
                                             // @ts-ignore
-                                            style={{ background: 'linear-gradient(135deg, rgba(14,165,233,0.3), rgba(123,97,255,0.2))' }}>
+                                            style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.3), rgba(123,97,255,0.2))' }}>
                                             <Music size={20} color="rgba(255,255,255,0.4)" />
                                         </YStack>
                                     )}

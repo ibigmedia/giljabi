@@ -111,7 +111,7 @@ function AudioBar({ playing, audioPaused, togglePause, stop }: {
   return createPortal(
     <div style={{
       position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999,
-      background: 'linear-gradient(135deg, #0EA5E9, #0284C7)', padding: '10px 16px',
+      background: 'linear-gradient(135deg, #3B82F6, #2563EB)', padding: '10px 16px',
       display: 'flex', alignItems: 'center', gap: 12, color: '#fff',
       boxShadow: '0 -2px 12px rgba(0,0,0,0.2)',
     }}>
@@ -356,8 +356,8 @@ export function HomeScreen() {
               const Icon = item.icon
               return (
                 <div key={item.title} className="community-card">
-                  <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--color-primaryContainer, #E0F2FE)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
-                    <Icon size={22} color="var(--color-primary, #0EA5E9)" />
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--color-primaryContainer, #DBEAFE)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
+                    <Icon size={22} color="var(--color-primary, #3B82F6)" />
                   </div>
                   <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 6 }}>{item.title}</div>
                   <div style={{ fontSize: 13, opacity: 0.65, lineHeight: '1.5' }}>{item.desc}</div>

@@ -46,7 +46,7 @@ const MORE_USER_ITEMS = [
 const RESPONSIVE_CSS = `
   .desktop-only { display: flex !important; }
   .mobile-only { display: none !important; }
-  @media (max-width: 860px) {
+  @media (max-width: 960px) {
     .desktop-only { display: none !important; }
     .mobile-only { display: flex !important; }
   }
@@ -226,17 +226,20 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     borderColor="$outlineVariant"
                     width="100%"
                 >
-                    <XStack
-                        maxWidth={960}
-                        width="100%"
-                        alignSelf="center"
-                        px="$6"
-                        height="100%"
-                        alignItems="center"
-                        justifyContent="space-between"
+                    <div
+                        style={{
+                            display: 'grid',
+                            gridTemplateColumns: '1fr auto 1fr',
+                            alignItems: 'center',
+                            maxWidth: 1100,
+                            width: '100%',
+                            margin: '0 auto',
+                            padding: '0 24px',
+                            height: '100%',
+                        }}
                     >
-                        {/* Left: Logo & Nav */}
-                        <XStack alignItems="center" gap="$4" height="100%">
+                        {/* Left: Logo */}
+                        <XStack alignItems="center" height="100%">
                             <SizableText
                                 size="$7"
                                 fontWeight="800"
@@ -247,40 +250,41 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                             >
                                 Giljabi
                             </SizableText>
+                        </XStack>
 
-                            <XStack gap="$1" ml="$3" height="100%" alignItems="center">
-                                {DESKTOP_NAV_ITEMS.map((item) => {
-                                    const active = isNavActive(item.path)
-                                    const Icon = item.icon
-                                    return (
-                                        <XStack
-                                            key={item.path}
-                                            alignItems="center"
-                                            gap="$2"
-                                            cursor="pointer"
-                                            onPress={() => router.push(item.path)}
-                                            bg={active ? '$primaryContainer' : 'transparent'}
-                                            hoverStyle={{ bg: active ? '$primaryContainer' : '$surfaceContainerLow' }}
-                                            borderRadius="$full"
-                                            px="$3.5"
-                                            py="$2"
+                        {/* Center: Nav */}
+                        <XStack gap={2} height="100%" alignItems="center" justifyContent="center">
+                            {DESKTOP_NAV_ITEMS.map((item) => {
+                                const active = isNavActive(item.path)
+                                const Icon = item.icon
+                                return (
+                                    <XStack
+                                        key={item.path}
+                                        alignItems="center"
+                                        gap="$1.5"
+                                        cursor="pointer"
+                                        onPress={() => router.push(item.path)}
+                                        bg={active ? '$primaryContainer' : 'transparent'}
+                                        hoverStyle={{ bg: active ? '$primaryContainer' : '$surfaceContainerLow' }}
+                                        borderRadius="$full"
+                                        px="$2.5"
+                                        py="$2"
+                                    >
+                                        <Icon size={18} color={active ? '$onPrimaryContainer' : '$onSurfaceVariant'} />
+                                        <SizableText
+                                            size="$3"
+                                            fontWeight={active ? '700' : '500'}
+                                            color={active ? '$onPrimaryContainer' : '$onSurfaceVariant'}
                                         >
-                                            <Icon size={18} color={active ? '$onPrimaryContainer' : '$onSurfaceVariant'} />
-                                            <SizableText
-                                                size="$3"
-                                                fontWeight={active ? '700' : '500'}
-                                                color={active ? '$onPrimaryContainer' : '$onSurfaceVariant'}
-                                            >
-                                                {item.label}
-                                            </SizableText>
-                                        </XStack>
-                                    )
-                                })}
-                            </XStack>
+                                            {item.label}
+                                        </SizableText>
+                                    </XStack>
+                                )
+                            })}
                         </XStack>
 
                         {/* Right: Actions & User */}
-                        <XStack alignItems="center" gap="$1.5">
+                        <XStack alignItems="center" justifyContent="flex-end" gap="$1.5">
                             <Button size="$3" circular bg="transparent" hoverStyle={{ bg: '$surfaceContainerLow' }} icon={<Search size={20} color="$onSurfaceVariant" />} onPress={() => router.push('/search')} />
                             {userProfile ? (
                                 <>
@@ -311,7 +315,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                                 </XStack>
                             )}
                         </XStack>
-                    </XStack>
+                    </div>
                 </XStack>
             </div>
 
@@ -352,7 +356,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 {/* 모바일에서 하단 네비바 높이만큼 패딩 */}
                 <div className="mobile-only" style={{ display: 'contents' }}>
                     <style dangerouslySetInnerHTML={{ __html: `
-                        @media (max-width: 860px) {
+                        @media (max-width: 960px) {
                             .main-content-area { padding-bottom: 80px !important; }
                         }
                     `}} />

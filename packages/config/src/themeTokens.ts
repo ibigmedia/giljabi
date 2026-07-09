@@ -9,16 +9,16 @@ export const customTokens = createTokens({
     color: {
         ...defaultColors,
 
-        // ── M3 Primary Tonal Palette (청량한 스카이블루) ──
-        primary: '#0EA5E9',
-        primaryHover: '#0284C7',
-        primaryPress: '#0369A1',
-        primaryContainer: '#E0F2FE',
-        onPrimaryContainer: '#0C4A6E',
-        primaryFixed: '#E0F2FE',
-        primaryFixedDim: '#7DD3FC',
-        onPrimaryFixed: '#0C4A6E',
-        inversePrimary: '#7DD3FC',
+        // ── M3 Primary Tonal Palette (청량하면서도 완전한 블루) ──
+        primary: '#3B82F6',
+        primaryHover: '#2563EB',
+        primaryPress: '#1D4ED8',
+        primaryContainer: '#DBEAFE',
+        onPrimaryContainer: '#1E3A8A',
+        primaryFixed: '#DBEAFE',
+        primaryFixedDim: '#93C5FD',
+        onPrimaryFixed: '#1E3A8A',
+        inversePrimary: '#93C5FD',
 
         // ── M3 Secondary ──
         secondary: '#4a6572',
