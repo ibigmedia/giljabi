@@ -46,7 +46,7 @@ const MORE_USER_ITEMS = [
 const RESPONSIVE_CSS = `
   .desktop-only { display: flex !important; }
   .mobile-only { display: none !important; }
-  @media (max-width: 960px) {
+  @media (max-width: 1240px) {
     .desktop-only { display: none !important; }
     .mobile-only { display: flex !important; }
   }
@@ -231,7 +231,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                             display: 'grid',
                             gridTemplateColumns: '1fr auto 1fr',
                             alignItems: 'center',
-                            maxWidth: 1100,
+                            maxWidth: 1320,
                             width: '100%',
                             margin: '0 auto',
                             padding: '0 24px',
@@ -356,7 +356,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 {/* 모바일에서 하단 네비바 높이만큼 패딩 */}
                 <div className="mobile-only" style={{ display: 'contents' }}>
                     <style dangerouslySetInnerHTML={{ __html: `
-                        @media (max-width: 960px) {
+                        @media (max-width: 1240px) {
                             .main-content-area { padding-bottom: 80px !important; }
                         }
                     `}} />
