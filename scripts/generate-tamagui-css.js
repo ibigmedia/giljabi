@@ -32,3 +32,8 @@ if (!css || css.length < 1000) {
 
 fs.writeFileSync(outputPath, css)
 console.log(`[generate-tamagui-css] Wrote ${css.length} bytes to ${path.relative(process.cwd(), outputPath)}`)
+
+// Requiring the built tamagui config leaves some timer/handle open (animations
+// driver or similar) that keeps the event loop alive indefinitely, which would
+// otherwise hang the `&&`-chained build command forever. Force-exit once done.
+process.exit(0)
