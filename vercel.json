@@ -1,6 +1,6 @@
 {
   "installCommand": "corepack enable && yarn install",
-  "buildCommand": "yarn build && cd apps/next && next build",
+  "buildCommand": "yarn build && node scripts/generate-tamagui-css.js && cd apps/next && next build",
   "outputDirectory": "apps/next/.next",
   "framework": "nextjs",
   "crons": [
