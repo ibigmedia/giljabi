@@ -3,9 +3,13 @@ const fs = require('fs');
 
 const sql = fs.readFileSync('prisma/add_portfolio_tables.sql', 'utf8');
 
-const client = new Client({
-  connectionString: 'postgresql://postgres:%2ARwDj0614ibig@db.jwgpjjpqnlgjgpvhhxvz.supabase.co:5432/postgres'
-});
+const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL;
+if (!connectionString) {
+  console.error('Set DIRECT_URL or DATABASE_URL (see .env.example)');
+  process.exit(1);
+}
+
+const client = new Client({ connectionString });
 
 (async () => {
   await client.connect();
